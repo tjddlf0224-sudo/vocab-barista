@@ -6,48 +6,63 @@
   "background_color": "#fff8e1",
   "theme_color": "#3e2723",
   "orientation": "portrait",
+  "lang": "ko",
+  "description": "공무원 영어 기출 단어를 카페 손님 응대로 익히는 단어 학습 게임. 1,570개 기출 단어 수록.",
+  "categories": ["education", "games"],
   "icons": [
     {
-      "src": "../icons/icon-48.webp",
-      "type": "image/png",
+      "src": "icons/icon-48.webp",
+      "type": "image/webp",
       "sizes": "48x48",
       "purpose": "any maskable"
     },
     {
-      "src": "../icons/icon-72.webp",
-      "type": "image/png",
+      "src": "icons/icon-72.webp",
+      "type": "image/webp",
       "sizes": "72x72",
       "purpose": "any maskable"
     },
     {
-      "src": "../icons/icon-96.webp",
-      "type": "image/png",
+      "src": "icons/icon-96.webp",
+      "type": "image/webp",
       "sizes": "96x96",
       "purpose": "any maskable"
     },
     {
-      "src": "../icons/icon-128.webp",
-      "type": "image/png",
+      "src": "icons/icon-128.webp",
+      "type": "image/webp",
       "sizes": "128x128",
       "purpose": "any maskable"
     },
     {
-      "src": "../icons/icon-192.webp",
-      "type": "image/png",
+      "src": "icons/icon-192.webp",
+      "type": "image/webp",
       "sizes": "192x192",
       "purpose": "any maskable"
     },
     {
-      "src": "../icons/icon-256.webp",
-      "type": "image/png",
+      "src": "icons/icon-256.webp",
+      "type": "image/webp",
       "sizes": "256x256",
       "purpose": "any maskable"
     },
     {
-      "src": "../icons/icon-512.webp",
-      "type": "image/png",
+      "src": "icons/icon-512.webp",
+      "type": "image/webp",
       "sizes": "512x512",
       "purpose": "any maskable"
+    },
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
     }
   ]
 }
