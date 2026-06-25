@@ -617,8 +617,9 @@ const World = {
     const zone=document.getElementById('stick-zone');
     const base=document.getElementById('stick-base'), knob=document.getElementById('stick-knob');
     const R=52;
-    const setKnob=(dx,dy)=>{ knob.style.transform=`translate(${28+dx}px, ${-28+dy}px)`; };
-    const reset=()=>{ this.stick.active=false; this.stick.dx=0; this.stick.dy=0; setKnob(31,-31); };
+    // 중앙 보정 31px(=(베이스118-노브56)/2). 떼면 정확히 중앙으로 복귀
+    const setKnob=(dx,dy)=>{ knob.style.transform=`translate(${31+dx}px, ${-31+dy}px)`; };
+    const reset=()=>{ this.stick.active=false; this.stick.dx=0; this.stick.dy=0; setKnob(0,0); };
     zone.addEventListener('pointerdown', e=>{ e.preventDefault();
       const b=base.getBoundingClientRect(); this.stick.active=true; this.stick.id=e.pointerId;
       this.stick.cx=b.left+b.width/2; this.stick.cy=b.top+b.height/2; move(e); zone.setPointerCapture(e.pointerId); });
