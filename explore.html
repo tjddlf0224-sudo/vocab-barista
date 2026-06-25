@@ -168,7 +168,7 @@
   /* 보스: 더 크고 위협적인 붉은 오라 */
   .sprite-enemy.boss{ width:44%; max-width:200px; top:16%; right:9%; filter:drop-shadow(0 10px 8px rgba(0,0,0,.5)) drop-shadow(0 0 18px rgba(255,60,60,.7)); animation:bossPulse 1.6s ease-in-out infinite; }
   @keyframes bossPulse{ 0%,100%{ filter:drop-shadow(0 10px 8px rgba(0,0,0,.5)) drop-shadow(0 0 14px rgba(255,60,60,.6)); } 50%{ filter:drop-shadow(0 10px 8px rgba(0,0,0,.5)) drop-shadow(0 0 26px rgba(255,90,90,.9)); } }
-  .sprite-self{ position:absolute; bottom:5%; left:7%; width:31%; max-width:138px; filter:drop-shadow(0 8px 6px rgba(0,0,0,.4)); }
+  .sprite-self{ position:absolute; bottom:4%; left:6%; width:40%; max-width:185px; filter:drop-shadow(0 8px 6px rgba(0,0,0,.4)); }
   .sprite-self img{ width:100%; height:auto; display:block; }
   .sprite-self.emoji{ font-size:4.2rem; text-align:center; }
   .sprite-enemy.enter{ animation:enemyEnter .6s ease-out; }
@@ -406,7 +406,9 @@ const Explore = {
     return b; },
   effStats(){ const s=this.state.stats; const b=this.effBonus(); const maxHp=s.maxHp+b.maxHp;
     return { hp:Math.min(s.hp,maxHp), maxHp, atk:s.atk+b.atk, def:s.def+b.def, base:s, bonus:b }; },
-  exitToCafe(){ this.persist(); try{ unlockOrientation(); }catch(e){} location.href='index.html'; },
+  exitToCafe(){ this.persist(); try{ unlockOrientation(); }catch(e){}
+    try{ localStorage.setItem('vb_resume_paused','1'); }catch(e){} // 카페 복귀 시 일시정지 화면으로
+    location.href='index.html'; },
   refreshHUD(){
     const s=this.state,c=this.cafe;
     document.getElementById('hud-gold').textContent=c.wallet;
@@ -450,7 +452,7 @@ const MATERIALS = {
 };
 // ---------- 동행 캐릭터 (채용 게이팅은 Stage C, 지금은 자유 선택해 미리보기) ----------
 const COMPANIONS = {
-  none: { name:'기본',  emoji:'🧑‍🍳', img:null, charId:null },
+  none: { name:'기본',  emoji:'🧑‍🍳', img:null, battleImg:'chars/chef_back.png', charId:null },
   roa:  { name:'로아',  img:'chars/roa.png',  battleImg:'chars/roa_back.png',  charId:'m_roa' },
   luna: { name:'루나',  img:'chars/luna.png', battleImg:'chars/luna_back.png', charId:'m_luna' },
   sera: { name:'세라',  img:'chars/sera.png', battleImg:'chars/sera_back.png', charId:'m_sera' },
@@ -583,15 +585,15 @@ const World = {
     // 시작/출구: 맵 하단 가장자리의 '마을로 가는 길' 게이트 — 위험지대 한가운데가 아니라 변두리에서 시작
     const gateX=Math.floor(this.WT/2);
     this.gate ={ x:gateX, y:this.HT-1 };   // 이 줄(하단 가장자리)을 밟으면 마을(카페)로
-    this.start={ x:gateX, y:this.HT-4 };   // 부활/입장 시작점(게이트 바로 안쪽)
-    // 게이트 앞 광장 비우기(나무/벽 제거)
-    for(let yy=this.HT-5; yy<=this.HT-1; yy++)
+    this.start={ x:gateX, y:this.HT-7 };   // 입장/부활 시작점 — 팻말보다 위쪽(게이트와 거리 둬 즉시 재진입 방지)
+    // 게이트~시작점 광장 비우기(나무/벽 제거)
+    for(let yy=this.HT-8; yy<=this.HT-1; yy++)
       for(let dx=-2; dx<=2; dx++){ const xx=gateX+dx;
         if(xx<1||xx>=this.WT-1) continue;
         this.barrier.delete(key(xx,yy));
         this.trees=this.trees.filter(t=>!(t.x===xx&&t.y===yy)); }
     // 광장에 걸친 채집 노드는 제거(겹침 방지)
-    this.nodes=this.nodes.filter(n=>!(Math.abs(n.x-gateX)<=2 && n.y>=this.HT-5));
+    this.nodes=this.nodes.filter(n=>!(Math.abs(n.x-gateX)<=2 && n.y>=this.HT-8));
     // 팻말 세우기(통과 불가) — 게이트 옆
     this.sign={ x:gateX-2, y:this.HT-4 };
     this.barrier.add(key(this.sign.x,this.sign.y));
@@ -690,12 +692,12 @@ const World = {
     let vx=this.stick.dx, vy=this.stick.dy;
     if(this.keys.l)vx-=1; if(this.keys.r)vx+=1; if(this.keys.u)vy-=1; if(this.keys.d)vy+=1;
     const mag=Math.hypot(vx,vy);
-    this.moving = mag>0.12;
+    this.moving = mag>0.18;   // 데드존 ↑(살짝 기울임은 무시)
     if(this.moving){
-      this.walkT=(this.walkT||0)+0.32;   // 보행 위상(팔다리 스윙)
+      this.walkT=(this.walkT||0)+0.28;   // 보행 위상(팔다리 스윙)
       vx/=Math.max(1,mag); vy/=Math.max(1,mag);
       if(Math.abs(vx)>0.2) this.facing=vx<0?-1:1;
-      const SPD=0.085;
+      const SPD=0.058;   // 이동 속도 둔화(기존 0.085)
       const nx=this.px+vx*SPD, ny=this.py+vy*SPD;
       // 충돌: 발 위치 타일 검사
       if(!this.isBarrier(Math.round(nx), Math.round(this.py))) this.px=nx;
@@ -1054,7 +1056,7 @@ const Battle = {
     if(m.art){ es.innerHTML='<img src="'+m.art+'">'; } else { es.classList.add('emoji'); es.textContent=m.emoji; }
     document.getElementById('e-name').textContent=m.name;
     document.getElementById('e-lv').textContent='Lv '+(m.lv||3);
-    this.setSelfSprite(); this.gauge=0; this.setSkillLabel(); this.renderBars();
+    this.setSelfSprite(); this.setSkillLabel(); this.renderBars(); // 게이지는 전투 간 누적(리셋 안 함)
     // 전투 배경에 현재 존 테마 적용(숲/깊은숲 밤)
     const arena=document.getElementById('b-arena');
     arena.classList.remove('zone-forest','zone-deepwood'); arena.classList.add('zone-'+(Explore.state.map.zone||'forest'));
@@ -1071,7 +1073,9 @@ const Battle = {
     if(this._skip){ clearTimeout(this._skipT); const r=this._skip; this._skip=null; r(); } },
   setSelfSprite(){ const comp=COMPANIONS[Explore.state.companion||'none']; const ps=document.getElementById('p-self'); ps.className='sprite-self';
     const bi=comp&&(comp.battleImg||comp.img);
-    if(bi){ ps.innerHTML='<img src="'+bi+'">'; } else { ps.classList.add('emoji'); ps.textContent='🧑‍🍳'; } },
+    // 이미지가 없거나 로드 실패하면 이모지로 폴백(기본 요리사 뒷모습 PNG 추가 전까지 안전)
+    if(bi){ ps.innerHTML='<img src="'+bi+'" onerror="this.parentNode.classList.add(\'emoji\');this.parentNode.textContent=\'🧑‍🍳\'">'; }
+    else { ps.classList.add('emoji'); ps.textContent='🧑‍🍳'; } },
   pStat(){ return Explore.effStats(); },
   renderBars(){ const p=this.pStat(); this.setBar('e',this.eHp,this.eMax); this.setBar('p',p.hp,p.maxHp);
     document.getElementById('e-hptext').textContent=Math.max(0,this.eHp)+'/'+this.eMax;
@@ -1132,14 +1136,14 @@ const Battle = {
       const st=Explore.state.stats; st.maxHp+=8; st.atk+=3; st.def+=2; st.hp=st.maxHp; ups.push(Explore.state.level); }
     if(ups.length){ txt+=`<br><span class="lvlup">🎉 레벨 업! Lv ${ups[ups.length-1]} (HP·공·방 상승, 체력 회복)</span>`; setTimeout(()=>Sfx.play('levelup'),450); }
     this.msg(txt); this.renderBars(); Explore.refreshHUD(); Explore.persist(); this.setButtons(false);
-    const f=document.getElementById('cmd-flee'); f.disabled=false; f.textContent='▶ 계속'; f.onclick=()=>this.close(); },
+    await this.wait(1500); this.close(); },   // 결과 잠깐 보여주고 자동으로 전투 종료(탭하면 즉시)
   async lose(){ this.msg('정신을 잃었다… 카페 근처에서 깨어났다. (체력 회복)'); Explore.state.stats.hp=Math.max(1,Math.round(Explore.state.stats.maxHp*0.5));
     // 마을 입구(시작점) 근처로 이동 — 쓰러진 자리에 그대로 두지 않음
     if(window.World && World.start){ World.px=World.start.x; World.py=World.start.y;
       Explore.state.pos={x:World.px,y:World.py}; if(World.updateActionBtn) World.updateActionBtn(); }
     this.lastStep=Explore.state.steps; // 부활 직후 즉시 재전투 방지
     await this.wait(900); this.renderBars(); Explore.refreshHUD(); Explore.persist(); this.setButtons(false);
-    const f=document.getElementById('cmd-flee'); f.disabled=false; f.textContent='▶ 계속'; f.onclick=()=>this.close(); },
+    await this.wait(1500); this.close(); },
   async flee(){ if(this.busy||!this.active)return; this.busy=true; this.setButtons(false);
     if(this._rand()<0.55){ this.msg('무사히 도망쳤다!'); await this.wait(700); return this.close(); }
     this.msg('도망치지 못했다!'); await this.wait(700); await this.enemyTurn(); },

@@ -1337,6 +1337,71 @@ const AFFECTION_STORY = {
     ]
 };
 
+// ===== 메인 캐릭터 방문 대사 — 일일(그날 첫 등장)/호감 단계별 인사/응대 후 작별 =====
+// 호감 단계: low(<30) · mid(30~59) · high(>=60). 캐릭터 개성·말투 살린 오리지널 대사.
+const MAIN_DIALOGUE = {
+    m_roa: {
+        daily: [
+            '"…또 왔군. 이 거리 끝에서 자네 원두 향이 나더군."',
+            '"오늘은 비가 오려나. 그런 날의 커피가 가장 깊지."',
+            '"왕실에서도 못 찾던 맛을, 이런 골목에서 만나다니."',
+            '"말은 됐네. 한 잔이면 충분해."',
+            '"여행 가방은 늘 문 앞에 둬. 언제 떠날지 모르니."',
+            '"…좋은 아침이군. 자네, 손이 정직해."'
+        ],
+        greet: {
+            low: [ '"실력부터 보지. 주문을 맞춰보게."', '"이름은 됐네. 커피로 말하지."', '"기대는 안 해. 증명해보게."' ],
+            mid: [ '"자네라면… 이번엔 좀 더 까다로운 걸로."', '"왔네. 늘 마시던 거, 알지?"', '"손님이 아니라 동료에게 묻듯 주문하지."' ],
+            high:[ '"…자네 가게는 묘하게 발이 떨어지질 않아."', '"오늘 주문은 내 비법 한 줄. 잘 받아 적게."', '"여정의 끝이 여기일지도 모르겠군. 자, 한 잔."' ]
+        },
+        served: {
+            low: [ '로아가 잔을 비우곤 짧게 끄덕였다. "…합격."', '"나쁘지 않아." 그는 그 말만 남기고 돌아섰다.' ],
+            mid: [ '"역시 자네군." 로아의 입꼬리가 살짝 올라갔다.', '"다음엔 더 어려운 걸 가져오지." 즐거운 듯한 목소리였다.' ],
+            high:[ '"완벽에 가까워." 로아가 처음으로 환히 웃었다.', '"또 오겠네. …아니, 머물지도 모르지." 그가 가방을 내려놓았다.' ]
+        }
+    },
+    m_luna: {
+        daily: [
+            '"보름달이 곱구나. 그래서 또 너를 찾아왔단다."',
+            '"백 년을 살아도 이 향만은 질리질 않아."',
+            '"인간의 밤은 어찌 이리 짧은지… 그래도 곁에 있으마."',
+            '"별이 좋은 밤이야. 주문 하나 들어주겠니?"',
+            '"네 가게의 불빛은 멀리서도 따뜻하더구나."',
+            '"늙지 않는 건 외로운 일이란다. …오늘은 덜 외롭네."'
+        ],
+        greet: {
+            low: [ '"낯선 손이로구나. 어디 솜씨를 보자꾸나."', '"마녀의 주문은 쉽지 않아. 각오는 되었니?"', '"후훗… 너무 떨지 마렴. 천천히 답하면 돼."' ],
+            mid: [ '"이젠 네 손이 익숙하구나. 자, 오늘의 주문이야."', '"네게라면 조금 어려운 마법을 청해도 되겠지."', '"달빛이 네 잔에 잘 어울려. 부탁 하나 하마."' ],
+            high:[ '"보름이 아니어도… 네가 그리워 와버렸단다."', '"내 긴 시간 속, 네가 가장 환한 밤이야."', '"오래된 주문을 하나 나눠주마. 잘 들으렴."' ]
+        },
+        served: {
+            low: [ '루나가 만족스레 눈을 감았다. "제법이구나."', '"달이 너를 어여삐 보겠어." 그녀가 속삭였다.' ],
+            mid: [ '"역시 너야." 루나의 미소에 달빛이 어렸다.', '"이 맛이 그리워 또 올 것 같구나."' ],
+            high:[ '"네 곁의 시간만은… 짧지 않았으면 해." 루나가 나직이 말했다.', '"고맙다. 백 년 만에 머물고 싶은 곳을 찾았어."' ]
+        }
+    },
+    m_sera: {
+        daily: [
+            '"안녕하세요! …아, 모자는 안 벗을게요. 비밀이에요, 쉿!"',
+            '"오늘 스케줄 몰래 빠져나왔어요. 헤헤."',
+            '"여기선 아무도 절 안 알아봐서 좋아요."',
+            '"무대보다 이 카운터가 더 떨려요. 왜죠?"',
+            '"사장님, 저 오늘 좀 지쳤어요. …한 잔 부탁해요."',
+            '"제 진짜 이름, 언젠가 알려드릴까 봐요!"'
+        ],
+        greet: {
+            low: [ '"저… 그냥 평범한 손님이에요. 주문할게요!"', '"여기 단어 카페 맞죠? 한번 해볼래요."', '"조금 긴장돼요. 잘 부탁드려요!"' ],
+            mid: [ '"사장님 보러 왔… 아니, 커피 마시러 왔어요!"', '"오늘도 저 알아봐 주실 거죠? 주문이요!"', '"여기 오면 마음이 놓여요. 자, 문제 주세요."' ],
+            high:[ '"무대 끝나자마자 달려왔어요. 보고 싶어서요."', '"여기가 제 진짜 \'집\' 같아요. …이상하죠?"', '"사장님한테만은 변장 안 해도 될 것 같아요."' ]
+        },
+        served: {
+            low: [ '세라가 환하게 웃었다. "와, 역시 잘하시네요!"', '"또 와도 돼요? …농담 아니에요!" 그녀가 손을 흔들었다.' ],
+            mid: [ '"역시 사장님!" 세라의 눈이 반짝였다.', '"오늘 하루가 다 풀렸어요. 고마워요!"' ],
+            high:[ '"여기 있으면 외롭지 않아요." 세라가 작게 속삭였다.', '"제 최고의 무대는 여기예요. 다음에 또 올게요!"' ]
+        }
+    }
+};
+
 function charSVG(c) {
     if(!c) return '';
     if(c.img) return `<img src="${c.img}" alt="${c.name}" style="width:100%;height:auto;display:block;">`;
@@ -1506,7 +1571,7 @@ const CRAFTED_DEFS = {
 // [5] 게임 엔진 (Game Object)
 // ==========================================
 const game = {
-    wallet: 0, score: 0, lifetimeScore: 0, lives: 5, day: 1, bestDay: 1, lastDaily: '', dailyStreak: 0, affection: {}, charActs: {}, totalCustomers: 0, dailyCount: 0, masteredCount: 0,
+    wallet: 0, score: 0, lifetimeScore: 0, lives: 5, day: 1, bestDay: 1, lastDaily: '', dailyStreak: 0, affection: {}, charActs: {}, mainSeenDay: {}, totalCustomers: 0, dailyCount: 0, masteredCount: 0,
     isMuted: false, gameMode: 'normal', isActive: false, isPaused: false, timer: null, currentCust: null,
     activePool: [], sortedWords: [], ownedItems: [], myWords: [],
     
@@ -1546,6 +1611,7 @@ const game = {
             this.lifetimeScore = Math.max(data.lifetimeScore || 0, this.score);
             this.affection = (data.affection && typeof data.affection==='object') ? data.affection : {}; // 메인 호감도
             this.charActs = (data.charActs && typeof data.charActs==='object') ? data.charActs : {};      // 해금된 스토리 막 수
+            this.mainSeenDay = (data.mainSeenDay && typeof data.mainSeenDay==='object') ? data.mainSeenDay : {}; // 메인별 그날 첫 등장 추적(일일 대사)
             this.bestDay = data.bestDay || data.day || 1;       // 최고 기록(게임오버에도 유지)
             this.lastDaily = data.lastDaily || '';              // 마지막 출석 보상 날짜(YYYY-M-D)
             this.dailyStreak = data.dailyStreak || 0;           // 연속 출석 일수
@@ -1595,6 +1661,18 @@ const game = {
         BgMusic.init();
         BgMusic.isMuted = this.isMuted; if(this.isMuted) BgMusic.stop(); // 통합 음소거 상태로 동기화
         this.checkDailyReward(); // 일일 출석 보상(새 날이면 보상 지급)
+        // 탐험에서 카페로 돌아온 경우 → 시작화면이 아니라 일시정지 화면으로 복귀
+        try { if(localStorage.getItem('vb_resume_paused')==='1'){ localStorage.removeItem('vb_resume_paused'); this.resumeFromExplore(); } } catch(e){}
+    },
+
+    // 탐험 복귀 — 진행 중이던 카페로(일시정지 상태). '계속 하기'로 다음 손님부터 재개
+    resumeFromExplore: function() {
+        document.getElementById('start-screen').classList.add('hidden');
+        this.gameMode='normal'; document.body.classList.remove('mode-review');
+        this.isActive=false; this.isPaused=true; this._needTurn=true;
+        const ps=document.getElementById('pause-screen');
+        ps.classList.remove('hidden'); ps.style.display='flex';
+        this.updateHUD();
     },
 
     // 일일 출석 보상 — 하루 한 번, 연속 출석 시 보상 증가(복귀 동기)
@@ -1623,7 +1701,7 @@ const game = {
             myWords: this.myWords,
             day: this.day, score: this.score, lifetimeScore: this.lifetimeScore || 0,
             bestDay: this.bestDay || 1, lastDaily: this.lastDaily || '', dailyStreak: this.dailyStreak || 0,
-            affection: this.affection || {}, charActs: this.charActs || {},
+            affection: this.affection || {}, charActs: this.charActs || {}, mainSeenDay: this.mainSeenDay || {},
             lives: this.lives,
             stats: { totalServed: totalServedCount, totalVip: totalVipCount, totalItems: totalItemsBought, currentQuests: currentQuests },
             totalCustomers: this.totalCustomers, dailyCount: this.dailyCount, isMuted: this.isMuted,
@@ -1858,6 +1936,24 @@ const game = {
             this.saveData();
         }
     },
+    // [대사] 호감 단계 판정 + 랜덤 선택 + 그날 첫 등장(일일) 판정
+    affTier: function(id){ const a=(this.affection&&this.affection[id])||0; return a>=AFFECTION_TIERS[1]?'high':(a>=AFFECTION_TIERS[0]?'mid':'low'); },
+    pickLine: function(arr){ return (arr&&arr.length)? arr[Math.floor(Math.random()*arr.length)] : ''; },
+    todayStr: function(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); },
+    // 메인 손님 등장 인사: 그날 그 캐릭터 첫 등장이면 일일 대사, 아니면 호감 단계별 인사
+    mainGreeting: function(id){
+        const d = MAIN_DIALOGUE[id]; if(!d) return '';
+        if(!this.mainSeenDay) this.mainSeenDay = {};
+        const today = this.todayStr();
+        if(this.mainSeenDay[id] !== today){
+            this.mainSeenDay[id] = today;
+            const line = this.pickLine(d.daily);
+            if(line) return line;
+        }
+        return this.pickLine(d.greet[this.affTier(id)]);
+    },
+    // 메인 손님 응대 완료 후 작별 대사(호감 단계별)
+    mainFarewell: function(id){ const d = MAIN_DIALOGUE[id]; return d ? this.pickLine(d.served[this.affTier(id)]) : ''; },
 
     // 4. 미스터리 박스
     buyMysteryBox: function() {
@@ -1921,10 +2017,11 @@ const game = {
 
             const afterSpeech = () => {
                 const el = document.getElementById('cust-el');
-                if(el) el.classList.add('leaving');
                 const nc = this._newChar; this._newChar = null;
+                const cust = this.currentCust;
                 if(nc && nc.ch.kind === 'main') {
                     // 메인 캐릭터 첫 등장 — 스토리 모달로 성취감
+                    if(el) el.classList.add('leaving');
                     setTimeout(() => {
                         this.isActive = false;
                         showGameAlert(
@@ -1938,6 +2035,17 @@ const game = {
                     }, 450);
                     return;
                 }
+                // 이미 아는 메인 캐릭터 재방문 — 작별 대사를 잠깐 띄우고 퇴장
+                if(cust && cust.char && cust.char.kind === 'main') {
+                    const fw = this.mainFarewell(cust.char.id);
+                    const bub = document.getElementById('bubble-el');
+                    if(fw && bub) {
+                        bub.innerHTML = `<div style="color:#7a5a8a;font-size:0.9rem;font-style:italic;line-height:1.4;">${fw}</div>`;
+                        setTimeout(() => { if(el) el.classList.add('leaving'); setTimeout(() => this.nextTurn(), 420); }, 1150);
+                        return;
+                    }
+                }
+                if(el) el.classList.add('leaving');
                 if(nc) this.showFloatingText(`📖 ${nc.ch.name} 등록! +${nc.bonus}G`, document.getElementById('cust-el'));
                 setTimeout(() => this.nextTurn(), 400);
             };
@@ -2925,14 +3033,17 @@ equipItem: function(category, level) {
         // ▼▼▼ [수정] 이 줄을 삭제하거나 주석 처리(//) 하세요! ▼▼▼
         // if(!this.isActive && !this.isPaused) return; 
 
-        if(this.isPaused) { 
-            this.isPaused=false; 
-            document.getElementById('pause-screen').classList.add('hidden'); 
-            
-            // 주의: 상점 모드일 때는 타이머가 없으므로 타이머 재개는 isActive일 때만 해야 에러가 안 납니다.
-            if(this.isActive) this.startTimer(); 
-            
-            BgMusic.play(); 
+        if(this.isPaused) {
+            this.isPaused=false;
+            document.getElementById('pause-screen').classList.add('hidden');
+            BgMusic.play();
+            // 탐험 복귀 등으로 진행 중 손님이 없으면 새 손님(턴)부터 시작
+            if(this._needTurn) {
+                this._needTurn=false; this.isActive=true; this.nextTurn();
+            } else if(this.isActive) {
+                // 상점 모드 등 타이머 없는 경우 대비 — isActive일 때만 타이머 재개
+                this.startTimer();
+            }
             if(this.currentCust && this.currentCust.type === 'rush') {
                 document.getElementById('game-container').classList.add('effect-rush-bg');
             }
@@ -2958,7 +3069,12 @@ equipItem: function(category, level) {
         const ch = c.char;
         if(ch && ch.kind === 'main') {
             avClass += ' main-aura';
-            txt = `<div style="color:#ce93d8;font-size:0.8rem;font-weight:900;margin-bottom:3px;">✨ ${ch.title || ch.name} ✨</div>` + txt;
+            // 등장 인사는 손님당 한 번만 뽑아 고정(재렌더 시 흔들리지 않게)
+            if(c.greetLine === undefined) c.greetLine = this.mainGreeting(ch.id);
+            const greetHtml = c.greetLine ? `<div style="color:#7a5a8a;font-size:0.82rem;font-style:italic;line-height:1.35;margin:0 0 7px;">${c.greetLine}</div>` : '';
+            txt = `<div style="color:#ce93d8;font-size:0.8rem;font-weight:900;margin-bottom:3px;">✨ ${ch.title || ch.name} ✨</div>`
+                + greetHtml
+                + `<div style="font-weight:700;">${txt}</div>`;
         }
         if(c.type==='rush') txt += `<br><span style='color:red;font-size:0.8rem'>🔥 빨리!!</span>`;
         if(c.type==='vip') {
