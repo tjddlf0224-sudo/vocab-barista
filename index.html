@@ -52,25 +52,16 @@
 
 /* 콤보가 처음 나타날 때 (커지면서 등장) */
 @keyframes comboPopIn {
-    0% {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.5); /* 중앙 정렬 유지하며 작게 시작 */
-    }
-    80% {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1.1); /* 살짝 커졌다가 */
-    }
-    100% {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1); /* 제자리 */
-    }
+    0%   { opacity: 0; transform: scale(0.5); } /* 작게 시작 */
+    80%  { opacity: 1; transform: scale(1.1); } /* 살짝 커졌다가 */
+    100% { opacity: 1; transform: scale(1); }   /* 제자리 */
 }
 
 /* 콤보 숫자가 올라갈 때 (울렁거리는 효과) */
 @keyframes comboBump {
-    0% { transform: translate(-50%, -50%) scale(1); }
-    50% { transform: translate(-50%, -50%) scale(1.2); } /* 커짐 */
-    100% { transform: translate(-50%, -50%) scale(1); }
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.2); } /* 커짐 */
+    100% { transform: scale(1); }
 }
         
         /* 진상 손님 흔들림 효과 (pause시 제거됨) */
@@ -345,10 +336,9 @@
 /* 콤보 UI — 그라데이션 숫자 + COMBO 리본 (깔끔 리디자인) */
 #combo-ui {
     position: absolute;
-    top: 50%;                /* 손님 위 — 말풍선(문제)·보기 어느 것도 안 가림 */
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 200;
+    top: 30%;                /* 우측 위로 비켜놓음 — 캐릭터/말풍선 안 가림 */
+    right: 14px;
+    z-index: 55;             /* 일시정지·잡화점 등 오버레이(z-index:100) 아래 — 메뉴 뜨면 가려짐 */
     pointer-events: none;
     display: flex;
     flex-direction: column;
@@ -1443,7 +1433,7 @@ const CRAFTED_DEFS = {
 // [5] 게임 엔진 (Game Object)
 // ==========================================
 const game = {
-    wallet: 0, score: 0, lives: 5, day: 1, totalCustomers: 0, dailyCount: 0, masteredCount: 0,
+    wallet: 0, score: 0, lifetimeScore: 0, lives: 5, day: 1, totalCustomers: 0, dailyCount: 0, masteredCount: 0,
     isMuted: false, gameMode: 'normal', isActive: false, isPaused: false, timer: null, currentCust: null,
     activePool: [], sortedWords: [], ownedItems: [], myWords: [],
     
@@ -1473,6 +1463,9 @@ const game = {
             this.myWords = data.myWords || [];
             this.day = data.day || 1;
             this.score = data.score || 0;
+            // [누적 점수] 게임오버로 score가 0이 돼도 안 깎이는 평생 누적치 — 랭크/탐험 기준.
+            // 구버전 저장본(lifetimeScore 없음)은 현재 score로 시드해 기존 진행 보존.
+            this.lifetimeScore = Math.max(data.lifetimeScore || 0, this.score);
             this.lives = data.lives || 5;
             this.totalCustomers = data.totalCustomers || 0;
             this.dailyCount = data.dailyCount || 0;
@@ -1528,7 +1521,7 @@ const game = {
             shopLevels: this.shopLevels,    // [신규] 보유 레벨
             currentEquip: this.currentEquip,// [신규] 장착 상태
             myWords: this.myWords,
-            day: this.day, score: this.score, lives: this.lives,
+            day: this.day, score: this.score, lifetimeScore: this.lifetimeScore || 0, lives: this.lives,
             stats: { totalServed: totalServedCount, totalVip: totalVipCount, totalItems: totalItemsBought, currentQuests: currentQuests },
             totalCustomers: this.totalCustomers, dailyCount: this.dailyCount, isMuted: this.isMuted,
             masteredCount: this.masteredCount, masteredList: this.mastered,
@@ -1543,7 +1536,7 @@ const game = {
     EXPLORE_UNLOCK_SCORE: 5000,
     EXPLORE_UNLOCK_RANK: '정직원',
 
-    isExploreUnlocked: function() { return (this.score || 0) >= this.EXPLORE_UNLOCK_SCORE; },
+    isExploreUnlocked: function() { return (this.lifetimeScore || 0) >= this.EXPLORE_UNLOCK_SCORE; },
 
     // 시작화면 탐험 버튼을 랭크에 따라 잠금/해제 표시
     updateExploreBtn: function() {
@@ -1563,7 +1556,7 @@ const game = {
     // [탐험] 탐험 모드로 이동 — 잠금 확인 후, 카페 상태 저장하고 explore.html 로
     goExplore: function() {
         if(!this.isExploreUnlocked()) {
-            alert(`🔒 탐험은 '${this.EXPLORE_UNLOCK_RANK}' 랭크 달성 시 열립니다.\n(누적 ${this.EXPLORE_UNLOCK_SCORE.toLocaleString()}점 필요 · 현재 ${(this.score||0).toLocaleString()}점)`);
+            alert(`🔒 탐험은 '${this.EXPLORE_UNLOCK_RANK}' 랭크 달성 시 열립니다.\n(누적 ${this.EXPLORE_UNLOCK_SCORE.toLocaleString()}점 필요 · 현재 ${(this.lifetimeScore||0).toLocaleString()}점)`);
             return;
         }
         try { this.saveData(); } catch(e) {}
@@ -1705,7 +1698,7 @@ const game = {
 
     // 3. 랭크 시스템
     checkRank: function() {
-        const s = this.score; 
+        const s = this.lifetimeScore || 0;  // 누적 점수 기준 — 게임오버에도 랭크 유지
         let rank = "알바생";
         let color = "#fff";
 
@@ -1820,6 +1813,7 @@ const game = {
 
             // 저장 및 랭크
             this.score += pts;
+            this.lifetimeScore = (this.lifetimeScore || 0) + pts; // 누적 점수 — 랭크 상승용(안 깎임)
             this.wallet += pts;
             this.totalCustomers++;
             // [버그수정] 하루 손님 수 / 누적 서빙 / VIP 카운터 증가 — 날짜진행·퀘스트 정상화
@@ -2574,6 +2568,7 @@ equipItem: function(category, level) {
         document.getElementById('wallet').innerText = this.wallet;
         document.getElementById('lives').innerText = this.lives;
         document.getElementById('day-display').innerText = this.day;
+        this.checkRank(); // 누적 점수 기준 랭크 명패 갱신(로드/게임오버 후에도 반영)
     },
     showFloatingText: function(text, targetEl) {
         const el = document.createElement('div'); 
