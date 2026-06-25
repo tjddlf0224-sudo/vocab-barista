@@ -137,11 +137,27 @@
   #battle{ position:fixed; inset:0; z-index:20; display:none; flex-direction:column; }
   #battle.show{ display:flex; }
   .b-arena{ flex:1; position:relative; overflow:hidden;
-    background:linear-gradient(180deg,#bfe7f5 0%,#d8efcc 52%,#88cb61 52%,#5fae49 100%); }
+    background:
+      radial-gradient(ellipse 50% 34% at 76% 26%, rgba(255,248,200,.45), transparent 62%), /* 햇살 */
+      linear-gradient(180deg,#bfe7f5 0%,#cdeef0 38%,#e6f3d8 50%,#86c95f 50%,#5fae49 100%); }
   .b-arena.shake{ animation:bshake .28s; }
   @keyframes bshake{ 0%,100%{transform:translate(0,0)} 25%{transform:translate(-6px,3px)} 50%{transform:translate(6px,-3px)} 75%{transform:translate(-4px,-2px)} }
-  .b-trees{ position:absolute; top:36%; left:0; right:0; height:16%; pointer-events:none; opacity:.5;
-    background:repeating-linear-gradient(90deg, transparent 0 16px, #4f9a44 16px 30px); }
+  /* 먼 나무 실루엣(둥근 수관) — 줄무늬 대신 */
+  .b-trees{ position:absolute; top:34%; left:0; right:0; height:18%; pointer-events:none; opacity:.55;
+    background:radial-gradient(circle at 18px 22px, #4f9a44 15px, transparent 16px) repeat-x;
+    background-size:38px 36px; }
+  .b-trees.far{ top:30%; height:14%; opacity:.32; background-size:30px 30px;
+    background:radial-gradient(circle at 14px 18px, #5aa84f 12px, transparent 13px) repeat-x; background-size:30px 30px; }
+  /* 깊은 숲(밤) 테마 */
+  .b-arena.zone-deepwood{
+    background:
+      radial-gradient(circle at 82% 20%, #f2f5ff 0 15px, rgba(242,245,255,0) 16px),       /* 달 */
+      radial-gradient(circle at 82% 20%, rgba(190,205,255,.5), transparent 16%),           /* 달무리 */
+      linear-gradient(180deg,#161a40 0%,#222452 40%,#2a2c46 50%,#21351f 50%,#16271a 100%); }
+  .b-arena.zone-deepwood .b-trees{ opacity:.6;
+    background:radial-gradient(circle at 18px 22px, #16271c 15px, transparent 16px) repeat-x; background-size:38px 36px; }
+  .b-arena.zone-deepwood .b-trees.far{ opacity:.4;
+    background:radial-gradient(circle at 14px 18px, #1d3325 12px, transparent 13px) repeat-x; background-size:30px 30px; }
   .platform{ position:absolute; border-radius:50%; background:radial-gradient(ellipse at center, #84c95f 0%, #5da046 68%, transparent 71%); pointer-events:none; }
   .plat-enemy{ width:40%; height:13%; top:40%; right:7%; }
   .plat-self{ width:46%; height:15%; bottom:2%; left:1%; }
@@ -279,7 +295,8 @@
 
 <!-- ===== 전투 화면 ===== -->
 <div id="battle">
-  <div class="b-arena" id="b-arena">
+  <div class="b-arena" id="b-arena" onpointerdown="Battle.skipTap()">
+    <div class="b-trees far"></div>
     <div class="b-trees"></div>
     <div class="platform plat-enemy"></div>
     <div class="platform plat-self"></div>
@@ -300,7 +317,7 @@
     <div id="b-flash"></div>
   </div>
   <div class="b-bottom">
-    <div class="b-msg" id="b-msg">전투 시작!</div>
+    <div class="b-msg" id="b-msg" onpointerdown="Battle.skipTap()">전투 시작!</div>
     <div class="b-cmds">
       <button class="b-cmd cmd-atk" id="cmd-atk" onclick="Battle.playerAttack('normal')"><span class="cmd-ic">🗡️</span><span class="cmd-lb">공격</span></button>
       <button class="b-cmd cmd-skill" id="cmd-skill" onclick="Battle.useSkill()" disabled><span class="skill-fill" id="skill-fill"></span><span class="cmd-ic" id="skill-ic">✨</span><span class="cmd-lb" id="skill-lb">스킬</span></button>
@@ -1014,12 +1031,20 @@ const Battle = {
     document.getElementById('e-name').textContent=m.name;
     document.getElementById('e-lv').textContent='Lv '+(m.lv||3);
     this.setSelfSprite(); this.gauge=0; this.setSkillLabel(); this.renderBars();
+    // 전투 배경에 현재 존 테마 적용(숲/깊은숲 밤)
+    const arena=document.getElementById('b-arena');
+    arena.classList.remove('zone-forest','zone-deepwood'); arena.classList.add('zone-'+(Explore.state.map.zone||'forest'));
     const battle=document.getElementById('battle'); battle.classList.add('show','intro');
     void es.offsetWidth; es.classList.add('enter');
     this.setButtons(false);
     this.msg(m.isBoss ? `⚔️ <b>${m.name}</b> — 보스가 길을 막아섰다!` : `🐾 앗! 야생 <b>${m.name}</b>이(가) 나타났다!`);
     clearTimeout(this._introT);
     this._introT=setTimeout(()=>{ battle.classList.remove('intro'); es.classList.remove('enter'); this.msg('무엇을 할까?'); this.setButtons(true); }, 1400); },
+  // 메시지/아레나 탭 → 등장 연출이나 현재 대기를 빨리 넘김
+  skipTap(){ const battle=document.getElementById('battle');
+    if(battle.classList.contains('intro')){ clearTimeout(this._introT); battle.classList.remove('intro');
+      document.getElementById('e-sprite').classList.remove('enter'); this.msg('무엇을 할까?'); this.setButtons(true); return; }
+    if(this._skip){ clearTimeout(this._skipT); const r=this._skip; this._skip=null; r(); } },
   setSelfSprite(){ const comp=COMPANIONS[Explore.state.companion||'none']; const ps=document.getElementById('p-self'); ps.className='sprite-self';
     const bi=comp&&(comp.battleImg||comp.img);
     if(bi){ ps.innerHTML='<img src="'+bi+'">'; } else { ps.classList.add('emoji'); ps.textContent='🧑‍🍳'; } },
@@ -1055,7 +1080,7 @@ const Battle = {
   msg(h){ document.getElementById('b-msg').innerHTML=h; },
   shake(){ const a=document.getElementById('b-arena'); a.classList.remove('shake'); void a.offsetWidth; a.classList.add('shake'); setTimeout(()=>a.classList.remove('shake'),300); },
   pop(who,t,k){ const host=document.getElementById(who+'-pop'); const el=document.createElement('div'); el.className='dmg-pop'+(k?' '+k:''); el.textContent=t; el.style.left=(this._rand()*26)+'px'; host.appendChild(el); setTimeout(()=>el.remove(),1000); },
-  wait(ms){ return new Promise(r=>setTimeout(r,ms)); },
+  wait(ms){ return new Promise(r=>{ this._skip=r; this._skipT=setTimeout(()=>{ this._skip=null; r(); }, ms); }); },
   async playerAttack(kind){ if(this.busy||!this.active)return; this.busy=true; this.setButtons(false);
     const p=this.pStat(); const power=kind==='power'; const miss=power?0.25:0.05;
     const ps=document.getElementById('p-self'), es=document.getElementById('e-sprite');

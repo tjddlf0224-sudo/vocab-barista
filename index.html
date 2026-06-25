@@ -764,7 +764,6 @@
             <button class="btn-mini" onclick="game.startStory()">🎬 프롤로그</button>
             <button class="btn-mini" onclick="game.openWordbook()">📘 오답 노트</button>
         </div>
-        <button class="reset-btn" onclick="game.resetData()" style="background:none; border:none; color:#999; text-decoration:underline; margin-top:20px;">⚙️ 데이터 초기화</button>
     </div>
 
     <div id="difficulty-screen" class="overlay hidden">
@@ -804,6 +803,8 @@
         <button id="explore-btn" class="btn-mini" style="background:linear-gradient(180deg,#8d6e63,#5d4037);box-shadow:0 3px 0 rgba(0,0,0,.32),0 5px 8px rgba(0,0,0,.22); padding:12px 26px; font-size:1.05rem;" onclick="game.goExplore()">🗺️ 탐험 (마을 밖)</button>
         <br><br>
         <button class="btn-mini" onclick="game.manualQuit()">저장하고 타이틀로</button>
+        <br>
+        <button class="reset-btn" onclick="game.resetData()" style="background:none; border:none; color:#9b8e84; text-decoration:underline; margin-top:16px; font-size:0.82rem;">⚙️ 데이터 초기화</button>
     </div>
 
     <div id="inventory-screen" class="overlay hidden">
@@ -1699,14 +1700,21 @@ const game = {
             }
         }
 
+        // 특수 손님 빈도: 초반 25% → 후반 최대 50%로 상승(날이 갈수록 압박↑)
+        const specialChance = Math.min(0.5, 0.25 + (this.day-1)*0.012);
         let type = 'normal';
-        if(this.gameMode==='normal' && Math.random() < 0.33) {
-            if(Math.random()<0.5) type='rush'; else type='vip';
+        if(this.gameMode==='normal' && Math.random() < specialChance) {
+            // 진상(rush) 연속 등장 방지 — 직전이 rush였으면 vip로
+            if(this._lastType==='rush') type='vip';
+            else type = Math.random()<0.5 ? 'rush' : 'vip';
         }
+        this._lastType = type;
 
+        // 제한시간: 5000ms에서 시작, 날마다 단축. Day13 이후에도 하한이 2500→2000으로 서서히 더 빡세짐
         let baseTime = 5000 - ((this.day-1)*200);
-        if(baseTime < 2500) baseTime = 2500;
-        
+        const floor = Math.max(2000, 2500 - Math.max(0, this.day-13)*60);
+        if(baseTime < floor) baseTime = floor;
+
         if(type==='rush') baseTime = 3000;
         if(type==='vip') baseTime += 3000;
 
