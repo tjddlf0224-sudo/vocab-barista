@@ -282,6 +282,8 @@
   <div class="cs-panel" style="max-width:700px; max-height:92vh; overflow-y:auto;">
     <div class="cs-title">🧪 조합소</div>
     <div style="font-size:.82rem; color:#cdbf9e; margin-bottom:10px;">재료를 모아 특별 아이템을 만들어요. 마지막에 <b style="color:#ffd54f">스펠링 조합</b>을 완성해야 성공! (만든 건 카페 잡화점에서 사용)</div>
+    <div class="cm-label">🎒 보유 재료</div>
+    <div id="craft-mats" class="cm-wrap"></div>
     <div id="craft-body"></div>
     <button class="cs-close" onclick="World.closeCraft()">닫기</button>
   </div>
@@ -1039,8 +1041,8 @@ function expNeed(level){ return Math.floor(40*Math.pow(level,1.6)); }
 const Battle = {
   active:false, busy:false, enemy:null, eHp:0, eMax:0, lastStep:-99, gauge:0, GMAX:100, _canAct:false,
   _seed:777, _rand(){ this._seed=(this._seed*1103515245+12345)&0x7fffffff; return this._seed/0x7fffffff; },
-  maybeEncounter(){ if(this.active)return; const s=Explore.state; if((s.steps-this.lastStep)<12)return;
-    if(this._rand()<0.12){
+  maybeEncounter(){ if(this.active)return; const s=Explore.state; if((s.steps-this.lastStep)<25)return;
+    if(this._rand()<0.05){
       const zone=ZONES[s.map.zone]||ZONES.forest;
       const bossOk = (s.level >= (zone.minLv+3)) && this._rand()<0.12; // 충분히 강하면 가끔 보스
       this.start(bossOk?{boss:true}:{});
