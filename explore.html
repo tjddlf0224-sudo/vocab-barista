@@ -536,7 +536,7 @@ const World = {
 
   // ----- 입력: 키보드 -----
   keys:{},
-  onKey(e){ const m={ArrowUp:'u',ArrowDown:'d',ArrowLeft:'l',ArrowRight:'r',w:'u',s:'d',a:'l',d:'r'}; if(m[e.key]){this.keys[m[e.key]]=1;e.preventDefault();} if(e.key===' '||e.key==='Enter'){this.interact();e.preventDefault();} },
+  onKey(e){ if(this.overlayOpen()) return; const m={ArrowUp:'u',ArrowDown:'d',ArrowLeft:'l',ArrowRight:'r',w:'u',s:'d',a:'l',d:'r'}; if(m[e.key]){this.keys[m[e.key]]=1;e.preventDefault();} if(e.key===' '||e.key==='Enter'){this.interact();e.preventDefault();} },
   onKeyUp(e){ const m={ArrowUp:'u',ArrowDown:'d',ArrowLeft:'l',ArrowRight:'r',w:'u',s:'d',a:'l',d:'r'}; if(m[e.key])this.keys[m[e.key]]=0; },
 
   // ----- 입력: 조이스틱 -----
@@ -585,8 +585,10 @@ const World = {
     clearTimeout(this._tt); this._tt=setTimeout(()=>el.classList.remove('show'),1600); },
 
   // ----- 이동/업데이트 -----
+  // 오버레이(스탯/조합/스펠/동행/전투)가 떠 있으면 이동·인카운터 정지
+  overlayOpen(){ return !!(document.querySelector('.ex-overlay.show') || (window.Battle&&Battle.active)); },
   update(){
-    if(window.Battle&&Battle.active){ this.moving=false; return; }
+    if(this.overlayOpen()){ this.moving=false; return; }
     let vx=this.stick.dx, vy=this.stick.dy;
     if(this.keys.l)vx-=1; if(this.keys.r)vx+=1; if(this.keys.u)vy-=1; if(this.keys.d)vy+=1;
     const mag=Math.hypot(vx,vy);

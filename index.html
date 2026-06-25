@@ -412,6 +412,20 @@
     min-width: 280px;
     animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
+/* 커스텀 알림 확인 버튼(테마 통일) */
+.btn-primary {
+    background: linear-gradient(180deg, #ffd54f, #ffb300);
+    color: #5d4037;
+    border: none;
+    padding: 12px 40px;
+    border-radius: 22px;
+    font-family: 'Jua', sans-serif;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #b28900, 0 7px 12px rgba(0,0,0,.25);
+}
+.btn-primary:active { transform: translateY(4px); box-shadow: 0 1px 0 #b28900, 0 2px 5px rgba(0,0,0,.25); }
 
 /* 팝업 튀어오르는 애니메이션 */
 @keyframes popIn {
@@ -921,7 +935,7 @@ const BgMusic = {
             const self = this;
             document.addEventListener('visibilitychange', () => {
                 if(document.hidden) self.audio.pause();
-                else if(!self.isMuted) self.play();
+                else if(!self.isMuted && !(window.game && game.isPaused)) self.play();
             });
             window.addEventListener('pagehide', () => self.audio.pause());
             window.addEventListener('beforeunload', () => self.audio.pause());
@@ -1453,11 +1467,16 @@ const game = {
         const vipInput = document.getElementById('vip-input');
         if(vipInput) vipInput.onkeypress = (e) => { if(e.key==='Enter') game.checkVipAnswer(); };
 
-        this.mastered = JSON.parse(localStorage.getItem('vb_mastered_v7')) || [];
-        const saved = localStorage.getItem('vb_save_v7');
-        
+        try { this.mastered = JSON.parse(localStorage.getItem('vb_mastered_v7')) || []; }
+        catch(e){ console.warn('마스터 단어 저장본 손상 — 초기화', e); this.mastered = []; }
+
+        let saved = localStorage.getItem('vb_save_v7');
+        let data = null;
         if(saved) {
-            const data = JSON.parse(saved);
+            try { data = JSON.parse(saved); }
+            catch(e){ console.warn('저장 데이터 손상 — 새 게임으로 시작', e); data = null; saved = null; }
+        }
+        if(data) {
             this.wallet = data.wallet || 0;
             // this.ownedItems = data.ownedItems || []; (이제 사용 안 함)
             this.myWords = data.myWords || [];
@@ -1501,7 +1520,7 @@ const game = {
         if(typeof this.maxCombo !== 'number') this.maxCombo = 0;
         if(typeof this.turnCount !== 'number') this.turnCount = 0;
         this.doubleNext = false; this.comboShield = false;
-        if(!Array.isArray(this.collectedChars)) this.collectedChars = (saved ? (JSON.parse(saved).collectedChars || []) : []);
+        if(!Array.isArray(this.collectedChars)) this.collectedChars = (data && Array.isArray(data.collectedChars)) ? data.collectedChars : [];
         ensureQuestTracks(); // 새 퀘스트 트랙(학습/콤보) 보강
 
         checkQuests();
@@ -2278,7 +2297,10 @@ const game = {
         const d = CRAFTED_DEFS[id]; if (!d) return;
         if (d.effect === 'double') { this.doubleNext = true; }
         else if (d.effect === 'shield') { this.comboShield = true; }
-        else if (d.effect === 'life') { this.lives++; this.updateHUD(); }
+        else if (d.effect === 'life') {
+            if (this.lives >= 5) { showGameAlert("❤️ 체력이 이미 가득 찼어요. 아껴두세요!", null); return; }
+            this.lives = Math.min(5, this.lives + 1); this.updateHUD();
+        }
         else if (d.effect === 'time') {
             if (this.currentCust) { this.currentCust.timeLeft += 5000;
                 if (this.currentCust.timeLeft > this.currentCust.maxTime) this.currentCust.maxTime = this.currentCust.timeLeft; }
@@ -3060,18 +3082,12 @@ function flashFX(kind) {
    모두 깨끗하게 지워졌어야 합니다. 
 */
 
-// ▼▼▼ [화면 나가면 음악 끄기] 이것만 남겨주세요 ▼▼▼
+// ▼▼▼ [백그라운드 시 정식 일시정지] — 복귀 시 '계속 하기'로 재개(소프트락 방지) ▼▼▼
+// (BGM 정지/재개는 BgMusic의 자체 visibilitychange 핸들러가 담당)
 document.addEventListener('visibilitychange', function() {
     if (document.hidden) {
-        // 홈으로 나가거나 화면 끄면: 음악 정지
-        if (game.bgm) {
-            game.bgm.pause();
-        }
-        // 게임도 일시정지 (선택사항)
-        game.isPaused = true; 
-    } else {
-        // 다시 돌아왔을 때 로직 (필요하면 유지, 아니면 생략 가능)
-        // 사용자가 직접 플레이 버튼을 누르게 하는 것이 가장 오류가 적습니다.
+        // 진행 중인 게임이면 일시정지 화면을 띄워 둔다(타이머 정리·오버레이 표시까지 처리됨)
+        try { if (game.isActive && !game.isPaused) game.togglePause(); } catch(e){}
     }
 });
 
