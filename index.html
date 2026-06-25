@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Vocab Barista: Master V2.4</title>
+    <title>Vocab Barista</title>
 
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
@@ -755,9 +755,8 @@
 </div>
 
     <div class="overlay" id="start-screen">
-        <h1 style="font-size:2.5rem; line-height:1.2;">☕ VOCAB<br>BARISTA <span style="color:var(--gold); font-size:1.5rem;">V2.4</span></h1>
+        <h1 style="font-size:2.5rem; line-height:1.2;">☕ VOCAB<br>BARISTA</h1>
         <p>나만의 카페를 키우며 단어 마스터!</p>
-        <p style="color:#aaa; font-size:0.9rem;">🎵 BGM: Bright Morning</p>
         <div style="margin-bottom:20px;">
             <button class="buy-btn btn-hero" onclick="showDifficulty()">☕ 영업 시작</button>
         </div>
@@ -1326,6 +1325,22 @@ function renderCharacter(spec){ return buildAvatarSVG(spec); }
 
 // 4. 효과음 및 TTS
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+// 햅틱(진동) — Capacitor Haptics 우선, 없으면 navigator.vibrate 폴백
+function haptic(kind) {
+    try {
+        const H = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Haptics;
+        if (H) {
+            if (kind === 'success') { H.notification({ type: 'SUCCESS' }); }
+            else if (kind === 'heavy') { H.impact({ style: 'HEAVY' }); }
+            else { H.impact({ style: 'LIGHT' }); }
+            return;
+        }
+    } catch(e) {}
+    if (navigator.vibrate) {
+        navigator.vibrate(kind === 'heavy' ? 60 : kind === 'success' ? [30,40,30] : 15);
+    }
+}
+
 function playSound(type) {
     if(game.isMuted) return;
     if(audioCtx.state === 'suspended') audioCtx.resume();
@@ -1575,7 +1590,7 @@ const game = {
     // [탐험] 탐험 모드로 이동 — 잠금 확인 후, 카페 상태 저장하고 explore.html 로
     goExplore: function() {
         if(!this.isExploreUnlocked()) {
-            alert(`🔒 탐험은 '${this.EXPLORE_UNLOCK_RANK}' 랭크 달성 시 열립니다.\n(누적 ${this.EXPLORE_UNLOCK_SCORE.toLocaleString()}점 필요 · 현재 ${(this.lifetimeScore||0).toLocaleString()}점)`);
+            showGameAlert(`🔒 탐험은 '${this.EXPLORE_UNLOCK_RANK}' 랭크 달성 시 열립니다.<br>(누적 ${this.EXPLORE_UNLOCK_SCORE.toLocaleString()}점 필요 · 현재 ${(this.lifetimeScore||0).toLocaleString()}점)`);
             return;
         }
         try { this.saveData(); } catch(e) {}
@@ -1605,10 +1620,10 @@ const game = {
 
         if(this.gameMode === 'review' && this.activePool.length === 0) {
             this.isActive = false; clearInterval(this.timer);
-            alert("복습 완료! +100G");
             this.wallet += 100; checkQuests();
             document.body.classList.remove('mode-review');
-            this.saveData(); location.reload();
+            this.saveData();
+            showGameAlert("📖 복습 완료! +100G", () => location.reload());
             return;
         }
 
@@ -1645,7 +1660,7 @@ const game = {
                         const startScreen = document.getElementById('start-screen');
                         startScreen.classList.remove('hidden');
                         startScreen.style.display = 'flex';
-                        setTimeout(() => { alert("🎉 현재 난이도 마스터! 타이틀 화면으로 이동합니다."); }, 50);
+                        showGameAlert("🎉 현재 난이도 마스터! 타이틀 화면으로 이동합니다.");
                         return;
                     }
                 } else {
@@ -1680,8 +1695,9 @@ const game = {
 
     // 1. 피버 모드 시작
     startFever: function() {
-        if (this.isFever) return; 
+        if (this.isFever) return;
         this.isFever = true;
+        haptic('success');
         
         // 화면 효과
         document.body.classList.add('fever-mode');
@@ -1737,7 +1753,7 @@ const game = {
     // 4. 미스터리 박스
     buyMysteryBox: function() {
         if(this.wallet < 500) {
-            alert("코인이 부족합니다! (500G 필요)");
+            showGameAlert("코인이 부족합니다! (500G 필요)");
             return;
         }
         
@@ -1766,7 +1782,7 @@ const game = {
             playSound('wrong');
         }
         
-        alert(msg);
+        showGameAlert(msg);
         this.updateHUD();
         this.saveData();
     },
@@ -1777,7 +1793,7 @@ const game = {
 
         // [정답인 경우]
         if(val.toLowerCase() === this.currentCust.data.w.toLowerCase()) {
-            clearInterval(this.timer); playSound('correct');
+            clearInterval(this.timer); playSound('correct'); haptic('light');
 
             // 콤보 로직
             if (!this.combo) this.combo = 0;
@@ -1939,7 +1955,7 @@ const game = {
     },
 
     handleFail: function(isTimeout) {
-        clearInterval(this.timer); playSound('wrong');
+        clearInterval(this.timer); playSound('wrong'); haptic('heavy');
         flashFX('bad'); // [이펙트] 오답 화면 플래시
         this.lives--; this.updateHUD();
         
@@ -2015,7 +2031,7 @@ const game = {
 
         // 2. 돈 확인 (250G)
         if(this.wallet < 250) {
-            alert("골드가 부족합니다! (250G 필요)");
+            showGameAlert("골드가 부족합니다! (250G 필요)");
             return;
         }
 
@@ -2045,7 +2061,7 @@ const game = {
         const reviveCost = 450; 
         
         if(this.wallet < reviveCost) {
-            alert(`골드가 부족합니다! (필요: ${reviveCost}G)`);
+            showGameAlert(`골드가 부족합니다! (필요: ${reviveCost}G)`);
             return;
         }
 
@@ -2085,28 +2101,28 @@ const game = {
         // 소비 아이템 처리
         const consumable = CONSUMABLES.find(i => i.id === id);
         if (consumable) {
-            if(this.wallet < consumable.price) return alert("골드가 부족합니다!");
+            if(this.wallet < consumable.price) return showGameAlert("골드가 부족합니다!");
             const charge = () => { this.wallet -= consumable.price; totalItemsBought++; };
             const refreshShop = () => { const sg=document.getElementById('shop-gold'); if(sg) sg.innerText=this.wallet; this.renderShopItems(); };
 
             if(id === 'con_potion') {
-                if(this.lives>=5) return alert("체력이 꽉 찼습니다.");
+                if(this.lives>=5) return showGameAlert("체력이 꽉 찼습니다.");
                 this.lives++; charge();
                 this.saveData(); this.updateHUD(); refreshShop(); playSound('buy'); checkQuests(); return;
             }
             if(id === 'con_skip') {
-                if(!this.currentCust || this.currentCust.solved) return alert("패스할 손님이 없습니다.");
+                if(!this.currentCust || this.currentCust.solved) return showGameAlert("패스할 손님이 없습니다.");
                 charge(); this.saveData(); this.updateHUD(); playSound('buy'); this.closeOverlays();
                 const ce=document.getElementById('cust-el'); if(ce) ce.classList.add('leaving');
                 setTimeout(() => this.nextTurn(), 400); checkQuests(); return;
             }
             if(id === 'con_hint') {
-                if(!this.currentCust || this.currentCust.solved) return alert("힌트를 쓸 손님이 없습니다.");
+                if(!this.currentCust || this.currentCust.solved) return showGameAlert("힌트를 쓸 손님이 없습니다.");
                 this.useHint(); charge(); this.saveData(); this.updateHUD(); playSound('buy');
                 this.closeOverlays(); checkQuests(); return;
             }
             if(id === 'con_time') {
-                if(!this.currentCust || this.currentCust.solved) return alert("시간을 늘릴 손님이 없습니다.");
+                if(!this.currentCust || this.currentCust.solved) return showGameAlert("시간을 늘릴 손님이 없습니다.");
                 this.currentCust.timeLeft += 5000;
                 if(this.currentCust.timeLeft > this.currentCust.maxTime) this.currentCust.maxTime = this.currentCust.timeLeft;
                 charge(); this.saveData(); this.updateHUD(); playSound('buy');
@@ -2151,9 +2167,9 @@ const game = {
                 this.updateDecorations(); 
                 checkQuests();
                 
-                alert(`${item.name} 획득! (자동 장착됨)\n기존 아이템은 터치하여 교체 가능합니다.`);
+                showGameAlert(`${item.name} 획득! (자동 장착됨)<br>기존 아이템은 터치하여 교체 가능합니다.`);
             } else {
-                alert("돈이 부족합니다!");
+                showGameAlert("돈이 부족합니다!");
             }
         }
     },
@@ -2681,7 +2697,7 @@ equipItem: function(category, level) {
     },
 
     submitRank: function() {
-        const name = document.getElementById('nickname').value; if(!name) return alert("닉네임 입력!");
+        const name = document.getElementById('nickname').value; if(!name) return showGameAlert("닉네임 입력!");
         const rec = { name: name, score: this.score, day: this.day };
         let ranks = JSON.parse(localStorage.getItem('vb_ranks_v4')) || [];
         ranks.push(rec); ranks.sort((a,b)=>b.score-a.score); ranks=ranks.slice(0,10);
@@ -2727,7 +2743,7 @@ equipItem: function(category, level) {
         this.updateHUD(); this.nextTurn();
     },
     startReviewMode: function() {
-        if(this.myWords.length<1) return alert("오답 노트가 비어있습니다.");
+        if(this.myWords.length<1) return showGameAlert("오답 노트가 비어있습니다.");
         if(!rawWords || rawWords.length===0) rawWords = wordData.easy;
         BgMusic.play(); 
         this.gameMode='review';
@@ -3009,22 +3025,22 @@ function flashFX(kind) {
                 const scoreText = document.getElementById('final-score').innerText;
                 const score = parseInt(scoreText.replace(/,/g, ''), 10) || 0;
 
-                if(!name) { alert("닉네임을 입력해주세요!"); return; }
+                if(!name) { showGameAlert("닉네임을 입력해주세요!"); return; }
 
                 const btn = document.querySelector('#result-screen .buy-btn');
                 btn.disabled = true;
                 btn.innerText = "등록 중...";
 
                 // Firestore에 점수 등록
-                if(!window.vbDB) { alert("인터넷 연결을 확인해주세요."); btn.disabled=false; btn.innerText="랭킹 등록"; return; }
+                if(!window.vbDB) { showGameAlert("인터넷 연결을 확인해주세요."); btn.disabled=false; btn.innerText="랭킹 등록"; return; }
                 window.vbDB.collection('vb_ranking').add({ name: name.slice(0,20), score: score, createdAt: Date.now() })
                 .then(() => {
-                    alert("랭킹 등록 완료!");
+                    showGameAlert("랭킹 등록 완료!");
                     showSheetRanking(); // 등록 후 랭킹판 보여주기
                 })
                 .catch(err => {
                     console.error(err);
-                    alert("등록 실패. 인터넷 연결을 확인해주세요.");
+                    showGameAlert("등록 실패. 인터넷 연결을 확인해주세요.");
                     btn.disabled = false;
                     btn.innerText = "랭킹 등록";
                 });

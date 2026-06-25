@@ -325,6 +325,37 @@ const SaveBridge = {
   saveExplore(s){ localStorage.setItem(EXPLORE_KEY,JSON.stringify(s)); },
 };
 
+// 효과음 + 햅틱 (카페의 음소거 설정 공유) — 탐험이 무음이던 문제 보완
+const Sfx = {
+  ctx:null, muted:false,
+  init(){ try{ this.muted = !!SaveBridge.loadCafe().isMuted; }catch(e){} },
+  _ac(){ if(!this.ctx){ try{ this.ctx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return null; } }
+    if(this.ctx.state==='suspended') this.ctx.resume(); return this.ctx; },
+  tone(freq, dur, type, vol){ if(this.muted) return; const ac=this._ac(); if(!ac) return;
+    const o=ac.createOscillator(), g=ac.createGain(); o.connect(g); g.connect(ac.destination);
+    const now=ac.currentTime; o.type=type||'sine'; o.frequency.setValueAtTime(freq, now);
+    g.gain.setValueAtTime(vol||0.18, now); g.gain.exponentialRampToValueAtTime(0.0001, now+(dur||0.15));
+    o.start(now); o.stop(now+(dur||0.15)); },
+  play(kind){
+    switch(kind){
+      case 'gather': this.tone(660,0.1,'sine',0.16); setTimeout(()=>this.tone(990,0.12,'sine',0.16),70); break;
+      case 'hit':    this.tone(180,0.1,'square',0.14); break;
+      case 'crit':   this.tone(140,0.16,'sawtooth',0.2); setTimeout(()=>this.tone(280,0.12,'square',0.16),60); break;
+      case 'miss':   this.tone(200,0.12,'sine',0.1); break;
+      case 'enemy':  this.tone(120,0.12,'sawtooth',0.13); break;
+      case 'win':    [523,659,784,1046].forEach((f,i)=>setTimeout(()=>this.tone(f,0.16,'sine',0.18),i*90)); break;
+      case 'levelup':[659,880,1318].forEach((f,i)=>setTimeout(()=>this.tone(f,0.18,'triangle',0.18),i*100)); break;
+      case 'correct':this.tone(523,0.1,'sine',0.16); setTimeout(()=>this.tone(1046,0.14,'sine',0.16),90); break;
+      case 'wrong':  this.tone(160,0.22,'sawtooth',0.16); break;
+    }
+  }
+};
+function exHaptic(kind){
+  try { const H=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Haptics;
+    if(H){ if(kind==='success')H.notification({type:'SUCCESS'}); else if(kind==='heavy')H.impact({style:'HEAVY'}); else H.impact({style:'LIGHT'}); return; } } catch(e){}
+  if(navigator.vibrate) navigator.vibrate(kind==='heavy'?60:kind==='success'?[30,40,30]:15);
+}
+
 const Explore = {
   cafe:null, state:null,
   init(){
@@ -334,6 +365,7 @@ const Explore = {
                 craftedItems:(c.craftedItems&&typeof c.craftedItems==='object')?c.craftedItems:{} };
     this.state=SaveBridge.loadExplore();
     if(!this.isRecruited(this.state.companion)) this.state.companion='none';  // 미채용 동행은 기본으로
+    Sfx.init();
     Assets.preloadAll();
     this.refreshHUD();
     lockLandscape();
@@ -519,6 +551,8 @@ const World = {
     // 팻말 세우기(통과 불가) — 게이트 옆
     this.sign={ x:gateX-2, y:this.HT-4 };
     this.barrier.add(key(this.sign.x,this.sign.y));
+    // 나무는 정적이므로 y정렬을 1회만(렌더 루프의 매 프레임 sort 제거 — 저사양 GC/CPU 절감)
+    this.trees.sort((a,b)=>a.y-b.y);
   },
   addTree(x,y){ const k=x+','+y; if(this.barrier.has(k))return; this.barrier.add(k);
     this.trees.push({x,y,type:this.rnd()<0.7?'green':'orange'}); },
@@ -571,13 +605,14 @@ const World = {
     const mat=MATERIALS[n.mat];
     Explore.state.materials[n.mat]=(Explore.state.materials[n.mat]||0)+1;
     n.taken=true; n.reSteps=(Explore.state.steps||0)+40;
+    Sfx.play('gather'); exHaptic('light');
     Explore.refreshHUD(); Explore.persist(); this.updateActionBtn();
     const w=this.pickWord();
     this.toast(`${mat.icon} <b>${mat.name}</b> +1<br><span class="en">${w.w}</span> · <span class="ko">${w.m}</span>`);
   },
   pickWord(){
     const due=(Explore.cafe.myWords||[]).filter(v=>(v.due||0)<=(Explore.cafe.turnCount||0));
-    if(due.length) return due[0];
+    if(due.length) return due[Math.floor(this.rnd()*due.length)]; // 매번 첫 단어만 나오던 문제 수정
     const pool=window.wordData?[].concat(wordData.easy,wordData.normal,wordData.hard):[];
     return pool.length?pool[Math.floor(this.rnd()*pool.length)]:{w:'coffee',m:'커피'};
   },
@@ -662,7 +697,7 @@ const World = {
       const mimg=MATERIALS[n.mat].img;
       if(Assets.ready(mimg)){ const s=TS*0.92; ctx.drawImage(Assets.imgs[mimg], dx+(TS-s)/2, dy+(TS-s)/2, s, s); } }
     // 나무(2칸: 본체+상단), y정렬
-    const vis=this.trees.filter(t=>t.x>=x0-1&&t.x<=x1+1&&t.y>=y0-1&&t.y<=y1+1).sort((a,b)=>a.y-b.y);
+    const vis=this.trees.filter(t=>t.x>=x0-1&&t.x<=x1+1&&t.y>=y0-1&&t.y<=y1+1); // 이미 y정렬됨
     for(const t of vis){ const dx=Math.round(t.x*TS-camX), dy=Math.round(t.y*TS-camY);
       const top=t.type==='green'?4:3, bot=t.type==='green'?16:15;
       this.drawTile(bot,dx,dy,TS); this.drawTile(top,dx,dy-TS,TS); }
@@ -913,6 +948,7 @@ const Battle = {
     const def=sk.ignoreDef?0:this.enemy.def; let b=p.atk*sk.mult-def*0.5; b*=0.95+this._rand()*0.2;
     const crit=sk.alwaysCrit||this._rand()<0.2; if(crit)b*=1.6; const dmg=Math.max(1,Math.round(b));
     this.eHp-=dmg; es.classList.add('hit'); this.shake();
+    Sfx.play(crit?'crit':'hit'); exHaptic('heavy');
     this.pop('e','-'+dmg+(crit?'!':''),crit?'crit':null);
     let m=`${sk.name}! ${this.enemy.name}에게 <b>${dmg}</b> 피해!${crit?' 치명타!':''}`;
     if(sk.heal){ const h=Math.round(p.maxHp*sk.heal); Explore.state.stats.hp=Math.min(p.maxHp,p.hp+h); m+=`<br>✨ 체력 ${h} 회복!`; Explore.refreshHUD(); }
@@ -927,8 +963,9 @@ const Battle = {
     const p=this.pStat(); const power=kind==='power'; const miss=power?0.25:0.05;
     const ps=document.getElementById('p-self'), es=document.getElementById('e-sprite');
     ps.classList.add('lunge'); await this.wait(150);
-    if(this._rand()<miss){ this.pop('e','MISS','miss'); this.msg('공격이 빗나갔다…'); await this.wait(650); }
+    if(this._rand()<miss){ Sfx.play('miss'); this.pop('e','MISS','miss'); this.msg('공격이 빗나갔다…'); await this.wait(650); }
     else { const {dmg,crit}=this.calc(p.atk,this.enemy.def,power?1.7:1.0); this.eHp-=dmg;
+      Sfx.play(crit?'crit':'hit'); exHaptic(crit?'heavy':'light');
       es.classList.add('hit'); this.shake(); this.pop('e','-'+dmg+(crit?'!':''),crit?'crit':null);
       this.msg(`${power?'강공격! ':''}${this.enemy.name}에게 <b>${dmg}</b> 피해!${crit?' 치명타!':''}`); this.renderBars(); await this.wait(550); es.classList.remove('hit'); }
     ps.classList.remove('lunge'); this.addGauge(22);
@@ -937,16 +974,17 @@ const Battle = {
     es.classList.add('lunge'); await this.wait(180); const p=this.pStat();
     if(this._rand()<0.05){ this.pop('p','MISS','miss'); this.msg(`${this.enemy.name}의 공격이 빗나갔다!`); await this.wait(600); }
     else { const {dmg,crit}=this.calc(this.enemy.atk,p.def,1.0); Explore.state.stats.hp=p.hp-dmg;
+      Sfx.play('enemy'); exHaptic('heavy');
       ps.classList.add('hit'); this.shake(); this.pop('p','-'+dmg,crit?'crit':null);
       this.msg(`${this.enemy.name}의 공격! 나에게 <b>${dmg}</b> 피해!`); this.renderBars(); Explore.refreshHUD(); this.addGauge(16); await this.wait(600); ps.classList.remove('hit'); }
     es.classList.remove('lunge');
     if(Explore.state.stats.hp<=0) return this.lose(); this.busy=false; this.setButtons(true); },
-  async win(){ const e=this.enemy; document.getElementById('e-sprite').classList.add('dead'); this.msg(`${e.name}을(를) 쓰러뜨렸다!`); await this.wait(700);
+  async win(){ const e=this.enemy; Sfx.play('win'); exHaptic('success'); document.getElementById('e-sprite').classList.add('dead'); this.msg(`${e.name}을(를) 쓰러뜨렸다!`); await this.wait(700);
     const gold=Math.round(e.gold*(1+Explore.effBonus().goldPct)); Explore.cafe.wallet+=gold; Explore.state.materials[e.drop]=(Explore.state.materials[e.drop]||0)+1;
     let txt=`승리! 🪙+${gold} · ${MATERIALS[e.drop].icon}${MATERIALS[e.drop].name}+1 · ⭐EXP+${e.exp}`; Explore.state.exp+=e.exp;
     const ups=[]; while(Explore.state.exp>=expNeed(Explore.state.level)){ Explore.state.exp-=expNeed(Explore.state.level); Explore.state.level++;
       const st=Explore.state.stats; st.maxHp+=8; st.atk+=3; st.def+=2; st.hp=st.maxHp; ups.push(Explore.state.level); }
-    if(ups.length) txt+=`<br><span class="lvlup">🎉 레벨 업! Lv ${ups[ups.length-1]} (HP·공·방 상승, 체력 회복)</span>`;
+    if(ups.length){ txt+=`<br><span class="lvlup">🎉 레벨 업! Lv ${ups[ups.length-1]} (HP·공·방 상승, 체력 회복)</span>`; setTimeout(()=>Sfx.play('levelup'),450); }
     this.msg(txt); this.renderBars(); Explore.refreshHUD(); Explore.persist(); this.setButtons(false);
     const f=document.getElementById('cmd-flee'); f.disabled=false; f.textContent='▶ 계속'; f.onclick=()=>this.close(); },
   async lose(){ this.msg('정신을 잃었다… 카페 근처에서 깨어났다. (체력 회복)'); Explore.state.stats.hp=Math.max(1,Math.round(Explore.state.stats.maxHp*0.5));
@@ -999,9 +1037,9 @@ const SpellQuiz = {
   submit(){ if(this.slots.includes(null)){ this.msg('빈 칸을 모두 채워줘!','no'); return; }
     const ans=this.slots.map(ti=>this.tiles[ti].ch).join('');
     if(ans===this.word) this.onSuccess(); else this.onWrong(); },
-  onWrong(){ this.msg(`철자가 틀렸어! 다시 (${this.word.length}글자)`,'no');
+  onWrong(){ Sfx.play('wrong'); exHaptic('heavy'); this.msg(`철자가 틀렸어! 다시 (${this.word.length}글자)`,'no');
     const p=document.getElementById('sp-panel'); p.classList.remove('shake'); void p.offsetWidth; p.classList.add('shake'); },
-  onSuccess(){ this.msg(`✅ ${this.word.toUpperCase()} — 정답!`,'ok');
+  onSuccess(){ Sfx.play('correct'); exHaptic('success'); this.msg(`✅ ${this.word.toUpperCase()} — 정답!`,'ok');
     if(this.isReview) Explore.srsCorrect(this.word);
     World.completeCraft(this.recipe);
     setTimeout(()=>this.close(), 850); },
