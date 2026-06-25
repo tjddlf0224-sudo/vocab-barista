@@ -100,6 +100,15 @@
   .st-expt{ font-size:.76rem; color:#cdbf9e; }
   .st-pass{ font-size:.9rem; color:#e8dcc4; margin:8px 0 2px; }
   .st-sec{ color:var(--gold); font-size:1rem; margin:13px 0 6px; text-align:left; padding-left:4px; }
+  /* 조합소 보유 재료 스트립 */
+  .cm-label{ color:#e8d8b0; font-size:.82rem; font-weight:bold; margin:2px 2px 6px; }
+  .cm-wrap{ display:flex; flex-wrap:wrap; gap:7px; margin-bottom:14px; padding-bottom:12px; border-bottom:1px dashed #6a5640; }
+  .cm-chip{ display:flex; align-items:center; gap:6px; background:rgba(255,253,245,.96); border:1.5px solid #b9a87e; border-radius:11px; padding:5px 10px 5px 6px; }
+  .cm-chip .cm-ic{ width:24px; height:24px; object-fit:contain; }
+  .cm-chip .cm-nm{ font-size:.8rem; color:#5a4326; font-weight:bold; }
+  .cm-chip .cm-ct{ font-size:.82rem; font-weight:900; color:#2e7d32; min-width:16px; text-align:right; }
+  .cm-chip.zero{ opacity:.42; filter:grayscale(.6); }
+  .cm-chip.rare{ border-color:var(--gold); background:linear-gradient(180deg,#fff8e1,#ffeaa7); }
   .eq-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
   .eq-card{ background:rgba(255,253,245,.96); border:2px solid #b9a87e; border-radius:12px; padding:8px 10px; text-align:left; display:flex; align-items:center; gap:9px; }
   .eq-card.equipped{ border-color:var(--gold); box-shadow:0 0 9px rgba(255,179,0,.55); }
@@ -972,13 +981,23 @@ const World = {
   // ----- 조합소 -----
   openCraft(){ this.renderCraft(); document.getElementById('craft-screen').classList.add('show'); },
   closeCraft(){ document.getElementById('craft-screen').classList.remove('show'); },
-  renderCraft(){ const owned=Explore.cafe.craftedItems||{}; let h='<div class="eq-grid">';
+  renderCraft(){ this.renderMats(); const owned=Explore.cafe.craftedItems||{}; let h='<div class="eq-grid">';
     CRAFT_DB.forEach(r=>{ const can=this.canAfford(r.cost); const have=owned[r.id]||0;
       h+=`<div class="eq-card"><span class="eq-ic">${r.icon}</span><div class="eq-info">`
         +`<div class="nm">${r.name}${have?` <small style="color:#7a5a2a">보유 x${have}</small>`:''}</div>`
-        +`<div class="bn">${r.edesc}</div><div class="ct">${this.costText(r.cost)}</div></div>`
+        +`<div class="bn">${r.edesc}</div><div class="ct">${this.costDetail(r.cost)}</div></div>`
         +`<button class="eq-btn buy" ${can?'':'disabled'} onclick="World.startCraft('${r.id}')">조합</button></div>`; });
     document.getElementById('craft-body').innerHTML=h+'</div>'; },
+  // 보유 재료 스트립(전체 재료 + 개수, 0개는 흐리게, 황금원두는 금테)
+  renderMats(){ const m=Explore.state.materials||{}; const el=document.getElementById('craft-mats'); if(!el)return;
+    el.innerHTML=Object.entries(MATERIALS).map(([k,mat])=>{ const c=m[k]||0;
+      return `<div class="cm-chip${c?'':' zero'}${mat.rare?' rare':''}"><img class="cm-ic" src="${mat.img}" onerror="this.replaceWith(document.createTextNode('${mat.icon}'))"><span class="cm-nm">${mat.name}</span><span class="cm-ct">${c}</span></div>`; }).join(''); },
+  // 레시피 비용: 재료별 보유/필요를 색으로(충분=초록, 부족=빨강)
+  costDetail(cost){ if(!cost)return''; const parts=[];
+    if(cost.gold) parts.push(`🪙${cost.gold}`);
+    for(const k in cost){ if(k==='gold')continue; const have=Explore.state.materials[k]||0; const need=cost[k]; const ok=have>=need;
+      parts.push(`<span style="color:${ok?'#2e7d32':'#c62828'};font-weight:bold;">${MAT_ICON[k]||k}${have}/${need}</span>`); }
+    return parts.join('  '); },
   startCraft(id){ const r=CRAFT_DB.find(x=>x.id===id); if(!r||!this.canAfford(r.cost)) return; SpellQuiz.open(r); },
   completeCraft(r){ for(const k in r.cost){ Explore.state.materials[k]=(Explore.state.materials[k]||0)-r.cost[k]; }
     if(!Explore.cafe.craftedItems) Explore.cafe.craftedItems={};
