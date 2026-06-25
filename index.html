@@ -435,6 +435,13 @@
 #pause-screen .pause-menu .pause-cta { padding:16px 10px; font-size:1.3rem; border-radius:14px; }
 #pause-screen .pause-menu .pause-reset { background:none; border:none; color:#9b8e84; text-decoration:underline;
     box-shadow:none; padding:8px; font-size:0.82rem; margin-top:2px; }
+/* 도감 모달 탭 */
+.dex-tabs { display:flex; gap:8px; margin-bottom:10px; width:90%; max-width:430px; }
+.dex-tab { flex:1; padding:11px 8px; border:none; border-radius:12px 12px 0 0; cursor:pointer;
+    font-family:'Jua',sans-serif; font-size:1rem; white-space:nowrap; color:#cdbf9e; background:rgba(0,0,0,.28); }
+.dex-tab.active { color:#3e2723; background:var(--gold); box-shadow:0 3px 0 #b28900; }
+.dex-pane { display:flex; flex-direction:column; align-items:center; width:100%; }
+.dex-pane.hidden { display:none; }
 
 /* 팝업 튀어오르는 애니메이션 */
 @keyframes popIn {
@@ -688,7 +695,6 @@
     <div class="header">
         <div class="hud-group">
             <button class="btn-mini pause-btn" onclick="game.togglePause()">⏸️</button>
-            <button class="btn-mini music-btn" id="bgm-btn" onclick="BgMusic.toggle()">🎵</button>
             <span style="margin-left:5px">❤️ <span id="lives">5</span></span>
         </div>
 
@@ -699,6 +705,7 @@
             <div style="font-size:0.8rem; margin-right:5px;">
                 <img src="sprites/coin.svg" alt="G" style="width:20px;height:20px;vertical-align:middle;filter:drop-shadow(0 1px 1px rgba(0,0,0,.3));"> <span id="wallet">0</span>
             </div>
+            <button class="btn-mini" id="sound-toggle" onclick="game.toggleAllSound()" style="background:linear-gradient(180deg,#6d6d6d,#4a4a4a);box-shadow:0 3px 0 #222;">🔊</button>
             <button class="btn-mini quest-btn" onclick="game.openQuests()">🏆<div class="noti-dot" id="quest-noti"></div></button>
             <button class="btn-mini shop-btn" onclick="game.openShop()">🏪</button>
             <span id="wallet-target" style="width:1px;height:1px;position:absolute;right:10px;top:10px;"></span>
@@ -802,14 +809,9 @@
         <div class="pause-menu">
             <button class="buy-btn btn-hero pause-cta" onclick="game.togglePause()">▶ 계속 하기</button>
             <div class="pause-row">
-                <button class="btn-mini" id="sound-btn" onclick="game.toggleSound()">🔊 효과음</button>
-                <button class="btn-mini" id="bgm-pause-btn" onclick="BgMusic.toggle()">🎵 BGM</button>
+                <button class="btn-mini" style="background:linear-gradient(180deg,#26a69a,#00897b);" onclick="game.openCollection('word')">📚 도감</button>
+                <button id="explore-btn" class="btn-mini" style="background:linear-gradient(180deg,#8d6e63,#5d4037);" onclick="game.goExplore()">🗺️ 탐험</button>
             </div>
-            <div class="pause-row">
-                <button class="btn-mini" style="background:linear-gradient(180deg,#26a69a,#00897b);" onclick="game.openDex()">📖 단어 도감</button>
-                <button class="btn-mini" style="background:linear-gradient(180deg,#ab47bc,#8e24aa);" onclick="game.openCharDex()">🧑‍🤝‍🧑 손님 도감</button>
-            </div>
-            <button id="explore-btn" class="btn-mini" style="background:linear-gradient(180deg,#8d6e63,#5d4037);" onclick="game.goExplore()">🗺️ 탐험 (마을 밖)</button>
             <button class="btn-mini" style="background:linear-gradient(180deg,#6d6d6d,#4a4a4a);" onclick="game.manualQuit()">저장하고 타이틀로</button>
             <button class="reset-btn pause-reset" onclick="game.resetData()">⚙️ 데이터 초기화</button>
         </div>
@@ -866,26 +868,29 @@
     </div>
 
     <div class="overlay hidden" id="dex-screen">
-        <h2>📖 단어 도감</h2>
-        <div style="background:rgba(0,0,0,.25); border:2px solid rgba(255,202,40,.3); padding:12px; border-radius:14px; color:#fff; margin-bottom:6px; width:90%; max-width:400px;">
-            졸업한 단어 <b id="dex-count" style="color:var(--gold); font-size:1.3rem;">0</b>
-            <span style="opacity:.7;">/ <span id="dex-total">0</span></span>
-            <div style="height:10px; background:rgba(255,255,255,.15); border-radius:5px; margin-top:8px; overflow:hidden;">
-                <div id="dex-bar" style="height:100%; width:0%; background:linear-gradient(90deg,#ffd54f,#ffb300); transition:width .4s;"></div>
+        <h2>📚 도감</h2>
+        <div class="dex-tabs">
+            <button class="dex-tab active" id="dex-tab-word" onclick="game.switchDexTab('word')">📖 단어</button>
+            <button class="dex-tab" id="dex-tab-char" onclick="game.switchDexTab('char')">🧑‍🤝‍🧑 손님</button>
+        </div>
+        <div id="dex-pane-word" class="dex-pane">
+            <div style="background:rgba(0,0,0,.25); border:2px solid rgba(255,202,40,.3); padding:12px; border-radius:14px; color:#fff; margin-bottom:6px; width:90%; max-width:400px;">
+                졸업한 단어 <b id="dex-count" style="color:var(--gold); font-size:1.3rem;">0</b>
+                <span style="opacity:.7;">/ <span id="dex-total">0</span></span>
+                <div style="height:10px; background:rgba(255,255,255,.15); border-radius:5px; margin-top:8px; overflow:hidden;">
+                    <div id="dex-bar" style="height:100%; width:0%; background:linear-gradient(90deg,#ffd54f,#ffb300); transition:width .4s;"></div>
+                </div>
             </div>
+            <div class="wordbook-list" id="dex-list"></div>
         </div>
-        <div class="wordbook-list" id="dex-list"></div>
+        <div id="dex-pane-char" class="dex-pane hidden">
+            <div style="background:rgba(0,0,0,.25); border:2px solid rgba(255,202,40,.3); padding:10px; border-radius:14px; color:#fff; margin-bottom:8px; width:90%; max-width:430px;">
+                모은 손님 <b id="chardex-count" style="color:var(--gold); font-size:1.2rem;">0</b>
+                <span style="opacity:.7;">/ <span id="chardex-total">0</span></span>
+            </div>
+            <div id="chardex-grid"></div>
+        </div>
         <button class="btn-mini close-btn" onclick="document.getElementById('dex-screen').classList.add('hidden')">닫기</button>
-    </div>
-
-    <div class="overlay hidden" id="chardex-screen">
-        <h2>🧑‍🤝‍🧑 손님 도감</h2>
-        <div style="background:rgba(0,0,0,.25); border:2px solid rgba(255,202,40,.3); padding:10px; border-radius:14px; color:#fff; margin-bottom:8px; width:90%; max-width:430px;">
-            모은 손님 <b id="chardex-count" style="color:var(--gold); font-size:1.2rem;">0</b>
-            <span style="opacity:.7;">/ <span id="chardex-total">0</span></span>
-        </div>
-        <div id="chardex-grid"></div>
-        <button class="btn-mini close-btn" onclick="document.getElementById('chardex-screen').classList.add('hidden')">닫기</button>
     </div>
 
     <div class="overlay hidden" id="day-clear-screen">
@@ -1564,6 +1569,7 @@ const game = {
         this.updateSoundIcon();
         this.updateExploreBtn();
         BgMusic.init();
+        BgMusic.isMuted = this.isMuted; if(this.isMuted) BgMusic.stop(); // 통합 음소거 상태로 동기화
         this.checkDailyReward(); // 일일 출석 보상(새 날이면 보상 지급)
     },
 
@@ -1615,11 +1621,11 @@ const game = {
         const btn = document.getElementById('explore-btn');
         if(!btn) return;
         if(this.isExploreUnlocked()) {
-            btn.innerHTML = '🗺️ 탐험 (마을 밖)';
+            btn.innerHTML = '🗺️ 탐험';
             btn.style.opacity = '1';
             btn.style.filter = 'none';
         } else {
-            btn.innerHTML = `🔒 탐험 — ${this.EXPLORE_UNLOCK_RANK} 달성 시 해제`;
+            btn.innerHTML = '🔒 탐험';
             btn.style.opacity = '0.6';
             btn.style.filter = 'grayscale(0.5)';
         }
@@ -2582,11 +2588,29 @@ equipItem: function(category, level) {
     },
 
     // [신규] 단어 도감 — 졸업(마스터)한 단어 모음
-    openDex: function() {
+    // 통합 도감 모달(탭: 단어/손님)
+    openCollection: function(tab) {
         // 일시정지 화면에서 열면 게임 상태를 건드리지 않음(계속 하기로 정상 재개)
         if(!this.isPaused){ this.isActive=false; if(this.timer) clearInterval(this.timer); }
         document.getElementById('game-container').classList.remove('effect-rush-bg');
+        this._fillWordDex();
+        this._fillCharDex();
+        const ov = document.getElementById('dex-screen');
+        ov.classList.remove('hidden'); ov.style.display='flex';
+        this.switchDexTab(tab || 'word');
+    },
+    switchDexTab: function(tab) {
+        const word = (tab !== 'char');
+        document.getElementById('dex-pane-word').classList.toggle('hidden', !word);
+        document.getElementById('dex-pane-char').classList.toggle('hidden', word);
+        document.getElementById('dex-tab-word').classList.toggle('active', word);
+        document.getElementById('dex-tab-char').classList.toggle('active', !word);
+    },
+    // 하위호환 별칭
+    openDex: function(){ this.openCollection('word'); },
+    openCharDex: function(){ this.openCollection('char'); },
 
+    _fillWordDex: function() {
         const mastered = this.mastered || [];
         document.getElementById('dex-count').innerText = mastered.length;
         document.getElementById('dex-total').innerText = TOTAL_WORDS;
@@ -2605,15 +2629,10 @@ equipItem: function(category, level) {
                 list.appendChild(el);
             });
         }
-        document.getElementById('dex-screen').classList.remove('hidden');
-        document.getElementById('dex-screen').style.display='flex';
     },
 
-    // [신규] 손님 도감 — 응대한 손님 캐릭터 수집
-    openCharDex: function() {
-        if(!this.isPaused){ this.isActive=false; if(this.timer) clearInterval(this.timer); }
-        document.getElementById('game-container').classList.remove('effect-rush-bg');
-
+    // 손님 도감 — 응대한 손님 캐릭터 수집(통합 모달의 손님 탭)
+    _fillCharDex: function() {
         const got = this.collectedChars || [];
         document.getElementById('chardex-count').innerText = got.length;
         document.getElementById('chardex-total').innerText = CHAR_DEX.length;
@@ -2644,8 +2663,6 @@ equipItem: function(category, level) {
             }
             grid.appendChild(card);
         });
-        document.getElementById('chardex-screen').classList.remove('hidden');
-        document.getElementById('chardex-screen').style.display='flex';
     },
 
     updateHUD: function() {
@@ -2765,8 +2782,21 @@ equipItem: function(category, level) {
         board.classList.remove('hidden');
     },
     
-    toggleSound: function() { this.isMuted = !this.isMuted; this.updateSoundIcon(); this.saveData(); },
-    updateSoundIcon: function() { document.getElementById('sound-btn').innerText = this.isMuted?"🔇 효과음":"🔊 효과음"; },
+    // 사운드 통합 토글(효과음+BGM) — 헤더 우상단 스피커 하나로 제어
+    toggleAllSound: function() {
+        this.isMuted = !this.isMuted;
+        BgMusic.isMuted = this.isMuted;
+        localStorage.setItem('vb_bgm_mute', this.isMuted);
+        this.saveData();
+        if(this.isMuted) BgMusic.stop(); else if(!this.isPaused) BgMusic.play();
+        this.updateSoundIcon();
+    },
+    toggleSound: function(){ this.toggleAllSound(); }, // 하위호환 별칭
+    updateSoundIcon: function() {
+        BgMusic.isMuted = this.isMuted;            // 로드/토글 시 BGM 상태 동기화
+        const b = document.getElementById('sound-toggle');
+        if(b) b.innerText = this.isMuted ? "🔇" : "🔊";
+    },
     startStory: function() { 
         BgMusic.init(); 
         BgMusic.play(); 
