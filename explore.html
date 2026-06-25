@@ -41,12 +41,22 @@
     background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.95), rgba(200,200,200,.8));
     box-shadow:0 3px 8px rgba(0,0,0,.4); transform:translate(31px,-31px); pointer-events:none; }
 
-  /* 조사 A 버튼 (우하단) */
-  .abtn{ position:absolute; right:26px; bottom:34px; width:84px; height:84px; border-radius:50%;
-    border:none; z-index:4; font-family:inherit; font-weight:bold; font-size:.95rem; color:#4e342e;
-    background:radial-gradient(circle at 35% 30%, #ffd54f, #ff8f00);
-    box-shadow:0 5px 0 #b35c00, 0 7px 10px rgba(0,0,0,.4); }
-  .abtn:active{ transform:translateY(3px); box-shadow:0 2px 0 #b35c00; }
+  /* 채집 버튼 (우하단) */
+  .abtn{ position:absolute; right:26px; bottom:34px; width:88px; height:88px; border-radius:50%;
+    border:none; z-index:4; font-family:inherit; font-weight:bold; color:#4e342e;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+    background:radial-gradient(circle at 35% 28%, #ffe28a, #ff9f1c 68%, #ef7d00);
+    box-shadow:0 5px 0 #a85200, 0 8px 12px rgba(0,0,0,.45), inset 0 2px 3px rgba(255,255,255,.5);
+    transition:transform .08s, box-shadow .15s, background .2s; }
+  .abtn .ab-ico{ font-size:1.7rem; line-height:1; filter:drop-shadow(0 1px 1px rgba(0,0,0,.3)); }
+  .abtn .ab-tx{ font-size:.82rem; letter-spacing:1px; text-shadow:0 1px 0 rgba(255,255,255,.4); }
+  .abtn:active{ transform:translateY(3px); box-shadow:0 2px 0 #a85200, 0 4px 7px rgba(0,0,0,.4); }
+  /* 채집 가능 범위 안 — 초록빛 강조 + 맥동으로 누르도록 유도 */
+  .abtn.ready{ color:#143a16;
+    background:radial-gradient(circle at 35% 28%, #c4f8b0, #44c64a 68%, #2e9e3a);
+    box-shadow:0 5px 0 #1f7a2a, 0 0 0 4px rgba(76,200,80,.35), 0 8px 18px rgba(40,170,60,.55), inset 0 2px 3px rgba(255,255,255,.5);
+    animation:abReady 1.0s ease-in-out infinite; }
+  @keyframes abReady{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.08); } }
 
   /* 가로 회전 안내 (세로일 때) */
   #rotate{ position:fixed; inset:0; z-index:50; display:none; flex-direction:column; gap:14px;
@@ -214,7 +224,7 @@
     <div id="stick-base"></div>
     <div id="stick-knob"></div>
   </div>
-  <button class="abtn" onpointerdown="World.interact(event)">조사<br>A</button>
+  <button id="act-btn" class="abtn" onpointerdown="World.interact(event)"><span class="ab-ico">🧺</span><span class="ab-tx">채집</span></button>
 </div>
 
 <!-- 세로일 때 회전 안내 -->
@@ -549,7 +559,7 @@ const World = {
     const mat=MATERIALS[n.mat];
     Explore.state.materials[n.mat]=(Explore.state.materials[n.mat]||0)+1;
     n.taken=true; n.reSteps=(Explore.state.steps||0)+40;
-    Explore.refreshHUD(); Explore.persist();
+    Explore.refreshHUD(); Explore.persist(); this.updateActionBtn();
     const w=this.pickWord();
     this.toast(`${mat.icon} <b>${mat.name}</b> +1<br><span class="en">${w.w}</span> · <span class="ko">${w.m}</span>`);
   },
@@ -590,9 +600,16 @@ const World = {
       // 랜덤 인카운터 (전투 다음 Stage서 구도 재설계)
       if(window.Battle) Battle.maybeEncounter();
     }
+    this.updateActionBtn(); // 채집 버튼 강조 갱신
     // 주기적 위치 저장
     if((++this._saveT)%30===0){ Explore.state.pos={x:this.px,y:this.py}; Explore.persist(); }
   },
+  // 채집 사거리(맨해튼 1칸) 안에 캘 노드가 있으면 버튼을 초록으로 강조
+  updateActionBtn(){ const b=document.getElementById('act-btn'); if(!b)return;
+    const ptx=Math.round(this.px), pty=Math.round(this.py);
+    const near=(window.Battle&&Battle.active) ? false :
+      this.nodes.some(n=>!n.taken && (Math.abs(n.x-ptx)+Math.abs(n.y-pty))<=1);
+    b.classList.toggle('ready', near); },
   release(){ this.stick.active=false; this.stick.dx=0; this.stick.dy=0; this.keys={}; },
 
   // ----- 렌더 -----
@@ -803,7 +820,7 @@ function expNeed(level){ return Math.floor(40*Math.pow(level,1.6)); }
 const Battle = {
   active:false, busy:false, enemy:null, eHp:0, eMax:0, lastStep:-99, gauge:0, GMAX:100, _canAct:false,
   _seed:777, _rand(){ this._seed=(this._seed*1103515245+12345)&0x7fffffff; return this._seed/0x7fffffff; },
-  maybeEncounter(){ if(this.active)return; const s=Explore.state; if((s.steps-this.lastStep)<3)return; if(this._rand()<0.22) this.start(); },
+  maybeEncounter(){ if(this.active)return; const s=Explore.state; if((s.steps-this.lastStep)<12)return; if(this._rand()<0.12) this.start(); },
   start(){ const pool=MONSTERS[Explore.state.map.zone]||MONSTERS.forest; const m=pool[Math.floor(this._rand()*pool.length)];
     this.enemy={...m}; this.eMax=m.hp; this.eHp=m.hp; this.active=true; this.busy=false; this.lastStep=Explore.state.steps;
     World.release();
@@ -880,6 +897,10 @@ const Battle = {
     this.msg(txt); this.renderBars(); Explore.refreshHUD(); Explore.persist(); this.setButtons(false);
     const f=document.getElementById('cmd-flee'); f.disabled=false; f.textContent='▶ 계속'; f.onclick=()=>this.close(); },
   async lose(){ this.msg('정신을 잃었다… 카페 근처에서 깨어났다. (체력 회복)'); Explore.state.stats.hp=Math.max(1,Math.round(Explore.state.stats.maxHp*0.5));
+    // 카페(중앙 시작점) 근처로 이동 — 쓰러진 자리에 그대로 두지 않음
+    if(window.World){ World.px=Math.floor(World.WT/2); World.py=Math.floor(World.HT/2);
+      Explore.state.pos={x:World.px,y:World.py}; if(World.updateActionBtn) World.updateActionBtn(); }
+    this.lastStep=Explore.state.steps; // 부활 직후 즉시 재전투 방지
     await this.wait(900); this.renderBars(); Explore.refreshHUD(); Explore.persist(); this.setButtons(false);
     const f=document.getElementById('cmd-flee'); f.disabled=false; f.textContent='▶ 계속'; f.onclick=()=>this.close(); },
   async flee(){ if(this.busy||!this.active)return; this.busy=true; this.setButtons(false);
