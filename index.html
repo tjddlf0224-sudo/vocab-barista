@@ -1913,6 +1913,8 @@ const game = {
         if(type==='rush') baseTime = 3000;
         if(type==='vip') baseTime += 3000;
 
+        baseTime *= 2; // 시간제한 2배(여유롭게)
+
         const charObj = pickCharByType(type);
         const custAvatar = charSVG(charObj);
 
