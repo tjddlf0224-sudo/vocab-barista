@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <radialGradient id="wp" cx="0.5" cy="0.62" r="0.62">
+      <stop offset="0" stop-color="#eafcff"/><stop offset="0.35" stop-color="#7ad7ff"/><stop offset="0.7" stop-color="#4a8cf0"/><stop offset="1" stop-color="#3b3acb"/>
+    </radialGradient>
+    <radialGradient id="wpGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#bdeaff" stop-opacity="0.7"/><stop offset="1" stop-color="#7ad7ff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="64" cy="116" rx="26" ry="6" fill="#3b3acb" opacity="0.22"/>
+  <!-- outer glow -->
+  <circle cx="64" cy="66" r="52" fill="url(#wpGlow)"/>
+  <!-- flame body -->
+  <path d="M64 14 C 80 40, 96 54, 96 78 C 96 100, 80 112, 64 112 C 48 112, 32 100, 32 78 C 32 54, 48 40, 64 14 Z" fill="url(#wp)" stroke="#2f6fd6" stroke-width="3"/>
+  <!-- inner flame -->
+  <path d="M64 40 C 73 56, 80 64, 80 80 C 80 94, 73 102, 64 102 C 55 102, 48 94, 48 80 C 48 64, 55 56, 64 40 Z" fill="#dff6ff" opacity="0.55"/>
+  <!-- eyes -->
+  <ellipse cx="54" cy="74" rx="6" ry="8" fill="#16307a"/>
+  <ellipse cx="74" cy="74" rx="6" ry="8" fill="#16307a"/>
+  <circle cx="55.5" cy="71" r="2" fill="#fff"/><circle cx="75.5" cy="71" r="2" fill="#fff"/>
+  <!-- mouth -->
+  <path d="M58 90 Q 64 96 70 90" fill="none" stroke="#16307a" stroke-width="3" stroke-linecap="round"/>
+  <!-- spark dots -->
+  <circle cx="40" cy="50" r="3" fill="#eafcff" opacity="0.8"/>
+  <circle cx="92" cy="58" r="2.5" fill="#eafcff" opacity="0.8"/>
+  <circle cx="86" cy="38" r="2" fill="#eafcff" opacity="0.7"/>
+</svg>
