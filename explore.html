@@ -191,7 +191,17 @@
   @keyframes dpop{ 0%{ transform:translateY(0) scale(.6); opacity:0 } 20%{ transform:translateY(-10px) scale(1.15); opacity:1 } 100%{ transform:translateY(-54px) scale(1); opacity:0 } }
   .b-bottom{ background:linear-gradient(180deg,#3a2620,#2b1a16); border-top:3px solid var(--gold); padding:10px 14px calc(10px + env(safe-area-inset-bottom)); }
   .b-msg{ min-height:2.1em; color:#fff8e1; font-size:1.02rem; line-height:1.35; margin-bottom:9px; padding:1px 3px; }
-  .b-cmds{ display:grid; grid-template-columns:1fr 1.35fr 1fr; gap:10px; transition:opacity .3s; }
+  .b-cmds{ display:grid; grid-template-columns:1fr 1.3fr 0.85fr 0.85fr; gap:8px; transition:opacity .3s; }
+  .cmd-item{ background:linear-gradient(180deg,#a5d6a7,#66bb6a); box-shadow:0 4px 0 #2e7d32; color:#173b1a; }
+  .cmd-item:active{ box-shadow:0 2px 0 #2e7d32; }
+  /* 전투 아이템 미니 메뉴 */
+  #b-itemmenu{ position:absolute; left:0; right:0; bottom:100%; margin-bottom:8px; display:none; z-index:8; }
+  #b-itemmenu.show{ display:block; }
+  .bi-card{ display:flex; align-items:center; gap:10px; background:#fff; border-radius:13px; padding:9px 12px; margin:0 14px 8px; box-shadow:0 5px 14px rgba(0,0,0,.35); }
+  .bi-ic{ font-size:1.5rem; } .bi-nm{ font-weight:bold; color:#3a2a16; font-size:.95rem; } .bi-bn{ font-size:.78rem; color:#7a5a2a; }
+  .bi-use{ margin-left:auto; border:none; border-radius:11px; padding:7px 14px; font-family:inherit; font-weight:bold; color:#fff; background:linear-gradient(180deg,#66bb6a,#388e3c); box-shadow:0 3px 0 #2e7d32; cursor:pointer; }
+  .bi-use:active{ transform:translateY(2px); box-shadow:none; }
+  .bi-empty{ background:rgba(255,255,255,.95); border-radius:13px; padding:12px; margin:0 14px 8px; text-align:center; color:#7a5a2a; font-size:.88rem; }
   .b-cmd{ position:relative; overflow:hidden; border:none; border-radius:15px; font-family:inherit; cursor:pointer;
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; padding:9px 6px 8px; line-height:1.05; }
   .b-cmd .cmd-ic{ font-size:1.45rem; } .b-cmd .cmd-lb{ font-size:.92rem; font-weight:bold; }
@@ -316,11 +326,13 @@
     <div id="p-pop" style="position:absolute; bottom:20%; left:18%;"></div>
     <div id="b-flash"></div>
   </div>
-  <div class="b-bottom">
+  <div class="b-bottom" style="position:relative;">
+    <div id="b-itemmenu"></div>
     <div class="b-msg" id="b-msg" onpointerdown="Battle.skipTap()">전투 시작!</div>
     <div class="b-cmds">
       <button class="b-cmd cmd-atk" id="cmd-atk" onclick="Battle.playerAttack('normal')"><span class="cmd-ic">🗡️</span><span class="cmd-lb">공격</span></button>
       <button class="b-cmd cmd-skill" id="cmd-skill" onclick="Battle.useSkill()" disabled><span class="skill-fill" id="skill-fill"></span><span class="cmd-ic" id="skill-ic">✨</span><span class="cmd-lb" id="skill-lb">스킬</span></button>
+      <button class="b-cmd cmd-item" id="cmd-item" onclick="Battle.toggleItems()"><span class="cmd-ic">🎒</span><span class="cmd-lb">아이템</span></button>
       <button class="b-cmd cmd-flee" id="cmd-flee" onclick="Battle.flee()"><span class="cmd-ic">🏃</span><span class="cmd-lb">도망</span></button>
     </div>
   </div>
@@ -447,9 +459,15 @@ function checkRotate(){ applyOrientation(); } // 하위호환
 
 // ---------- 재료 (커스텀 SVG 스프라이트) ----------
 const MATERIALS = {
-  bean:  { name:'커피 원두', icon:'☕', img:'sprites/bean.svg' },
-  berry: { name:'커피 체리', icon:'🍒', img:'sprites/cherry.svg' },
+  bean:     { name:'커피 원두', icon:'☕', img:'sprites/bean.svg' },
+  berry:    { name:'커피 체리', icon:'🍒', img:'sprites/cherry.svg' },
+  milk:     { name:'우유',     icon:'🥛', img:'sprites/milk.svg' },
+  syrup:    { name:'시럽',     icon:'🍯', img:'sprites/syrup.svg' },
+  cacao:    { name:'카카오',   icon:'🟤', img:'sprites/cacao.svg' },
+  goldbean: { name:'황금 원두', icon:'🌟', img:'sprites/goldbean.svg', rare:true }, // 채집X, 전투 희귀 드롭만
 };
+// 채집 노드로 등장하는 재료(황금 원두는 제외 — 전투 보상으로만 획득)
+const GATHER_MATS = Object.keys(MATERIALS).filter(k => !MATERIALS[k].rare);
 // ---------- 동행 캐릭터 (채용 게이팅은 Stage C, 지금은 자유 선택해 미리보기) ----------
 const COMPANIONS = {
   none: { name:'기본',  emoji:'🧑‍🍳', img:null, battleImg:'chars/chef_back.png', charId:null },
@@ -483,13 +501,15 @@ const EQUIP_DB = {
     { id:'a_bean',  name:'원두 갑옷',     icon:'🧥', def:6, hp:20, cost:{gold:600, bean:8, berry:8} },
   ],
 };
-const MAT_ICON = { bean:'☕', berry:'🍒' };
+const MAT_ICON = Object.fromEntries(Object.entries(MATERIALS).map(([k,m])=>[k,m.icon]));
 // ---------- 조합 레시피 (재료+스펠링퀴즈 → 카페에서 쓰는 특별 아이템) ----------
 const CRAFT_DB = [
-  { id:'cr_score',  name:'골든 블렌드', icon:'✨', cost:{bean:3},          effect:'double', edesc:'카페: 다음 정답 점수 2배' },
-  { id:'cr_time',   name:'타임 시럽',   icon:'⏳', cost:{berry:3},         effect:'time',   edesc:'카페: 손님 시간 +5초' },
-  { id:'cr_shield', name:'포근한 라떼', icon:'🛡️', cost:{bean:2,berry:2},  effect:'shield', edesc:'카페: 콤보 보호막' },
-  { id:'cr_life',   name:'에너지 샷',   icon:'❤️', cost:{bean:4},          effect:'life',   edesc:'카페: 라이프 +1' },
+  { id:'cr_mood',  name:'카페라떼',     icon:'😊', cost:{bean:2,milk:2},     effect:'mood',   where:'cafe',   edesc:'카페: 다음 손님 3명 골드 +50%' },
+  { id:'cr_time',  name:'타임 시럽',    icon:'⏳', cost:{syrup:3},           effect:'time',   where:'cafe',   edesc:'카페: 지금 손님 시간 +5초' },
+  { id:'cr_score', name:'골든 블렌드',  icon:'💯', cost:{goldbean:1,bean:2}, effect:'double', where:'cafe',   edesc:'카페: 다음 정답 점수 2배' },
+  { id:'cr_heart', name:'하트 마카롱',  icon:'💖', cost:{cacao:2,milk:1},    effect:'affection', where:'cafe', edesc:'카페: 메인 손님 호감 +10' },
+  { id:'cr_atk',   name:'더블 샷',      icon:'⚔️', cost:{bean:3},            effect:'atkup',  where:'battle', edesc:'탐험: 이번 전투 공격력 +50%' },
+  { id:'cr_def',   name:'크림 실드',    icon:'🛡️', cost:{milk:2,berry:2},    effect:'defup',  where:'battle', edesc:'탐험: 이번 전투 받는 피해 −50%' },
 ];
 // ---------- 이미지 프리로더 ----------
 const Assets = {
@@ -573,7 +593,7 @@ const World = {
     for(let i=0;i<60;i++){ const x=2+Math.floor(this.rnd()*(this.WT-4)), y=3+Math.floor(this.rnd()*(this.HT-5));
       if(!this.barrier.has(key(x,y))) this.deco[y][x]=[39,42,43][Math.floor(this.rnd()*3)]; }
     // 채집 노드
-    const mats=Object.keys(MATERIALS);
+    const mats=GATHER_MATS;
     let placed=0, tries=0;
     while(placed<28 && tries<400){ tries++;
       const x=2+Math.floor(this.rnd()*(this.WT-4)), y=3+Math.floor(this.rnd()*(this.HT-5));
@@ -1051,6 +1071,7 @@ const Battle = {
       base = MONSTERS[ids[Math.floor(this._rand()*ids.length)]] || MONSTERS.slime; }
     const m = this.scaleMonster(base, opts);
     this.enemy=m; this.eMax=m.hp; this.eHp=m.hp; this.active=true; this.busy=false; this.lastStep=Explore.state.steps;
+    this.atkBuff=1; this.dmgReduce=0; this.hideItems(); // 전투 아이템 버프는 전투마다 초기화
     World.release();
     const es=document.getElementById('e-sprite'); es.className='sprite-enemy'+(m.isBoss?' boss':'');
     if(m.art){ es.innerHTML='<img src="'+m.art+'">'; } else { es.classList.add('emoji'); es.textContent=m.emoji; }
@@ -1084,7 +1105,22 @@ const Battle = {
   setBar(who,hp,max){ const f=document.getElementById(who+'-hpfill'); const pct=Math.max(0,Math.min(100,hp/max*100));
     f.style.width=pct+'%'; f.className='hpfill'+(pct<=25?' low':(pct<=50?' mid':'')); },
   calc(atk,def,mult){ let b=atk*mult-def*0.5; b*=0.85+this._rand()*0.3; const crit=this._rand()<0.12; if(crit)b*=1.6; return {dmg:Math.max(1,Math.round(b)),crit}; },
-  setButtons(on){ this._canAct=on; document.getElementById('cmd-atk').disabled=!on; document.getElementById('cmd-flee').disabled=!on; this.refreshSkill(); },
+  setButtons(on){ this._canAct=on; document.getElementById('cmd-atk').disabled=!on; document.getElementById('cmd-flee').disabled=!on;
+    const ib=document.getElementById('cmd-item'); if(ib) ib.disabled=!on; if(!on) this.hideItems(); this.refreshSkill(); },
+  // ----- 전투 소비 아이템(공격력↑/방어력↑) — 같은 craftedItems 공유, 이번 전투 한정 버프 -----
+  toggleItems(){ if(this.busy||!this.active)return; const m=document.getElementById('b-itemmenu');
+    if(m.classList.contains('show')){ this.hideItems(); return; } this.renderItems(); m.classList.add('show'); },
+  hideItems(){ const m=document.getElementById('b-itemmenu'); if(m) m.classList.remove('show'); },
+  renderItems(){ const owned=Explore.cafe.craftedItems||{}; const list=CRAFT_DB.filter(r=>r.where==='battle'&&(owned[r.id]||0)>0);
+    const m=document.getElementById('b-itemmenu');
+    if(!list.length){ m.innerHTML='<div class="bi-empty">전투 아이템이 없어요.<br>조합소에서 ⚔️·🛡️ 아이템을 만들어보세요!</div>'; return; }
+    m.innerHTML=list.map(r=>`<div class="bi-card"><span class="bi-ic">${r.icon}</span><div><div class="bi-nm">${r.name} <small style="color:#999">x${owned[r.id]}</small></div><div class="bi-bn">${r.edesc.replace(/^탐험:\s*/,'')}</div></div><button class="bi-use" onclick="Battle.useBattleItem('${r.id}')">사용</button></div>`).join(''); },
+  useBattleItem(id){ if(this.busy||!this.active)return; const r=CRAFT_DB.find(x=>x.id===id); const owned=Explore.cafe.craftedItems||{};
+    if(!r||!(owned[id]>0))return;
+    owned[id]--; if(owned[id]<=0) delete owned[id]; Explore.cafe.craftedItems=owned; Explore.persist();
+    if(r.effect==='atkup'){ this.atkBuff=1.5; this.msg(`⚔️ <b>${r.name}</b> 사용! 이번 전투 공격력 +50%`); }
+    else if(r.effect==='defup'){ this.dmgReduce=0.5; this.msg(`🛡️ <b>${r.name}</b> 사용! 이번 전투 받는 피해 −50%`); }
+    Sfx.play('correct'); exHaptic('success'); this.hideItems(); },
   refreshSkill(){ const sb=document.getElementById('cmd-skill'); if(!sb)return; const ready=this.gauge>=this.GMAX;
     const fill=document.getElementById('skill-fill'); if(fill) fill.style.height=Math.min(100,this.gauge/this.GMAX*100)+'%';
     sb.disabled=!(this._canAct&&ready); sb.classList.toggle('ready', ready&&!!this._canAct); },
@@ -1114,7 +1150,7 @@ const Battle = {
     const ps=document.getElementById('p-self'), es=document.getElementById('e-sprite');
     ps.classList.add('lunge'); await this.wait(150);
     if(this._rand()<miss){ Sfx.play('miss'); this.pop('e','MISS','miss'); this.msg('공격이 빗나갔다…'); await this.wait(650); }
-    else { const {dmg,crit}=this.calc(p.atk,this.enemy.def,power?1.7:1.0); this.eHp-=dmg;
+    else { const {dmg,crit}=this.calc(p.atk,this.enemy.def,(power?1.7:1.0)*(this.atkBuff||1)); this.eHp-=dmg;
       Sfx.play(crit?'crit':'hit'); exHaptic(crit?'heavy':'light');
       es.classList.add('hit'); this.shake(); this.pop('e','-'+dmg+(crit?'!':''),crit?'crit':null);
       this.msg(`${power?'강공격! ':''}${this.enemy.name}에게 <b>${dmg}</b> 피해!${crit?' 치명타!':''}`); this.renderBars(); await this.wait(550); es.classList.remove('hit'); }
@@ -1123,7 +1159,7 @@ const Battle = {
   async enemyTurn(){ const ps=document.getElementById('p-self'), es=document.getElementById('e-sprite');
     es.classList.add('lunge'); await this.wait(180); const p=this.pStat();
     if(this._rand()<0.05){ this.pop('p','MISS','miss'); this.msg(`${this.enemy.name}의 공격이 빗나갔다!`); await this.wait(600); }
-    else { const {dmg,crit}=this.calc(this.enemy.atk,p.def,1.0); Explore.state.stats.hp=p.hp-dmg;
+    else { let {dmg,crit}=this.calc(this.enemy.atk,p.def,1.0); dmg=Math.max(1,Math.round(dmg*(1-(this.dmgReduce||0)))); Explore.state.stats.hp=p.hp-dmg;
       Sfx.play('enemy'); exHaptic('heavy');
       ps.classList.add('hit'); this.shake(); this.pop('p','-'+dmg,crit?'crit':null);
       this.msg(`${this.enemy.name}의 공격! 나에게 <b>${dmg}</b> 피해!`); this.renderBars(); Explore.refreshHUD(); this.addGauge(16); await this.wait(600); ps.classList.remove('hit'); }
@@ -1132,6 +1168,8 @@ const Battle = {
   async win(){ const e=this.enemy; Sfx.play('win'); exHaptic('success'); document.getElementById('e-sprite').classList.add('dead'); this.msg(`${e.name}을(를) 쓰러뜨렸다!`); await this.wait(700);
     const gold=Math.round(e.gold*(1+Explore.effBonus().goldPct)); Explore.cafe.wallet+=gold; Explore.state.materials[e.drop]=(Explore.state.materials[e.drop]||0)+1;
     let txt=`승리! 🪙+${gold} · ${MATERIALS[e.drop].icon}${MATERIALS[e.drop].name}+1 · ⭐EXP+${e.exp}`; Explore.state.exp+=e.exp;
+    // 황금 원두 희귀 드롭(보스 35% · 일반 12%) — 골든 블렌드 조합 재료
+    if(this._rand() < (e.isBoss?0.35:0.12)){ Explore.state.materials.goldbean=(Explore.state.materials.goldbean||0)+1; txt+=`<br><span class="lvlup">🌟 황금 원두를 발견했다! (+1)</span>`; }
     const ups=[]; while(Explore.state.exp>=expNeed(Explore.state.level)){ Explore.state.exp-=expNeed(Explore.state.level); Explore.state.level++;
       const st=Explore.state.stats; st.maxHp+=8; st.atk+=3; st.def+=2; st.hp=st.maxHp; ups.push(Explore.state.level); }
     if(ups.length){ txt+=`<br><span class="lvlup">🎉 레벨 업! Lv ${ups[ups.length-1]} (HP·공·방 상승, 체력 회복)</span>`; setTimeout(()=>Sfx.play('levelup'),450); }

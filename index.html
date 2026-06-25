@@ -1561,17 +1561,24 @@ const CONSUMABLES = [
 
 // [탐험 조합 아이템] 탐험 조합소에서 만든 특별 아이템 — 카페에서 사용 (gameSave.craftedItems 공유)
 const CRAFTED_DEFS = {
-    cr_score:  { name:'골든 블렌드', icon:'✨', effect:'double', desc:'다음 정답 점수 2배' },
-    cr_time:   { name:'타임 시럽',   icon:'⏳', effect:'time',   desc:'지금 손님 시간 +5초' },
-    cr_shield: { name:'포근한 라떼', icon:'🛡️', effect:'shield', desc:'한 번 틀려도 콤보 유지' },
-    cr_life:   { name:'에너지 샷',   icon:'❤️', effect:'life',   desc:'라이프 +1' },
+    // 카페에서 사용(잡화점 '사용' 버튼)
+    cr_mood:   { name:'카페라떼',    icon:'😊', effect:'mood',     where:'cafe', desc:'다음 손님 3명 골드 +50%' },
+    cr_time:   { name:'타임 시럽',   icon:'⏳', effect:'time',     where:'cafe', desc:'지금 손님 시간 +5초' },
+    cr_score:  { name:'골든 블렌드', icon:'💯', effect:'double',   where:'cafe', desc:'다음 정답 점수 2배' },
+    cr_heart:  { name:'하트 마카롱', icon:'💖', effect:'affection', where:'cafe', desc:'메인 손님 호감 +10' },
+    // 탐험 전투에서 사용(전투 화면 🎒 버튼) — 카페 잡화점엔 안 보임
+    cr_atk:    { name:'더블 샷',      icon:'⚔️', effect:'atkup', where:'battle', desc:'탐험 전투 공격력 +50%' },
+    cr_def:    { name:'크림 실드',    icon:'🛡️', effect:'defup', where:'battle', desc:'탐험 전투 받는 피해 −50%' },
+    // 레거시(이전 세이브 호환 — 더 이상 조합 불가, 보유분은 사용 가능)
+    cr_shield: { name:'포근한 라떼', icon:'🛡️', effect:'shield', where:'cafe', desc:'한 번 틀려도 콤보 유지' },
+    cr_life:   { name:'에너지 샷',   icon:'❤️', effect:'life',   where:'cafe', desc:'라이프 +1' },
 };
 
 // ==========================================
 // [5] 게임 엔진 (Game Object)
 // ==========================================
 const game = {
-    wallet: 0, score: 0, lifetimeScore: 0, lives: 5, day: 1, bestDay: 1, lastDaily: '', dailyStreak: 0, affection: {}, charActs: {}, mainSeenDay: {}, totalCustomers: 0, dailyCount: 0, masteredCount: 0,
+    wallet: 0, score: 0, lifetimeScore: 0, lives: 5, day: 1, bestDay: 1, lastDaily: '', dailyStreak: 0, affection: {}, charActs: {}, mainSeenDay: {}, moodBoost: 0, totalCustomers: 0, dailyCount: 0, masteredCount: 0,
     isMuted: false, gameMode: 'normal', isActive: false, isPaused: false, timer: null, currentCust: null,
     activePool: [], sortedWords: [], ownedItems: [], myWords: [],
     
@@ -1612,6 +1619,7 @@ const game = {
             this.affection = (data.affection && typeof data.affection==='object') ? data.affection : {}; // 메인 호감도
             this.charActs = (data.charActs && typeof data.charActs==='object') ? data.charActs : {};      // 해금된 스토리 막 수
             this.mainSeenDay = (data.mainSeenDay && typeof data.mainSeenDay==='object') ? data.mainSeenDay : {}; // 메인별 그날 첫 등장 추적(일일 대사)
+            this.moodBoost = (typeof data.moodBoost==='number' && data.moodBoost>0) ? data.moodBoost : 0; // 카페라떼: 남은 골드+50% 손님 수
             this.bestDay = data.bestDay || data.day || 1;       // 최고 기록(게임오버에도 유지)
             this.lastDaily = data.lastDaily || '';              // 마지막 출석 보상 날짜(YYYY-M-D)
             this.dailyStreak = data.dailyStreak || 0;           // 연속 출석 일수
@@ -1701,7 +1709,7 @@ const game = {
             myWords: this.myWords,
             day: this.day, score: this.score, lifetimeScore: this.lifetimeScore || 0,
             bestDay: this.bestDay || 1, lastDaily: this.lastDaily || '', dailyStreak: this.dailyStreak || 0,
-            affection: this.affection || {}, charActs: this.charActs || {}, mainSeenDay: this.mainSeenDay || {},
+            affection: this.affection || {}, charActs: this.charActs || {}, mainSeenDay: this.mainSeenDay || {}, moodBoost: this.moodBoost || 0,
             lives: this.lives,
             stats: { totalServed: totalServedCount, totalVip: totalVipCount, totalItems: totalItemsBought, currentQuests: currentQuests },
             totalCustomers: this.totalCustomers, dailyCount: this.dailyCount, isMuted: this.isMuted,
@@ -2066,7 +2074,9 @@ const game = {
             // 저장 및 랭크
             this.score += pts;
             this.lifetimeScore = (this.lifetimeScore || 0) + pts; // 누적 점수 — 랭크 상승용(안 깎임)
-            this.wallet += pts;
+            let goldGain = pts;
+            if (this.moodBoost && this.moodBoost > 0) { goldGain = Math.round(goldGain * 1.5); this.moodBoost--; } // 😊 카페라떼: 골드 +50%
+            this.wallet += goldGain;
             this.totalCustomers++;
             // [버그수정] 하루 손님 수 / 누적 서빙 / VIP 카운터 증가 — 날짜진행·퀘스트 정상화
             if(this.gameMode === 'normal') this.dailyCount++;
@@ -2481,7 +2491,8 @@ const game = {
 
         // [탐험 조합 아이템] 보유분을 맨 위에 — 사용하면 효과 발동
         const ci = this.craftedItems || {};
-        const ownedIds = Object.keys(ci).filter(id => ci[id] > 0 && CRAFTED_DEFS[id]);
+        // 카페에서 쓰는 아이템만 노출(전투 전용 ⚔️🛡️은 탐험 전투의 🎒 버튼에서 사용)
+        const ownedIds = Object.keys(ci).filter(id => ci[id] > 0 && CRAFTED_DEFS[id] && CRAFTED_DEFS[id].where !== 'battle');
         if (ownedIds.length) {
             const head = document.createElement('div');
             head.style.cssText = 'font-weight:bold;color:#388e3c;padding:4px 2px;font-size:0.95rem;';
@@ -2533,8 +2544,13 @@ const game = {
         const ci = this.craftedItems || {};
         if (!ci[id] || ci[id] <= 0) return;
         const d = CRAFTED_DEFS[id]; if (!d) return;
+        if (d.where === 'battle') { showGameAlert(`${d.icon} <b>${d.name}</b>은(는) 🗺️ 탐험 전투 중 🎒 버튼으로 사용해요.`, null); return; }
         if (d.effect === 'double') { this.doubleNext = true; }
         else if (d.effect === 'shield') { this.comboShield = true; }
+        else if (d.effect === 'mood') { this.moodBoost = (this.moodBoost || 0) + 3; this.updateHUD(); }
+        else if (d.effect === 'affection') {
+            ['m_roa','m_luna','m_sera'].forEach(mid => this.gainAffection(mid, 10));
+        }
         else if (d.effect === 'life') {
             if (this.lives >= 5) { showGameAlert("❤️ 체력이 이미 가득 찼어요. 아껴두세요!", null); return; }
             this.lives = Math.min(5, this.lives + 1); this.updateHUD();
