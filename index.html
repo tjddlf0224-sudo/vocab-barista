@@ -199,6 +199,7 @@
 .cdex-rarity { font-size:0.58rem; color:#fff; background:var(--rc,#9e9e9e); border-radius:8px; padding:1px 7px; display:inline-block; margin-top:2px; }
         .timer-bar-wrap { width: 80%; height: 8px; background: rgba(255,255,255,0.5); border-radius: 4px; overflow: hidden; margin-bottom: 5px; }
         .timer-fill { height: 100%; background: var(--green); width: 100%; transition: width 0.1s linear; }
+        .no-timer-tag { font-size: 0.74rem; color: #8d6e63; background: rgba(255,255,255,0.45); padding: 2px 12px; border-radius: 10px; margin-bottom: 5px; font-family: 'Jua', sans-serif; }
 
         .kitchen { height: 35%; background: #fff8e1; padding: 10px 10px calc(10px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; border-top: 5px solid #d7ccc8; z-index: 30; }
         .info-txt { text-align: center; color: var(--coffee); margin-bottom: 8px; font-size: 1.1rem; }
@@ -1915,8 +1916,12 @@ const game = {
         const charObj = pickCharByType(type);
         const custAvatar = charSVG(charObj);
 
+        // [시간제한] 일반(평범한 common) 손님은 제한 없이 차분히 학습 / 특별·메인·VIP·진상은 제한 유지(오락실 긴장감)
+        const timed = (type === 'vip' || type === 'rush' ||
+            (charObj && (charObj.kind === 'main' || (charObj.rarity && charObj.rarity !== 'common'))));
+
         this.currentCust = { data: wordObj, type: type, maxTime: baseTime, timeLeft: baseTime, avatar: custAvatar,
-                             char: charObj, isReview: isReview, reviewRef: isReview ? wordObj : null };
+                             char: charObj, timed: timed, isReview: isReview, reviewRef: isReview ? wordObj : null };
         this.renderScene();
         this.startTimer();
     },
@@ -3191,7 +3196,8 @@ equipItem: function(category, level) {
             <div class="customer type-${c.type}" id="cust-el">
                 <div class="bubble" id="bubble-el"><div>${txt}</div>${srcTag}</div>
                 ${nameTag}
-                <div class="timer-bar-wrap"><div class="timer-fill" id="timer-bar"></div></div>
+                ${c.timed ? `<div class="timer-bar-wrap"><div class="timer-fill" id="timer-bar"></div></div>`
+                          : `<div class="no-timer-tag">☕ 천천히 골라요</div>`}
                 ${vipItemHtml}
                 <div class="${avClass}">${c.avatar}</div>
             </div>`;
@@ -3242,8 +3248,10 @@ equipItem: function(category, level) {
     },
     startTimer: function() {
         if(this.timer) clearInterval(this.timer);
+        // 일반 손님은 시간제한 없음 — 타이머를 돌리지 않음(시간초과로 라이프 안 깎임)
+        if(this.currentCust && !this.currentCust.timed) return;
         const bar = document.getElementById('timer-bar');
-        
+
         this.timer = setInterval(() => {
             if(!this.isActive || this.isPaused) return;
 
