@@ -426,6 +426,15 @@
     box-shadow: 0 4px 0 #b28900, 0 7px 12px rgba(0,0,0,.25);
 }
 .btn-primary:active { transform: translateY(4px); box-shadow: 0 1px 0 #b28900, 0 2px 5px rgba(0,0,0,.25); }
+/* 일시정지 메뉴 — 버튼 크기·정렬 통일 */
+#pause-screen .pause-menu { display:flex; flex-direction:column; align-items:stretch; gap:10px; width:300px; max-width:86vw; }
+#pause-screen .pause-menu .pause-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+#pause-screen .pause-menu button { width:100%; margin:0; box-sizing:border-box; }
+#pause-screen .pause-menu .btn-mini { padding:13px 10px; font-size:1rem; border-radius:12px; color:#fff;
+    box-shadow:0 3px 0 rgba(0,0,0,.32), 0 5px 8px rgba(0,0,0,.22); }
+#pause-screen .pause-menu .pause-cta { padding:16px 10px; font-size:1.3rem; border-radius:14px; }
+#pause-screen .pause-menu .pause-reset { background:none; border:none; color:#9b8e84; text-decoration:underline;
+    box-shadow:none; padding:8px; font-size:0.82rem; margin-top:2px; }
 
 /* 팝업 튀어오르는 애니메이션 */
 @keyframes popIn {
@@ -790,21 +799,20 @@
 
     <div class="overlay hidden" id="pause-screen">
         <h2>⏸️ 일시 정지</h2>
-        <button class="buy-btn btn-hero" onclick="game.togglePause()" style="margin-bottom:22px; font-size:1.5rem; padding:18px 56px;">▶ 계속 하기</button>
-        <div style="display:flex; gap:10px; justify-content:center;">
-             <button class="btn-mini" id="sound-btn" onclick="game.toggleSound()">🔊 효과음</button>
-             <button class="btn-mini" id="bgm-pause-btn" onclick="BgMusic.toggle()">🎵 BGM</button>
+        <div class="pause-menu">
+            <button class="buy-btn btn-hero pause-cta" onclick="game.togglePause()">▶ 계속 하기</button>
+            <div class="pause-row">
+                <button class="btn-mini" id="sound-btn" onclick="game.toggleSound()">🔊 효과음</button>
+                <button class="btn-mini" id="bgm-pause-btn" onclick="BgMusic.toggle()">🎵 BGM</button>
+            </div>
+            <div class="pause-row">
+                <button class="btn-mini" style="background:linear-gradient(180deg,#26a69a,#00897b);" onclick="game.openDex()">📖 단어 도감</button>
+                <button class="btn-mini" style="background:linear-gradient(180deg,#ab47bc,#8e24aa);" onclick="game.openCharDex()">🧑‍🤝‍🧑 손님 도감</button>
+            </div>
+            <button id="explore-btn" class="btn-mini" style="background:linear-gradient(180deg,#8d6e63,#5d4037);" onclick="game.goExplore()">🗺️ 탐험 (마을 밖)</button>
+            <button class="btn-mini" style="background:linear-gradient(180deg,#6d6d6d,#4a4a4a);" onclick="game.manualQuit()">저장하고 타이틀로</button>
+            <button class="reset-btn pause-reset" onclick="game.resetData()">⚙️ 데이터 초기화</button>
         </div>
-        <div style="display:flex; gap:10px; justify-content:center; margin-top:12px;">
-             <button class="btn-mini" style="background:linear-gradient(180deg,#26a69a,#00897b);box-shadow:0 3px 0 rgba(0,0,0,.32),0 5px 8px rgba(0,0,0,.22);" onclick="game.openDex()">📖 단어 도감</button>
-             <button class="btn-mini" style="background:linear-gradient(180deg,#ab47bc,#8e24aa);box-shadow:0 3px 0 rgba(0,0,0,.32),0 5px 8px rgba(0,0,0,.22);" onclick="game.openCharDex()">🧑‍🤝‍🧑 손님 도감</button>
-        </div>
-        <br>
-        <button id="explore-btn" class="btn-mini" style="background:linear-gradient(180deg,#8d6e63,#5d4037);box-shadow:0 3px 0 rgba(0,0,0,.32),0 5px 8px rgba(0,0,0,.22); padding:12px 26px; font-size:1.05rem;" onclick="game.goExplore()">🗺️ 탐험 (마을 밖)</button>
-        <br><br>
-        <button class="btn-mini" onclick="game.manualQuit()">저장하고 타이틀로</button>
-        <br>
-        <button class="reset-btn" onclick="game.resetData()" style="background:none; border:none; color:#9b8e84; text-decoration:underline; margin-top:16px; font-size:0.82rem;">⚙️ 데이터 초기화</button>
     </div>
 
     <div id="inventory-screen" class="overlay hidden">
