@@ -180,6 +180,9 @@
   .sprite-self{ position:absolute; bottom:4%; left:6%; width:40%; max-width:185px; filter:drop-shadow(0 8px 6px rgba(0,0,0,.4)); }
   .sprite-self img{ width:100%; height:auto; display:block; }
   .sprite-self.emoji{ font-size:4.2rem; text-align:center; }
+  /* 뒷모습 캐릭터: 상반신만(하반신은 하단에 붙여 잘라 안 보이게) */
+  .sprite-self.has-img{ bottom:0; left:5%; width:50%; max-width:240px; aspect-ratio:4/3; overflow:hidden; filter:none; }
+  .sprite-self.has-img img{ width:100%; height:auto; display:block; }
   .sprite-enemy.enter{ animation:enemyEnter .6s ease-out; }
   @keyframes enemyEnter{ 0%{ transform:translateX(150%) scale(.6); opacity:0 } 100%{ transform:translateX(0) scale(1); opacity:1 } }
   .sprite-enemy.hit{ animation:ehit .4s; } @keyframes ehit{ 0%,100%{transform:none; filter:none} 25%,55%{transform:translateX(5px); filter:brightness(2.4) drop-shadow(0 0 14px #fff)} 40%{transform:translateX(-5px)} }
@@ -1116,7 +1119,7 @@ const Battle = {
   setSelfSprite(){ const comp=COMPANIONS[Explore.state.companion||'none']; const ps=document.getElementById('p-self'); ps.className='sprite-self';
     const bi=comp&&(comp.battleImg||comp.img);
     // 이미지가 없거나 로드 실패하면 이모지로 폴백(기본 요리사 뒷모습 PNG 추가 전까지 안전)
-    if(bi){ ps.innerHTML='<img src="'+bi+'" onerror="this.parentNode.classList.add(\'emoji\');this.parentNode.textContent=\'🧑‍🍳\'">'; }
+    if(bi){ ps.classList.add('has-img'); ps.innerHTML='<img src="'+bi+'" onerror="this.parentNode.className=\'sprite-self emoji\';this.parentNode.textContent=\'🧑‍🍳\'">'; }
     else { ps.classList.add('emoji'); ps.textContent='🧑‍🍳'; } },
   pStat(){ return Explore.effStats(); },
   renderBars(){ const p=this.pStat(); this.setBar('e',this.eHp,this.eMax); this.setBar('p',p.hp,p.maxHp);
