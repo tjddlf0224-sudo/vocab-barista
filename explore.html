@@ -11,6 +11,7 @@
   html,body{ margin:0; padding:0; height:100%; overflow:hidden; }
   body{ font-family:'Jua','Nunito',system-ui,sans-serif; background:#1c2f1e; color:#fff8e1;
     padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+  #rotator{ position:fixed; top:0; left:0; width:100%; height:100%; }
   #game{ position:fixed; inset:0; }
   #map{ position:absolute; inset:0; width:100%; height:100%; display:block; image-rendering:pixelated; touch-action:none; }
 
@@ -220,6 +221,7 @@
 </style>
 </head>
 <body>
+<div id="rotator">
 <div id="game">
   <canvas id="map"></canvas>
 
@@ -246,8 +248,6 @@
   <button id="act-btn" class="abtn" onpointerdown="World.interact(event)"><span class="ab-ico">🧺</span><span class="ab-tx">채집</span></button>
 </div>
 
-<!-- 세로일 때 회전 안내 -->
-<div id="rotate"><div class="ph">📱</div><div>가로로 돌려서 탐험해요!</div></div>
 
 <!-- 동행 선택 -->
 <div id="comp-select" class="ex-overlay">
@@ -326,6 +326,7 @@
   </div>
 </div>
 
+</div><!-- /rotator -->
 <script src="shared/worddata.js"></script>
 <script>
 // ============================================================
@@ -424,7 +425,23 @@ async function unlockOrientation(){
   try{ const P=window.Capacitor&&window.Capacitor.Plugins; if(P&&P.ScreenOrientation) await P.ScreenOrientation.lock({orientation:'portrait'}); }catch(e){}
   try{ if(screen.orientation&&screen.orientation.unlock) screen.orientation.unlock(); }catch(e){}
 }
-function checkRotate(){ document.getElementById('rotate').classList.toggle('show', window.innerHeight > window.innerWidth*1.05); }
+// 세로로 들고 있으면 콘텐츠를 90° 회전해 자동으로 가로 화면처럼(iOS 웹은 기기회전 강제 불가 → CSS 회전). 가로면 그대로.
+function applyOrientation(){
+  const rot = document.getElementById('rotator'); if(!rot) return;
+  const portrait = window.innerHeight > window.innerWidth;
+  if(portrait){
+    document.body.classList.add('rot');
+    rot.style.width  = window.innerHeight+'px';
+    rot.style.height = window.innerWidth+'px';
+    rot.style.transformOrigin = 'top left';
+    rot.style.transform = 'rotate(90deg) translateY(-'+window.innerWidth+'px)';
+  } else {
+    document.body.classList.remove('rot');
+    rot.style.width=''; rot.style.height=''; rot.style.transform=''; rot.style.transformOrigin='';
+  }
+  if(window.World && World.resize) World.resize();
+}
+function checkRotate(){ applyOrientation(); } // 하위호환
 
 // ---------- 재료 (커스텀 SVG 스프라이트) ----------
 const MATERIALS = {
@@ -513,11 +530,12 @@ const World = {
     this._portalArmed = true;
     this.updateZoneName();
     this.resize();
-    window.addEventListener('resize', ()=>{ this.resize(); checkRotate(); });
+    window.addEventListener('resize', ()=>applyOrientation());
+    window.addEventListener('orientationchange', ()=>setTimeout(applyOrientation, 80));
     window.addEventListener('keydown', e=>this.onKey(e));
     window.addEventListener('keyup',   e=>this.onKeyUp(e));
     this.bindStick();
-    checkRotate();
+    applyOrientation();
     if(this.raf) cancelAnimationFrame(this.raf);
     this.loop();
   },
@@ -599,7 +617,10 @@ const World = {
   isBarrier(tx,ty){ if(tx<0||ty<0||tx>=this.WT||ty>=this.HT) return true; return this.barrier.has(tx+','+ty); },
 
   resize(){
-    const w=window.innerWidth, h=window.innerHeight;
+    // 회전(세로기기) 상태면 가로로 돌린 영역 크기 사용
+    const portrait = document.body.classList.contains('rot');
+    const w = portrait ? window.innerHeight : window.innerWidth;
+    const h = portrait ? window.innerWidth : window.innerHeight;
     this.dpr=Math.min(window.devicePixelRatio||1,2);
     this.cv.width=Math.floor(w*this.dpr); this.cv.height=Math.floor(h*this.dpr);
     this.cv.style.width=w+'px'; this.cv.style.height=h+'px';
@@ -628,6 +649,8 @@ const World = {
     zone.addEventListener('pointercancel', reset);
     const self=this;
     function move(e){ let dx=e.clientX-self.stick.cx, dy=e.clientY-self.stick.cy;
+      // 콘텐츠가 90° 회전된 상태면 화면 델타를 게임 좌표로 역회전(화면→로컬)
+      if(document.body.classList.contains('rot')){ const t=dx; dx=dy; dy=-t; }
       const d=Math.hypot(dx,dy)||1; if(d>R){ dx=dx/d*R; dy=dy/d*R; }
       self.stick.dx=dx/R; self.stick.dy=dy/R; setKnob(dx,dy); }
     reset();
