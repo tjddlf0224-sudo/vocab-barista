@@ -1129,11 +1129,17 @@ const TOTAL_WORDS = Object.keys(WORD_MAP).length;
 
 // 3. 헬퍼 함수
 function showDifficulty() {
+    // 첫 실행이면 프롤로그(조작 설명)를 한 번 보여준 뒤 난이도 선택으로 — 프롤로그 끝에서 다시 showDifficulty 호출됨
+    if(!localStorage.getItem('vb_seen_intro')) {
+        localStorage.setItem('vb_seen_intro','1');
+        game.startStory();
+        return;
+    }
     document.getElementById('start-screen').classList.add('hidden');
     document.getElementById('difficulty-screen').classList.remove('hidden');
     document.getElementById('difficulty-screen').style.display = 'flex';
     BgMusic.init();
-    BgMusic.play(); 
+    BgMusic.play();
 }
 function closeDifficulty() {
     document.getElementById('difficulty-screen').classList.add('hidden');
@@ -1462,7 +1468,7 @@ const CRAFTED_DEFS = {
 // [5] 게임 엔진 (Game Object)
 // ==========================================
 const game = {
-    wallet: 0, score: 0, lifetimeScore: 0, lives: 5, day: 1, totalCustomers: 0, dailyCount: 0, masteredCount: 0,
+    wallet: 0, score: 0, lifetimeScore: 0, lives: 5, day: 1, bestDay: 1, lastDaily: '', dailyStreak: 0, totalCustomers: 0, dailyCount: 0, masteredCount: 0,
     isMuted: false, gameMode: 'normal', isActive: false, isPaused: false, timer: null, currentCust: null,
     activePool: [], sortedWords: [], ownedItems: [], myWords: [],
     
@@ -1500,6 +1506,9 @@ const game = {
             // [누적 점수] 게임오버로 score가 0이 돼도 안 깎이는 평생 누적치 — 랭크/탐험 기준.
             // 구버전 저장본(lifetimeScore 없음)은 현재 score로 시드해 기존 진행 보존.
             this.lifetimeScore = Math.max(data.lifetimeScore || 0, this.score);
+            this.bestDay = data.bestDay || data.day || 1;       // 최고 기록(게임오버에도 유지)
+            this.lastDaily = data.lastDaily || '';              // 마지막 출석 보상 날짜(YYYY-M-D)
+            this.dailyStreak = data.dailyStreak || 0;           // 연속 출석 일수
             this.lives = data.lives || 5;
             this.totalCustomers = data.totalCustomers || 0;
             this.dailyCount = data.dailyCount || 0;
@@ -1544,8 +1553,24 @@ const game = {
         this.updateSoundIcon();
         this.updateExploreBtn();
         BgMusic.init();
-        // ▼▼▼ 여기서부터 복사하세요 ▼▼▼
+        this.checkDailyReward(); // 일일 출석 보상(새 날이면 보상 지급)
+    },
 
+    // 일일 출석 보상 — 하루 한 번, 연속 출석 시 보상 증가(복귀 동기)
+    checkDailyReward: function() {
+        let today;
+        try { const d=new Date(); today=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+        catch(e){ return; }
+        if(this.lastDaily === today) return; // 오늘 이미 받음
+        // 어제 받았으면 연속, 아니면 리셋
+        let yStr='';
+        try { const y=new Date(); y.setDate(y.getDate()-1); yStr=y.getFullYear()+'-'+(y.getMonth()+1)+'-'+y.getDate(); } catch(e){}
+        this.dailyStreak = (this.lastDaily === yStr) ? (this.dailyStreak||0)+1 : 1;
+        this.lastDaily = today;
+        const reward = Math.min(1000, 200 + (this.dailyStreak-1)*100); // 200부터 +100씩, 최대 1000
+        this.wallet += reward;
+        this.saveData(); this.updateHUD();
+        showGameAlert(`🎁 <b>${this.dailyStreak}일 연속 출석!</b><br>오늘의 보상 🪙 +${reward}G<br><span style="font-size:0.82rem;color:#777;">매일 접속할수록 보상이 커져요 (최대 1,000G)</span>`, null);
     },
 
 // [데이터 저장 수정]
@@ -1555,7 +1580,9 @@ const game = {
             shopLevels: this.shopLevels,    // [신규] 보유 레벨
             currentEquip: this.currentEquip,// [신규] 장착 상태
             myWords: this.myWords,
-            day: this.day, score: this.score, lifetimeScore: this.lifetimeScore || 0, lives: this.lives,
+            day: this.day, score: this.score, lifetimeScore: this.lifetimeScore || 0,
+            bestDay: this.bestDay || 1, lastDaily: this.lastDaily || '', dailyStreak: this.dailyStreak || 0,
+            lives: this.lives,
             stats: { totalServed: totalServedCount, totalVip: totalVipCount, totalItems: totalItemsBought, currentQuests: currentQuests },
             totalCustomers: this.totalCustomers, dailyCount: this.dailyCount, isMuted: this.isMuted,
             masteredCount: this.masteredCount, masteredList: this.mastered,
@@ -2655,10 +2682,17 @@ equipItem: function(category, level) {
         
         const title = this.gameMode === 'review' ? "🤕 복습 실패" : "❌ GAME OVER";
         document.getElementById('result-title').innerText = title;
-        document.getElementById('result-msg').innerText = this.gameMode === 'review' ? "다시 도전하세요." : "하트 소진!";
-        
-        if(this.gameMode === 'normal') { 
-            this.day = 1; this.lives = 5; this.score = 0; this.dailyCount = 0; this.totalCustomers = 0; this.saveData(); 
+
+        if(this.gameMode === 'normal') {
+            this.bestDay = Math.max(this.bestDay || 1, this.day); // 최고 기록 갱신(리셋돼도 유지)
+            const newRecord = this.day >= (this.bestDay || 1);
+            // 코인·단어·도감·랭크는 유지된다는 점을 알려 상실감 완화
+            document.getElementById('result-msg').innerHTML =
+                (newRecord ? `🏆 <b>최고 기록 달성! Day ${this.day}</b><br>` : `최고 기록: Day ${this.bestDay}<br>`) +
+                `<span style="font-size:0.82rem;color:#aaa;">코인·단어·도감·랭크는 그대로 유지돼요</span>`;
+            this.day = 1; this.lives = 5; this.score = 0; this.dailyCount = 0; this.totalCustomers = 0; this.saveData();
+        } else {
+            document.getElementById('result-msg').innerText = "다시 도전하세요.";
         }
 
         // 1. 결과 화면 켜기 (기존 유지)
