@@ -763,8 +763,6 @@
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; max-width:320px; margin:0 auto;">
             <button class="btn-mini" onclick="game.startStory()">🎬 프롤로그</button>
             <button class="btn-mini" onclick="game.openWordbook()">📘 오답 노트</button>
-            <button class="btn-mini" style="background:linear-gradient(180deg,#26a69a,#00897b);box-shadow:0 3px 0 rgba(0,0,0,.32),0 5px 8px rgba(0,0,0,.22);" onclick="game.openDex()">📖 단어 도감</button>
-            <button class="btn-mini" style="background:linear-gradient(180deg,#ab47bc,#8e24aa);box-shadow:0 3px 0 rgba(0,0,0,.32),0 5px 8px rgba(0,0,0,.22);" onclick="game.openCharDex()">🧑‍🤝‍🧑 손님 도감</button>
         </div>
         <button class="reset-btn" onclick="game.resetData()" style="background:none; border:none; color:#999; text-decoration:underline; margin-top:20px;">⚙️ 데이터 초기화</button>
     </div>
@@ -797,6 +795,10 @@
         <div style="display:flex; gap:10px; justify-content:center;">
              <button class="btn-mini" id="sound-btn" onclick="game.toggleSound()">🔊 효과음</button>
              <button class="btn-mini" id="bgm-pause-btn" onclick="BgMusic.toggle()">🎵 BGM</button>
+        </div>
+        <div style="display:flex; gap:10px; justify-content:center; margin-top:12px;">
+             <button class="btn-mini" style="background:linear-gradient(180deg,#26a69a,#00897b);box-shadow:0 3px 0 rgba(0,0,0,.32),0 5px 8px rgba(0,0,0,.22);" onclick="game.openDex()">📖 단어 도감</button>
+             <button class="btn-mini" style="background:linear-gradient(180deg,#ab47bc,#8e24aa);box-shadow:0 3px 0 rgba(0,0,0,.32),0 5px 8px rgba(0,0,0,.22);" onclick="game.openCharDex()">🧑‍🤝‍🧑 손님 도감</button>
         </div>
         <br>
         <button id="explore-btn" class="btn-mini" style="background:linear-gradient(180deg,#8d6e63,#5d4037);box-shadow:0 3px 0 rgba(0,0,0,.32),0 5px 8px rgba(0,0,0,.22); padding:12px 26px; font-size:1.05rem;" onclick="game.goExplore()">🗺️ 탐험 (마을 밖)</button>
@@ -2565,7 +2567,8 @@ equipItem: function(category, level) {
 
     // [신규] 단어 도감 — 졸업(마스터)한 단어 모음
     openDex: function() {
-        this.isActive=false; if(this.timer) clearInterval(this.timer);
+        // 일시정지 화면에서 열면 게임 상태를 건드리지 않음(계속 하기로 정상 재개)
+        if(!this.isPaused){ this.isActive=false; if(this.timer) clearInterval(this.timer); }
         document.getElementById('game-container').classList.remove('effect-rush-bg');
 
         const mastered = this.mastered || [];
@@ -2592,7 +2595,7 @@ equipItem: function(category, level) {
 
     // [신규] 손님 도감 — 응대한 손님 캐릭터 수집
     openCharDex: function() {
-        this.isActive=false; if(this.timer) clearInterval(this.timer);
+        if(!this.isPaused){ this.isActive=false; if(this.timer) clearInterval(this.timer); }
         document.getElementById('game-container').classList.remove('effect-rush-bg');
 
         const got = this.collectedChars || [];
