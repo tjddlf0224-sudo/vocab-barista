@@ -7,6 +7,23 @@
 
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
+
+    <!-- 랭킹: Firebase Firestore (온라인 전용, 오프라인이면 graceful) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+    <script>
+      try {
+        firebase.initializeApp({
+          apiKey: "AIzaSyAtHXeqZfS0puHc1D29sgHsP4ClG6-GYr4",
+          authDomain: "vocab-barista.firebaseapp.com",
+          projectId: "vocab-barista",
+          storageBucket: "vocab-barista.firebasestorage.app",
+          messagingSenderId: "137589982797",
+          appId: "1:137589982797:web:26c21fd4d42d10d6f9be04"
+        });
+        window.vbDB = firebase.firestore();
+      } catch(e) { console.warn('Firebase 초기화 실패(오프라인?):', e); }
+    </script>
     <meta name="theme-color" content="#3e2723">
 
     <!-- 오프라인 번들 폰트 (Google Fonts 로컬화) -->
@@ -2956,7 +2973,7 @@ function flashFX(kind) {
 
 <script>
     // ⬇️ 여기에 아까 복사한 '웹 앱 URL'을 붙여넣으세요! (따옴표 안에)
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbySfCSJVLGYcZQq1y9YfEYJJUnkw8XyBI6FSz--z6p5GeLAkBBL20RJ6TnAMF5ifhyN/exec";
+    // (랭킹은 Firestore로 이전됨 — window.vbDB 사용. 기존 Apps Script SCRIPT_URL 제거)
 
     // 오프라인/느린 네트워크에서 fetch가 무한정 멈추지 않도록 타임아웃 래퍼
     function fetchWithTimeout(url, ms = 8000) {
@@ -2981,16 +2998,16 @@ function flashFX(kind) {
                 btn.disabled = true;
                 btn.innerText = "등록 중...";
 
-                // 구글 시트로 데이터 쏘기
-                fetchWithTimeout(`${SCRIPT_URL}?action=register&name=${encodeURIComponent(name)}&score=${score}`)
-                .then(res => res.json())
-                .then(data => {
+                // Firestore에 점수 등록
+                if(!window.vbDB) { alert("인터넷 연결을 확인해주세요."); btn.disabled=false; btn.innerText="랭킹 등록"; return; }
+                window.vbDB.collection('vb_ranking').add({ name: name.slice(0,20), score: score, createdAt: Date.now() })
+                .then(() => {
                     alert("랭킹 등록 완료!");
                     showSheetRanking(); // 등록 후 랭킹판 보여주기
                 })
                 .catch(err => {
                     console.error(err);
-                    alert("인터넷 연결을 확인해주세요.");
+                    alert("등록 실패. 인터넷 연결을 확인해주세요.");
                     btn.disabled = false;
                     btn.innerText = "랭킹 등록";
                 });
@@ -3008,18 +3025,18 @@ function flashFX(kind) {
         const inputArea = document.getElementById('input-area');
         if(inputArea) inputArea.style.display = 'none';
 
-        fetchWithTimeout(`${SCRIPT_URL}?action=getRank`)
-        .then(res => res.json())
-        .then(data => {
+        if(!window.vbDB) { board.innerHTML = '<div style="text-align:center;">인터넷 연결이 필요합니다.</div>'; return; }
+        window.vbDB.collection('vb_ranking').orderBy('score','desc').limit(20).get()
+        .then(snap => {
             let html = '<h3 style="text-align:center; color:gold; margin-bottom:15px;">🏆 명예의 전당 🏆</h3>';
-            
-            if (data.length === 0) {
+
+            if (snap.empty) {
                 html += '<div style="text-align:center;">아직 랭킹이 없습니다.</div>';
             } else {
-                data.forEach((item, index) => {
-                    const rank = index + 1;
-                    let dateStr = "";
-                    try { dateStr = item.date.split('오')[0]; } catch(e){} // 날짜 짧게
+                let rank = 0;
+                snap.forEach(doc => {
+                    rank++;
+                    const item = doc.data();
 
                     html += `
                     <div class="rank-item" style="padding:10px; border-bottom:1px solid #555; display:flex; justify-content:space-between; align-items:center;">
@@ -3035,10 +3052,11 @@ function flashFX(kind) {
             }
             // 닫기 버튼 추가
             html += '<div style="text-align:center; margin-top:15px;"><button onclick="document.getElementById(\'ranking-board\').classList.add(\'hidden\')" style="padding:5px 15px;">닫기</button></div>';
-            
+
             board.innerHTML = html;
         })
         .catch(err => {
+            console.error(err);
             board.innerHTML = '<div style="text-align:center;">랭킹 불러오기 실패</div>';
         });
     }
