@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 120">
+  <defs>
+    <linearGradient id="fw_sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#afe0f5"/><stop offset="1" stop-color="#dff3df"/></linearGradient>
+    <linearGradient id="fw_fr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b9895a"/><stop offset="1" stop-color="#7a5230"/></linearGradient>
+  </defs>
+  <rect x="8" y="8" width="114" height="104" rx="10" fill="url(#fw_fr)" stroke="#5a3a1e" stroke-width="4"/>
+  <rect x="18" y="18" width="94" height="84" rx="4" fill="url(#fw_sky)"/>
+  <!-- sun -->
+  <circle cx="40" cy="40" r="10" fill="#fff6c4"/>
+  <!-- trees -->
+  <g>
+    <path d="M70 92 l10 -34 10 34 z" fill="#3f8c44"/><path d="M72 78 l8 -22 8 22 z" fill="#4fa052"/>
+    <path d="M88 94 l8 -26 8 26 z" fill="#357a3c"/>
+    <path d="M52 96 l7 -20 7 20 z" fill="#4fa052"/>
+  </g>
+  <rect x="18" y="92" width="94" height="10" fill="#7fae5a"/>
+  <!-- muntins -->
+  <rect x="63" y="18" width="4" height="84" fill="#6e4a2a"/>
+  <rect x="18" y="58" width="94" height="4" fill="#6e4a2a"/>
+  <rect x="14" y="14" width="102" height="5" fill="#fff" opacity="0.18"/>
+</svg>

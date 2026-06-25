@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <defs>
+    <linearGradient id="pr_b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff5c5c"/><stop offset="1" stop-color="#d12e2e"/></linearGradient>
+    <linearGradient id="pr_w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4fc3f7"/><stop offset="1" stop-color="#1f86c4"/></linearGradient>
+  </defs>
+  <!-- perch -->
+  <rect x="28" y="98" width="64" height="7" rx="3" fill="#8a5a30" stroke="#5a3a1e" stroke-width="2"/>
+  <ellipse cx="60" cy="112" rx="22" ry="4" fill="#000" opacity="0.15"/>
+  <!-- tail -->
+  <path d="M58 92 q-4 16 -14 22 q-2 -18 8 -28z" fill="#43a047" stroke="#2f6b27" stroke-width="1.5"/>
+  <!-- body -->
+  <path d="M44 96 q-6 -34 18 -38 q22 4 18 34 q-4 8 -18 8 q-12 0 -18 -4z" fill="url(#pr_b)" stroke="#9a1f1f" stroke-width="2"/>
+  <!-- wing -->
+  <path d="M62 60 q18 4 16 26 q-10 6 -18 -4 q-4 -16 2 -22z" fill="url(#pr_w)" stroke="#16648f" stroke-width="1.5"/>
+  <g stroke="#ffd54f" stroke-width="2" opacity="0.8"><path d="M66 70l8 2M64 80l10 2"/></g>
+  <!-- head -->
+  <circle cx="58" cy="44" r="17" fill="url(#pr_b)" stroke="#9a1f1f" stroke-width="2"/>
+  <path d="M50 30 q-6 -10 4 -14 q4 8 0 14z" fill="#ffd54f"/>
+  <!-- beak -->
+  <path d="M44 46 q-12 0 -10 8 q8 4 12 -2z" fill="#ffb74d" stroke="#c8861f" stroke-width="1.5"/>
+  <!-- eye -->
+  <circle cx="56" cy="42" r="4.5" fill="#fff"/><circle cx="55" cy="43" r="2.4" fill="#1a1a1a"/>
+  <ellipse cx="62" cy="36" rx="4" ry="6" fill="#fff" opacity="0.25"/>
+</svg>

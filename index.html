@@ -1,0 +1,3076 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Vocab Barista: Master V2.4</title>
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="theme-color" content="#3e2723">
+
+    <!-- 오프라인 번들 폰트 (Google Fonts 로컬화) -->
+    <link href="fonts.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --brown-dark: #3e2723; --coffee: #6d4c41; --cream: #fff8e1;
+            --green: #2e7d32; --gold: #ffca28; --red: #c62828;
+            --blue: #1976d2; --purple: #7b1fa2;
+            --bg-pattern: repeating-linear-gradient(45deg, #3e2723 0, #3e2723 10px, #4e342e 10px, #4e342e 20px);
+        }
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; padding: 0; background: #222; font-family: 'Jua', sans-serif; height: 100dvh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        #game-container { width: 100%; max-width: 480px; height: 100dvh; background-color: var(--cream); position: relative; display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* Animations */
+        @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
+        @keyframes floatText { to { transform: translateY(-50px); opacity: 0; } }
+        @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+        @keyframes golden-glow { 0%, 100% { filter: drop-shadow(0 0 5px gold); transform: scale(1); } 50% { filter: drop-shadow(0 0 20px gold); transform: scale(1.05); } }
+        @keyframes breathe { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+        @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+
+/* [추가] 콤보 UI 전용 애니메이션 (중앙 정렬 유지) */
+
+/* 콤보가 처음 나타날 때 (커지면서 등장) */
+@keyframes comboPopIn {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.5); /* 중앙 정렬 유지하며 작게 시작 */
+    }
+    80% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.1); /* 살짝 커졌다가 */
+    }
+    100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1); /* 제자리 */
+    }
+}
+
+/* 콤보 숫자가 올라갈 때 (울렁거리는 효과) */
+@keyframes comboBump {
+    0% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -50%) scale(1.2); } /* 커짐 */
+    100% { transform: translate(-50%, -50%) scale(1); }
+}
+        
+        /* 진상 손님 흔들림 효과 (pause시 제거됨) */
+        .effect-rush-bg { animation: shake 0.5s infinite; }
+        
+/* [수정] 랭크 명패: 기존 폰트 + 큰 사이즈 */
+/* 랭크 명패: 카운터 위에 얹힌 고급 황동 명패 */
+#my-rank-badge {
+    position: absolute;
+    bottom: 9px;             /* 맨 아래 카운터 바 테두리 바로 위 (조금 더 내림) */
+    left: 12px;              /* 왼쪽 — 캐릭터 가림 방지 */
+    z-index: 14;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+
+    padding: 6px 22px 8px;
+    /* 어두운 원목 명패 + 금테 각인 */
+    background: linear-gradient(180deg, #34210f 0%, #1c0f07 100%);
+    border: 2px solid #caa24f;
+    border-radius: 8px;
+    box-shadow:
+        0 4px 0 #0d0704,                          /* 받침 두께(스탠딩) */
+        0 8px 14px rgba(0,0,0,0.55),              /* 그림자 */
+        inset 0 0 0 1px rgba(255,224,138,0.35),   /* 안쪽 금선 */
+        inset 0 1px 1px rgba(255,255,255,0.12);
+
+    color: #ffd76a;          /* 기본색 (checkRank가 등급색으로 덮어씀) */
+    font-family: 'Jua', sans-serif;
+    font-size: 0.8rem;
+    font-weight: normal;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    text-shadow: 0 1px 2px #000, 0 0 8px rgba(255,202,40,0.25);
+}
+#my-rank-badge::before {
+    content: '★';
+    color: #ffca28;
+    font-size: 0.85rem;
+    text-shadow: 0 0 6px rgba(255,202,40,0.6);
+}
+
+
+        /* ▼▼▼ [여기 추가] 정비 시간에는 흔들림 강제 종료 ▼▼▼ */
+        /* 해석: game-container 안에 숨겨진(.hidden) game-screen이 있다면 애니메이션 끄기 */
+        #game-container:has(#game-screen.hidden) {
+            animation: none !important;
+        }
+        
+        .fly-coin { position: absolute; width: 30px; height: 30px; pointer-events: none; z-index: 100; transition: all 0.8s; }
+        .fly-coin img { width: 100%; height: 100%; display: block; filter: drop-shadow(0 2px 2px rgba(0,0,0,.35)); }
+        .floating-text { position: absolute; color: var(--gold); font-weight: bold; font-size: 2rem; text-shadow: 2px 2px 0 #000; animation: floatText 1s forwards; pointer-events: none; z-index: 200; }
+
+        /* Header */
+        .header { background: var(--brown-dark); color: white; padding: calc(8px + env(safe-area-inset-top)) 12px 8px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; z-index: 20; border-bottom: 4px solid #281815; font-size: 0.9rem; }
+        .hud-group { display: flex; gap: 8px; align-items: center; }
+        .hud-center { text-align: center; color: var(--gold); background: rgba(0,0,0,0.4); padding: 4px 12px; border-radius: 15px; font-size: 1rem; }
+        
+        .btn-mini { background: var(--red); color: white; border: none; padding: 6px 10px; border-radius: 8px; font-family: 'Jua', sans-serif; cursor: pointer; box-shadow: 0 3px 0 #8e0000; font-size: 0.9rem; position: relative; }
+        .btn-mini:active { transform: translateY(3px); box-shadow: none; }
+        .shop-btn { background: var(--gold); color: var(--brown-dark); box-shadow: 0 3px 0 #b28900; }
+        .quest-btn { background: var(--purple); color: white; box-shadow: 0 3px 0 #4a148c; }
+        .pause-btn { background: #555; color: white; box-shadow: 0 3px 0 #222; }
+        .music-btn { background: #0288d1; color: white; box-shadow: 0 3px 0 #01579b; font-size:0.8rem; }
+        .noti-dot { position: absolute; top: -5px; right: -5px; width: 12px; height: 12px; background: var(--red); border-radius: 50%; border: 2px solid white; display: none; }
+        .noti-dot.active { display: block; }
+        
+        .buy-btn { background: var(--green); color: white; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 3px 0 #1b5e20; }
+        .buy-btn:active { transform: translateY(3px); box-shadow: none; }
+        .buy-btn.disabled { background: #555; box-shadow: none; cursor: not-allowed; }
+
+        .quest-btn-claim { background: var(--gold); color: var(--brown-dark); border: none; padding: 5px 12px; border-radius: 15px; font-weight: bold; cursor: pointer; box-shadow: 0 3px 0 #b28900; animation: breathe 1s infinite; }
+        .quest-btn-claim:active { transform: translateY(2px); box-shadow: none; }
+
+        .vip-submit { background: var(--gold); color: var(--brown-dark); border: none; padding: 0 20px; height: 50px; border-radius: 10px; font-weight: bold; font-size: 1.2rem; cursor: pointer; box-shadow: 0 4px 0 #b28900; font-family: 'Jua', sans-serif; margin-left: 5px; transition: transform 0.1s; }
+        .vip-submit:active { transform: translateY(4px); box-shadow: none; }
+
+        /* Game Scene */
+        .cafe-view { flex: 1; position: relative; display: flex; flex-direction: column; justify-content: flex-end; background: var(--bg-pattern); overflow: hidden; }
+        .wall-deco-area, .counter-deco-area { position: absolute; width: 100%; pointer-events: none; }
+        .wall-deco-area { top: 10%; height: 50%; }
+        .counter-deco-area { bottom: 45px; height: 100px; z-index: 5; display: flex; justify-content: space-between; padding: 0 20px; align-items: flex-end; }
+        .counter { height: 45px; background: #8d6e63; border-top: 6px solid #5d4037; width: 100%; z-index: 10; }
+        
+.deco-item { 
+    position: absolute; 
+    animation: popIn 0.5s; 
+    font-size: 2.5rem; 
+    cursor: pointer;           /* 마우스 올리면 손가락 모양 */
+    transition: transform 0.1s; /* 부드러운 움직임 */
+    pointer-events: auto; 
+    z-index: 100; /* 혹시 모르니 우선순위도 높여줍니다 */
+}
+.deco-item:active {
+    transform: scale(0.95);    /* 클릭하면 살짝 작아지는(눌리는) 효과 */
+}
+
+        .deco-plant { bottom: 0; left: 10px; }
+        .deco-cat { bottom: 0; right: 20px; }
+        .deco-neon { top: 20px; right: 20px; color: #ffeb3b; border: 3px solid #ffeb3b; padding: 5px 10px; border-radius: 10px; transform: rotate(-5deg); font-size: 1.5rem; background: rgba(0,0,0,0.5); }
+
+        .customer-area { height: 320px; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 20px; z-index: 2; }
+        .customer { display: flex; flex-direction: column; align-items: center; transition: 0.3s; animation: popIn 0.4s; }
+        .customer.leaving { transform: translateX(300px); opacity: 0; }
+        .bubble { background: white; border: 3px solid #333; border-radius: 20px; padding: 15px; margin-bottom: 15px; font-size: 1.3rem; text-align: center; min-width: 180px; box-shadow: 4px 4px 0 rgba(0,0,0,0.1); }
+        .avatar { width: 150px; filter: drop-shadow(0 6px 5px rgba(0,0,0,0.35)); animation: idleBob 3s ease-in-out infinite; transform-origin: bottom center; }
+        .avatar svg { width: 100%; height: auto; display: block; }
+        @keyframes idleBob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+        .avatar.vip-aura { animation: golden-glow 2s infinite; }
+        @keyframes main-glow { 0%,100%{filter:drop-shadow(0 5px 5px rgba(0,0,0,.35)) drop-shadow(0 0 6px #ab47bc)} 50%{filter:drop-shadow(0 5px 5px rgba(0,0,0,.35)) drop-shadow(0 0 22px #ce93d8)} }
+        .avatar.main-aura { animation: idleBob 3s ease-in-out infinite, main-glow 1.8s infinite; }
+        .char-name { display:inline-block; margin-top:8px; padding:3px 14px; border-radius:13px; font-family:'Jua', sans-serif; font-size:0.74rem; color:#fff; background:rgba(20,12,8,.55); border:1.5px solid var(--rc, #9e9e9e); box-shadow:0 0 8px var(--rc, #9e9e9e); text-shadow:0 1px 2px #000; }
+        /* [말풍선 잘림 방지] 사파리 툴바 등으로 화면이 짧을 때 손님 영역·아바타·말풍선 축소 */
+        @media (max-height: 780px){
+            .customer-area { height: 250px !important; padding-bottom: 8px !important; }
+            .avatar { width: 118px; }
+            .bubble { font-size: 1.1rem; padding: 10px 14px; margin-bottom: 9px; min-width: 150px; }
+        }
+        @media (max-height: 680px){
+            .customer-area { height: 205px !important; }
+            .avatar { width: 96px; }
+            .bubble { font-size: 1rem; padding: 8px 12px; margin-bottom: 6px; }
+        }
+
+/* 손님 도감 그리드 */
+#chardex-grid { width:100%; max-width:440px; max-height:58vh; overflow-y:auto; display:grid; grid-template-columns:repeat(3,1fr); gap:10px; padding:6px; }
+.cdex-card { background:linear-gradient(180deg,#fffdf6,#fff2d4); border-radius:14px; border:2px solid var(--rc,#e0d3b0); padding:8px 4px 6px; text-align:center; box-shadow:0 4px 0 rgba(0,0,0,.12); cursor:pointer; transition:transform .1s; }
+.cdex-card:active { transform:scale(.95); }
+.cdex-card.locked { background:#2a2018; border-color:#3e2f22; cursor:default; }
+.cdex-art { width:100%; height:70px; display:flex; align-items:flex-end; justify-content:center; overflow:hidden; }
+.cdex-art svg { width:64px; height:auto; }
+.cdex-art .locked-q { font-size:2.4rem; color:#5a4836; }
+.cdex-name { font-family:'Jua',sans-serif; font-size:0.72rem; color:#3e2723; margin-top:3px; }
+.cdex-rarity { font-size:0.58rem; color:#fff; background:var(--rc,#9e9e9e); border-radius:8px; padding:1px 7px; display:inline-block; margin-top:2px; }
+        .timer-bar-wrap { width: 80%; height: 8px; background: rgba(255,255,255,0.5); border-radius: 4px; overflow: hidden; margin-bottom: 5px; }
+        .timer-fill { height: 100%; background: var(--green); width: 100%; transition: width 0.1s linear; }
+
+        .kitchen { height: 35%; background: #fff8e1; padding: 10px 10px calc(10px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; border-top: 5px solid #d7ccc8; z-index: 30; }
+        .info-txt { text-align: center; color: var(--coffee); margin-bottom: 8px; font-size: 1.1rem; }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; flex: 1; overflow-y: auto; }
+        .cup-btn { background: #fff; border: 2px solid #ddd; border-bottom: 6px solid #ccc; border-radius: 10px; color: var(--coffee); font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 1rem; cursor: pointer; }
+        .cup-btn:active { transform: translateY(4px); border-bottom-width: 2px; }
+        .cup-btn.gold-skin { background: linear-gradient(135deg, #fff9c4, #ffca28); border-color: #ffb300; border-bottom-color: #ff8f00; color: #5d4037; }
+        
+        /* [수정] flex-direction: column을 추가해서 위아래로 정렬되게 변경 */
+        .vip-area { 
+            display: flex; 
+            flex-direction: column; /* 세로 정렬 (힌트가 위, 입력창이 아래) */
+            gap: 10px; 
+            flex: 1; 
+            align-items: center; 
+            justify-content: center; 
+        }
+
+        /* 기존 코드 유지 */
+        .vip-input { 
+            width: 70%; 
+            padding: 10px; 
+            font-size: 1.4rem; 
+            text-align: center; 
+            border: 3px solid var(--gold); 
+            border-radius: 10px; 
+            font-family: 'Nunito', sans-serif; 
+            background: #fff; 
+            color: #000; 
+            font-weight: bold; 
+        }
+
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(40, 20, 10, 0.95); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; padding: calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom)); text-align: center; }
+        .hidden { display: none !important; }
+        .panel { background: var(--cream); padding: 30px; border-radius: 15px; border: 4px solid var(--brown-dark); width: 90%; max-width: 400px; color: #333; }
+        
+        .story-box { background: white; color: #333; padding: 20px; border-radius: 15px; width: 90%; max-width: 400px; text-align: left; position: relative; border: 4px solid var(--brown-dark); margin-top: 50px; }
+        .story-avatar { font-size: 4rem; position: absolute; top: -40px; right: 0px; filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.2)); }
+        .story-btn { float: right; margin-top: 10px; background: var(--green); color: white; border: none; padding: 8px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; box-shadow: 0 3px 0 #1b5e20; }
+        .story-btn:active { transform: translateY(3px); box-shadow: none; }
+
+        .quest-list, .shop-container, .wordbook-list { background: rgba(255,255,255,0.1); width: 100%; max-height: 55vh; overflow-y: auto; border-radius: 10px; padding: 10px; text-align: left; margin-top: 15px; }
+        .quest-item, .shop-item, .wb-item { background: #fff; color: #333; padding: 10px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .quest-item { border-left: 5px solid #bbb; }
+        .quest-item.ready { border-left-color: var(--gold); background: #fffde7; }
+        .quest-item.completed { border-left-color: var(--green); background: #e8f5e9; }
+        .rank-item { display: flex; justify-content: space-between; padding: 5px; border-bottom: 1px solid #555; color: #ddd; }
+
+        /* 인벤토리(아이템 교체) 스타일 */
+        .inventory-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .inv-item { background: #fff; padding: 10px; border-radius: 10px; border: 2px solid #ccc; text-align: center; cursor: pointer; transition: 0.2s; }
+        .inv-item:active { transform: scale(0.95); }
+        .inv-item.equipped { border-color: var(--green); background: #e8f5e9; box-shadow: 0 0 5px var(--green); }
+        .inv-item .icon { font-size: 2rem; margin-bottom: 5px; }
+
+        /* 클릭 가능한 장식 아이템 스타일 */
+        .deco-item { cursor: pointer; transition: 0.2s; }
+        .deco-item:hover { filter: drop-shadow(0 0 8px gold); transform: scale(1.05); }
+
+    #inventory-screen-item {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(40, 20, 10, 0.95); /* 배경색 (기존과 동일하게) */
+        z-index: 9999 !important;    /* 무조건 맨 위에 표시 */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        text-align: center;
+        padding: 20px;
+        pointer-events: auto !important; /* 클릭 무조건 허용 (핵심!) */
+    }
+
+    #inventory-list-item {
+        background: rgba(255,255,255,0.1);
+        width: 100%; 
+        max-width: 400px;
+        max-height: 55vh; 
+        overflow-y: auto; 
+        border-radius: 10px; 
+        padding: 10px; 
+        text-align: left; 
+        margin-top: 15px;
+        display: grid; 
+        grid-template-columns: 1fr 1fr; 
+        gap: 10px;
+    }
+
+/* ▼▼▼ [새로 추가] 동전 이모지를 금색으로 만들기 ▼▼▼ */
+.gold-coin {
+    /* 1. 금색 그라데이션 배경 정의 (밝은 금색 -> 진한 금색) */
+    background: linear-gradient(to bottom, #fff7cc 0%, #ffd700 30%, #b8860b 100%);
+    
+    /* 2. 배경을 텍스트(이모지) 모양으로 잘라냄 */
+    -webkit-background-clip: text;
+    background-clip: text;
+    
+    /* 3. 이모지 원래 색상을 투명하게 만듦 */
+    -webkit-text-fill-color: transparent;
+    
+    /* 4. 약간의 그림자를 주어 입체감 더하기 */
+    filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.3));
+    
+    /* 크기 살짝 키우기 (선택사항) */
+    font-size: 1.2em; 
+    display: inline-block; /* 크기 조절을 위해 필요 */
+}
+
+/* =========================================
+   [통합] 피버 모드 & 콤보 & 티어 시스템 & 상점 스타일
+   ========================================= */
+
+/* 1. 피버 모드: 네온 나이트 스타일 (화려한 클럽 분위기) */
+@keyframes feverBg {
+    0% { background: linear-gradient(180deg, #2e0a24, #3e163e); }
+    50% { background: linear-gradient(180deg, #0a0a2e, #16213e); }
+    100% { background: linear-gradient(180deg, #0a2e1a, #163e21); }
+}
+
+.fever-mode .cafe-view {
+    animation: feverBg 0.5s infinite alternate;
+    background-blend-mode: hard-light;
+    box-shadow: inset 0 0 50px #ff00ff;
+    border: 3px solid #ff00ff;
+}
+
+/* 피버일 때 배경(책상 등)은 어둡게 눌러줌 */
+.fever-mode .scene-layer {
+    filter: brightness(0.6) contrast(1.2); 
+    transition: filter 0.5s;
+}
+
+/* 콤보 UI — 그라데이션 숫자 + COMBO 리본 (깔끔 리디자인) */
+#combo-ui {
+    position: absolute;
+    top: 50%;                /* 손님 위 — 말풍선(문제)·보기 어느 것도 안 가림 */
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 200;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: 'Jua', sans-serif;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+#combo-ui .combo-num {
+    font-size: 4.4rem;
+    line-height: 0.95;
+    font-weight: 900;
+    background: linear-gradient(180deg, #fff6c0 0%, #ffd23f 42%, #ff9d1c 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    filter: drop-shadow(0 3px 0 rgba(120,55,0,.55)) drop-shadow(0 0 16px rgba(255,180,40,.55));
+}
+#combo-ui .combo-label {
+    margin-top: -1px;
+    font-size: 1.05rem;
+    letter-spacing: 5px;
+    font-weight: 900;
+    color: #fff;
+    background: linear-gradient(180deg, #ff9b3d, #e0531c);
+    padding: 3px 8px 3px 13px;
+    border-radius: 20px;
+    border: 2px solid #ffe9b8;
+    box-shadow: 0 3px 7px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.4);
+    text-shadow: 0 1px 2px rgba(0,0,0,.45);
+}
+#combo-ui.active {
+    opacity: 1;
+    animation: comboPopIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+#combo-ui.pulse { animation: comboBump 0.3s cubic-bezier(.36,.07,.19,.97); }
+
+/* 3. 미스터리 박스 버튼 (상점용 - 흔들리는 효과) */
+.gacha-btn {
+    background: linear-gradient(135deg, #673ab7, #512da8);
+    color: #fff;
+    border: 3px solid #d1c4e9;
+    box-shadow: 0 4px 0 #311b92;
+    animation: shakeBox 2s infinite;
+}
+@keyframes shakeBox {
+    0%, 90% { transform: rotate(0deg); }
+    92% { transform: rotate(-5deg); }
+    94% { transform: rotate(5deg); }
+    96% { transform: rotate(-5deg); }
+    98% { transform: rotate(5deg); }
+    100% { transform: rotate(0deg); }
+}
+
+/* [커스텀 알림창 스타일] */
+#custom-alert {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6); /* 배경 어둡게 */
+    display: flex; justify-content: center; align-items: center;
+    z-index: 2000; /* 다른 요소보다 위에 */
+}
+
+.alert-box {
+    background: var(--cream);
+    border: 4px solid var(--brown-dark);
+    border-radius: 15px;
+    padding: 20px 30px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    min-width: 280px;
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* 팝업 튀어오르는 애니메이션 */
+@keyframes popIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* =========================================================
+   [신규] 카페 씬 재디자인 — 따뜻한 벽 / 창문 / 펜던트 조명 / 선반 / 바닥
+   ========================================================= */
+.cafe-view { background: linear-gradient(180deg, #6f4e3d 0%, #5d4037 45%, #4e342e 100%); }
+.scene-bg { position:absolute; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
+.scene-layer, .scene-bg { transition: filter .5s; }
+
+/* 벽 하단 우드 패널(웨인스코트) */
+.scene-wainscot {
+    position:absolute; left:0; right:0; bottom:45px; height:90px;
+    background:
+        repeating-linear-gradient(90deg, #6d4c41 0 38px, #5e4034 38px 40px),
+        linear-gradient(180deg, #7a5644, #5e4034);
+    border-top:3px solid #8d6e63;
+    box-shadow: inset 0 6px 10px rgba(0,0,0,.25);
+}
+/* 바닥(카운터 아래 마룻널) */
+.scene-floor {
+    position:absolute; left:0; right:0; bottom:0; height:45px;
+    background:
+        repeating-linear-gradient(90deg, rgba(0,0,0,.18) 0 2px, transparent 2px 70px),
+        linear-gradient(180deg, #4e342e, #3a2620);
+}
+
+/* 창문 */
+.scene-window {
+    position:absolute; left:18px; top:24px; width:150px; height:135px;
+    border-radius:14px 14px 8px 8px;
+    border:8px solid #8d6e63;
+    box-shadow: 0 6px 14px rgba(0,0,0,.35), inset 0 0 0 3px #6d4c41;
+    overflow:hidden;
+}
+.win-sky { position:absolute; inset:0; background:linear-gradient(180deg, #afeaff 0%, #cdeffd 40%, #ffe7c2 80%, #ffd9a0 100%); }
+.win-sun { position:absolute; top:14px; right:16px; width:34px; height:34px; border-radius:50%;
+    background:radial-gradient(circle, #fff6c4 0%, #ffe27a 60%, #ffd23f 100%);
+    box-shadow:0 0 18px 6px rgba(255,221,87,.8); }
+.win-rays { position:absolute; inset:0; background:
+    linear-gradient(115deg, transparent 40%, rgba(255,255,255,.35) 47%, transparent 52%),
+    linear-gradient(125deg, transparent 55%, rgba(255,255,255,.25) 60%, transparent 66%); }
+.win-muntin-v { position:absolute; left:50%; top:0; bottom:0; width:5px; margin-left:-2.5px; background:#8d6e63; }
+.win-muntin-h { position:absolute; top:50%; left:0; right:0; height:5px; margin-top:-2.5px; background:#8d6e63; }
+.win-sill { position:absolute; left:-6px; right:-6px; bottom:-14px; height:12px; background:#6d4c41; border-radius:3px; box-shadow:0 4px 6px rgba(0,0,0,.3); }
+
+/* 펜던트 조명 */
+.scene-lamp { position:absolute; top:0; display:flex; flex-direction:column; align-items:center; }
+.lamp-a { right:34%; }
+.lamp-b { right:14%; }
+.lamp-cord { width:3px; height:30px; background:#3e2723; }
+/* 사다리꼴 램프갓 (위 좁고 아래 넓은 펜던트) */
+.lamp-shade { width:10px; height:0; border-left:13px solid transparent; border-right:13px solid transparent;
+    border-bottom:20px solid #2e1a14; position:relative; }
+.lamp-shade::after { content:''; position:absolute; left:-13px; bottom:-20px; width:36px; height:5px;
+    background:radial-gradient(ellipse, #ffe9a8 0%, #ffcf6b 70%, #b98a3e 100%); border-radius:50%; }
+.lamp-glow { width:60px; height:70px; margin-top:-2px;
+    background:radial-gradient(ellipse at top, rgba(255,210,110,.5) 0%, rgba(255,210,110,.1) 55%, transparent 75%); }
+
+/* 원두 선반 (벽 우측 중단, 조명과 겹치지 않게) */
+.scene-shelf { position:absolute; right:18px; top:150px; width:96px; height:12px; background:#6d4c41; border-radius:3px;
+    box-shadow:0 4px 6px rgba(0,0,0,.3); display:flex; align-items:flex-end; justify-content:space-around; padding:0 6px; }
+.scene-shelf .jar { width:16px; height:24px; border-radius:4px 4px 5px 5px; position:relative; top:-22px; box-shadow:inset -3px 0 4px rgba(0,0,0,.2); }
+.scene-shelf .jar::after { content:''; position:absolute; top:-4px; left:2px; right:2px; height:5px; background:#cfa06a; border-radius:3px; }
+.jar.j1 { background:linear-gradient(#8d6e63,#6d4c41); }
+.jar.j2 { background:linear-gradient(#a1887f,#7a5a4d); height:28px; top:-26px; }
+.jar.j3 { background:linear-gradient(#795548,#5d4037); }
+
+/* 카운터 우드 질감 업그레이드 */
+.counter {
+    height:45px;
+    background:
+        repeating-linear-gradient(90deg, rgba(0,0,0,.08) 0 1px, transparent 1px 46px),
+        linear-gradient(180deg, #a5764f 0%, #8d6e63 35%, #6d4c41 100%);
+    border-top:6px solid #b98a5e;
+    box-shadow: inset 0 4px 6px rgba(255,255,255,.15), 0 -3px 8px rgba(0,0,0,.25);
+}
+
+/* 피버모드에서 씬도 함께 어둡게 (네온이 도드라지게) */
+.fever-mode .scene-bg { filter: brightness(.5) saturate(1.4) hue-rotate(-10deg); }
+/* 피버 네온 워시 (scene-bg 위, 손님 뒤) */
+#fever-overlay { position:absolute; inset:0; z-index:1; pointer-events:none; opacity:0; transition:opacity .3s; }
+.fever-mode #fever-overlay { opacity:1; animation:feverWash .55s linear infinite alternate; }
+@keyframes feverWash {
+    0%   { background:radial-gradient(circle at 28% 38%, rgba(255,0,200,.4), transparent 62%), radial-gradient(circle at 72% 62%, rgba(0,200,255,.34), transparent 62%); box-shadow:inset 0 0 70px rgba(255,0,200,.5); }
+    100% { background:radial-gradient(circle at 72% 38%, rgba(0,200,255,.4), transparent 62%), radial-gradient(circle at 28% 62%, rgba(255,0,200,.34), transparent 62%); box-shadow:inset 0 0 70px rgba(0,200,255,.5); }
+}
+.fever-mode .cafe-view { border:3px solid #ff2bd0; box-shadow:inset 0 0 40px rgba(255,0,200,.4); }
+
+/* =========================================================
+   [신규] 전역 UI 디자인 시스템 — 따뜻한 카페 톤 통일
+   ========================================================= */
+/* 오버레이: 평평한 갈색 → 포근한 라디얼 비네트 */
+.overlay {
+    background: radial-gradient(125% 95% at 50% 16%, #6b4632 0%, #45291c 46%, #241510 100%);
+    box-shadow: inset 0 0 140px rgba(0,0,0,.55);
+}
+/* 오버레이 타이틀(h2/h1): 크림·골드 + 밑줄 악센트 */
+.overlay h1, .overlay h2 {
+    font-family:'Jua', sans-serif; color:#ffe9b8; font-weight:normal;
+    text-shadow:0 3px 0 rgba(0,0,0,.4), 0 0 20px rgba(255,202,40,.22);
+    position:relative; padding-bottom:12px;
+}
+.overlay h2::after {
+    content:''; display:block; width:60px; height:4px; border-radius:2px;
+    margin:10px auto 0; background:linear-gradient(90deg, transparent, #ffca28, transparent);
+}
+.overlay p { color:#e9d9c4; }
+
+/* 패널: 입체 크림 카드 + 골드 상단 악센트 */
+.panel {
+    background:linear-gradient(180deg, #fffdf6 0%, #fff2d4 100%);
+    border:none; border-radius:22px; position:relative; overflow:hidden;
+    box-shadow:0 20px 45px rgba(0,0,0,.5), 0 0 0 4px #3e2723, inset 0 2px 0 rgba(255,255,255,.8);
+}
+.panel::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:7px;
+    background:linear-gradient(90deg, #ffca28, #ff8f00, #ffca28);
+}
+.story-box {
+    background:linear-gradient(180deg, #fffdf6, #fff2d4);
+    border:none; border-radius:20px;
+    box-shadow:0 18px 40px rgba(0,0,0,.5), 0 0 0 4px #3e2723, inset 0 2px 0 rgba(255,255,255,.8);
+}
+
+/* 리스트 보드(상점/퀘스트/오답노트) 배경 */
+.quest-list, .shop-container, .wordbook-list, #ranking-board {
+    background:rgba(0,0,0,.22); border:2px solid rgba(255,255,255,.1);
+    box-shadow:inset 0 3px 10px rgba(0,0,0,.35); border-radius:14px;
+}
+/* 항목 카드 공통: 크림 그라데이션 + 두께감 그림자 */
+.shop-item, .quest-item, .wb-item {
+    background:linear-gradient(180deg, #ffffff, #fff6e3);
+    border-radius:14px; border:2px solid #f1e3c2;
+    box-shadow:0 4px 0 rgba(0,0,0,.1), 0 7px 14px rgba(0,0,0,.18);
+    transition:transform .12s;
+}
+.shop-item:active { transform:scale(.985); }
+/* 아이콘을 동그란 칩으로 */
+.shop-item .icon, .inv-item .icon {
+    background:#fff3d6; border-radius:12px; min-width:46px; height:46px;
+    display:flex; align-items:center; justify-content:center; margin-right:12px;
+    box-shadow:inset 0 0 0 2px #ffe2a0, 0 2px 4px rgba(0,0,0,.12); font-size:1.7rem;
+}
+
+/* 버튼: 그라데이션 + 중립 다크 3D 밑단(어떤 면색에도 어울림) */
+.buy-btn {
+    background:linear-gradient(180deg, #43a047, #2e7d32);
+    box-shadow:0 4px 0 rgba(0,0,0,.3), 0 7px 12px rgba(0,0,0,.25); border-radius:22px;
+}
+.buy-btn:active { transform:translateY(4px); box-shadow:0 1px 0 rgba(0,0,0,.3), 0 2px 5px rgba(0,0,0,.25); }
+.btn-mini {
+    background:linear-gradient(180deg, #ef5350, #d32f2f);
+    box-shadow:0 3px 0 rgba(0,0,0,.32), 0 5px 8px rgba(0,0,0,.22);
+}
+.shop-btn { background:linear-gradient(180deg, #ffd54f, #ffb300); box-shadow:0 3px 0 #b28900, 0 5px 8px rgba(0,0,0,.22); }
+.quest-btn { background:linear-gradient(180deg, #9575cd, #7b1fa2); box-shadow:0 3px 0 #4a148c, 0 5px 8px rgba(0,0,0,.22); }
+.pause-btn, .music-btn { background:linear-gradient(180deg, #6d6d6d, #4a4a4a); box-shadow:0 3px 0 #222, 0 5px 8px rgba(0,0,0,.22); }
+
+/* HUD 헤더 입체감 */
+.header {
+    background:linear-gradient(180deg, #5d4037, #3e2723);
+    box-shadow:0 3px 0 #281815, 0 6px 14px rgba(0,0,0,.4);
+}
+.hud-center { box-shadow:inset 0 0 0 2px rgba(255,202,40,.25); }
+
+/* 컵(객관식) 버튼 질감 업그레이드 */
+.cup-btn {
+    background:linear-gradient(180deg, #ffffff, #fff4dd);
+    border:2px solid #ece0c4; border-bottom:6px solid #d9c9a4;
+    box-shadow:0 4px 10px rgba(0,0,0,.12); border-radius:14px;
+    transition:transform .08s, box-shadow .12s;
+}
+@media (hover: hover) and (pointer: fine) { .cup-btn:hover { border-color:#ffca28; } }
+.cup-btn:focus { outline:none; }
+
+/* 큰 닫기 버튼 */
+.close-btn { padding: 13px 48px !important; font-size: 1.1rem !important; border-radius: 26px !important; margin-top: 22px !important; }
+
+/* 주 CTA(영업 시작) 골드 히어로 버튼 */
+.btn-hero {
+    background:linear-gradient(180deg, #ffe082, #ffca28 55%, #ffb300) !important;
+    color:#4e342e !important; font-size:1.4rem; padding:15px 44px; border-radius:30px;
+    box-shadow:0 5px 0 #c8870a, 0 9px 16px rgba(0,0,0,.35), inset 0 2px 0 rgba(255,255,255,.6) !important;
+    animation:breathe 2s ease-in-out infinite;
+}
+.btn-hero:active { transform:translateY(5px); box-shadow:0 0 0 #c8870a, 0 4px 8px rgba(0,0,0,.3) !important; }
+
+/* 타이틀 로고 글로우 */
+#start-screen h1 {
+    text-shadow:0 4px 0 rgba(0,0,0,.35), 0 0 30px rgba(255,202,40,.4), 0 0 60px rgba(255,143,0,.25);
+    letter-spacing:1px;
+}
+
+/* 결과/게임오버 점수 카드 */
+#result-screen > div[style*="rgba(255,255,255,0.1)"] {
+    background:rgba(0,0,0,.25) !important; border:2px solid rgba(255,202,40,.3);
+    box-shadow:inset 0 2px 8px rgba(0,0,0,.3); border-radius:16px;
+}
+
+/* =========================================================
+   [신규] 3단계 게임플레이 이펙트
+   ========================================================= */
+/* 손님 등장: 아래에서 톡 올라오며 등장 */
+@keyframes custIn {
+    0% { opacity:0; transform:translateY(46px) scale(.82); }
+    65% { opacity:1; transform:translateY(-7px) scale(1.03); }
+    100% { transform:translateY(0) scale(1); }
+}
+.customer { animation: custIn .45s cubic-bezier(.34,1.56,.64,1); }
+
+/* 정답/오답 화면 플래시 */
+#fx-flash { position:absolute; inset:0; z-index:60; pointer-events:none; opacity:0; }
+#fx-flash.go { animation: fxFlash .5s ease-out; }
+@keyframes fxFlash { 0%{opacity:0} 28%{opacity:1} 100%{opacity:0} }
+#fx-flash.good { background:radial-gradient(circle at 50% 62%, rgba(76,175,80,.4), transparent 68%); }
+#fx-flash.bad  { background:radial-gradient(circle at 50% 62%, rgba(229,57,53,.45), transparent 68%); }
+
+/* 피버 배너 */
+#fever-msg {
+    position:absolute; top:40%; left:50%; transform:translate(-50%,-50%) rotate(-6deg);
+    font-family:'Jua', sans-serif; font-size:2.3rem; color:#fff; z-index:59;
+    pointer-events:none; opacity:0; white-space:nowrap; transition:opacity .3s;
+    /* z-index는 오버레이(100) 아래로 — 메뉴 위 누출 방지 */
+    text-shadow:0 0 14px #ff3df0, 0 0 26px #ff00aa, 3px 3px 0 #000;
+    animation:feverPulse .6s ease-in-out infinite alternate;
+}
+@keyframes feverPulse { from{ filter:brightness(1) } to{ filter:brightness(1.4) } }
+
+/* 정답 시 컵 버튼 강조(클릭 직후) */
+/* 출처 태그: 말풍선 하단, 작고 은은하게 */
+.src-tag {
+    margin-top:6px; font-size:0.62rem; color:#a98e6a; font-family:'Nunito', sans-serif; font-weight:700;
+    letter-spacing:.2px; opacity:.85; border-top:1px dashed #e7d8bd; padding-top:4px;
+}
+
+.cup-btn.correct-pop { animation: correctPop .5s ease-out; border-color:#43a047 !important; }
+@keyframes correctPop {
+    0%{ transform:scale(1) } 35%{ transform:scale(1.08); box-shadow:0 0 0 4px rgba(76,175,80,.5), 0 0 18px rgba(76,175,80,.6) } 100%{ transform:scale(1) }
+}
+
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div class="header">
+        <div class="hud-group">
+            <button class="btn-mini pause-btn" onclick="game.togglePause()">⏸️</button>
+            <button class="btn-mini music-btn" id="bgm-btn" onclick="BgMusic.toggle()">🎵</button>
+            <span style="margin-left:5px">❤️ <span id="lives">5</span></span>
+        </div>
+
+        <div class="hud-center" style="flex-direction: column; line-height: 1.2;">
+            <div>Day <span id="day-display">1</span></div>
+        </div>
+        <div class="hud-group" style="justify-content: flex-end;">
+            <div style="font-size:0.8rem; margin-right:5px;">
+                <img src="sprites/coin.svg" alt="G" style="width:20px;height:20px;vertical-align:middle;filter:drop-shadow(0 1px 1px rgba(0,0,0,.3));"> <span id="wallet">0</span>
+            </div>
+            <button class="btn-mini quest-btn" onclick="game.openQuests()">🏆<div class="noti-dot" id="quest-noti"></div></button>
+            <button class="btn-mini shop-btn" onclick="game.openShop()">🏪</button>
+            <span id="wallet-target" style="width:1px;height:1px;position:absolute;right:10px;top:10px;"></span>
+        </div>
+    </div>
+
+    <div class="cafe-view">
+        <div class="scene-bg" id="scene-bg">
+            <div class="scene-window">
+                <div class="win-sky"></div>
+                <div class="win-sun"></div>
+                <div class="win-rays"></div>
+                <div class="win-muntin-v"></div>
+                <div class="win-muntin-h"></div>
+                <div class="win-sill"></div>
+            </div>
+            <div class="scene-lamp lamp-a"><span class="lamp-cord"></span><span class="lamp-shade"></span><span class="lamp-glow"></span></div>
+            <div class="scene-lamp lamp-b"><span class="lamp-cord"></span><span class="lamp-shade"></span><span class="lamp-glow"></span></div>
+            <div class="scene-shelf">
+                <span class="jar j1"></span><span class="jar j2"></span><span class="jar j3"></span>
+            </div>
+            <div class="scene-wainscot"></div>
+            <div class="scene-floor"></div>
+        </div>
+        <div class="wall-deco-area" id="wall-layer"></div>
+        <div class="customer-area" id="customer-area"></div>
+        <div class="counter-deco-area" id="counter-layer"></div>
+        <div class="counter"></div>
+        <div id="my-rank-badge">Rank: 알바생</div>
+        <div id="fever-overlay"></div>
+        <div id="fx-flash"></div>
+        <div id="fever-msg">🔥 FEVER TIME 🔥</div>
+    </div>
+
+<div class="kitchen">
+    <div class="info-txt" id="order-info">주문 대기 중...</div>
+    <div class="options-grid" id="options-grid"></div>
+
+    <div class="vip-area hidden" id="vip-area">
+        
+        <div id="vip-hint-display" 
+             style="font-family: 'Nunito', sans-serif; font-size: 1.6rem; 
+                    color: #3e2723; letter-spacing: 5px; font-weight: 900; 
+                    margin-bottom: 8px; 
+                    background: rgba(255,255,255,0.6); border-radius: 5px; padding: 2px 10px;">
+        </div>
+
+        <div style="display:flex; justify-content:center; gap:5px; width:100%;">
+            <input type="text" class="vip-input" id="vip-input" placeholder="스펠링 입력"
+                lang="en" 
+                autocomplete="off" 
+                autocorrect="off" 
+                autocapitalize="off" 
+                spellcheck="false" 
+                enterkeyhint="go"
+                style="ime-mode:disabled; padding:10px; text-align:center; font-size:1.1rem; border-radius:10px; border:2px solid #aaa; width:60%; font-family: 'Nunito', sans-serif;">            
+            <button class="vip-submit" onclick="game.checkVipAnswer()" 
+                    style="padding:10px 15px; background:var(--gold); color:#3e2723; font-weight:bold; border-radius:10px; border:none; cursor:pointer;">
+                제출
+            </button>
+        </div>
+    </div>
+</div>
+
+    <div class="overlay" id="start-screen">
+        <h1 style="font-size:2.5rem; line-height:1.2;">☕ VOCAB<br>BARISTA <span style="color:var(--gold); font-size:1.5rem;">V2.4</span></h1>
+        <p>나만의 카페를 키우며 단어 마스터!</p>
+        <p style="color:#aaa; font-size:0.9rem;">🎵 BGM: Bright Morning</p>
+        <div style="margin-bottom:20px;">
+            <button class="buy-btn btn-hero" onclick="showDifficulty()">☕ 영업 시작</button>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; max-width:320px; margin:0 auto;">
+            <button class="btn-mini" onclick="game.startStory()">🎬 프롤로그</button>
+            <button class="btn-mini" onclick="game.openWordbook()">📘 오답 노트</button>
+            <button class="btn-mini" style="background:linear-gradient(180deg,#26a69a,#00897b);box-shadow:0 3px 0 rgba(0,0,0,.32),0 5px 8px rgba(0,0,0,.22);" onclick="game.openDex()">📖 단어 도감</button>
+            <button class="btn-mini" style="background:linear-gradient(180deg,#ab47bc,#8e24aa);box-shadow:0 3px 0 rgba(0,0,0,.32),0 5px 8px rgba(0,0,0,.22);" onclick="game.openCharDex()">🧑‍🤝‍🧑 손님 도감</button>
+        </div>
+        <button class="reset-btn" onclick="game.resetData()" style="background:none; border:none; color:#999; text-decoration:underline; margin-top:20px;">⚙️ 데이터 초기화</button>
+    </div>
+
+    <div id="difficulty-screen" class="overlay hidden">
+        <div class="panel">
+            <h2>☕ 난이도 선택</h2>
+            <p>오늘 영업할 단어 난이도를 골라주세요.</p>
+            <div style="display:flex; flex-direction:column; gap:15px; margin:20px 0;">
+                <button class="buy-btn" onclick="selectDifficulty('easy')" style="background:#81c784; padding:15px; font-size:1.2rem;">🟢 Easy (초급)</button>
+                <button class="buy-btn" onclick="selectDifficulty('normal')" style="background:#ffb74d; padding:15px; font-size:1.2rem;">🟡 Normal (중급)</button>
+                <button class="buy-btn" onclick="selectDifficulty('hard')" style="background:#e57373; padding:15px; font-size:1.2rem;">🔴 Hard (고급)</button>
+            </div>
+            <button class="btn-mini" onclick="closeDifficulty()" style="background:#ccc; color:#333; padding:8px 20px;">취소</button>
+        </div>
+    </div>
+
+    <div class="overlay hidden" id="story-screen">
+        <div class="story-box">
+            <div class="story-avatar" id="story-avatar"></div>
+            <h3 id="story-speaker" style="margin:0 0 15px 0; color:var(--brown-dark); border-bottom:2px dashed #ddd; padding-bottom:5px; display:inline-block;">부동산 사장님</h3>
+            <p id="story-text" style="font-size:1.1rem; line-height:1.6; min-height:80px;">이야기는 여기서 진행됩니다.</p>
+            <button class="story-btn" onclick="game.nextStory()">다음 ▶</button>
+        </div>
+    </div>
+
+    <div class="overlay hidden" id="pause-screen">
+        <h2>⏸️ 일시 정지</h2>
+        <button class="buy-btn btn-hero" onclick="game.togglePause()" style="margin-bottom:22px; font-size:1.5rem; padding:18px 56px;">▶ 계속 하기</button>
+        <div style="display:flex; gap:10px; justify-content:center;">
+             <button class="btn-mini" id="sound-btn" onclick="game.toggleSound()">🔊 효과음</button>
+             <button class="btn-mini" id="bgm-pause-btn" onclick="BgMusic.toggle()">🎵 BGM</button>
+        </div>
+        <br>
+        <button id="explore-btn" class="btn-mini" style="background:linear-gradient(180deg,#8d6e63,#5d4037);box-shadow:0 3px 0 rgba(0,0,0,.32),0 5px 8px rgba(0,0,0,.22); padding:12px 26px; font-size:1.05rem;" onclick="game.goExplore()">🗺️ 탐험 (마을 밖)</button>
+        <br><br>
+        <button class="btn-mini" onclick="game.manualQuit()">저장하고 타이틀로</button>
+    </div>
+
+    <div id="inventory-screen" class="overlay hidden">
+        <div class="panel" style="max-height:80vh; display:flex; flex-direction:column;">
+            <h2 id="inventory-title">🎨 스킨 변경</h2>
+            <div id="inventory-list" class="inventory-list" style="overflow-y:auto; flex:1;">
+                </div>
+            <br>
+            <button class="btn-mini" onclick="document.getElementById('inventory-screen').classList.add('hidden'); game.isActive=true; if(game.currentCust && !game.currentCust.solved) game.startTimer();" style="background:#ccc; color:#333; padding:10px; width:100%;">닫기</button>
+        </div>
+    </div>
+
+    <div class="overlay hidden" id="quest-screen">
+        <h2>🏆 도전 과제</h2>
+        <div class="quest-list" id="quest-list-el"></div>
+        <button class="btn-mini close-btn" onclick="game.closeOverlays()">닫기</button>
+    </div>
+
+    <div class="overlay hidden" id="shop-screen">
+        <h2>🏪 잡화점</h2>
+        <p>내 지갑: <span id="shop-gold" style="color:var(--gold); font-weight:bold;">0</span> G</p>
+        
+        <div style="margin: 10px 0; width: 100%; display: flex; justify-content: center;">
+            <button onclick="game.buyMysteryBox()" class="shop-btn gacha-btn" style="width: 90%; padding: 15px; font-size: 1.1rem; cursor: pointer;">
+                🎁 미스터리 박스 (500G)
+                <br><span style="font-size:0.8rem; opacity:0.8; font-weight:normal;">꽝일까? 대박일까?</span>
+            </button>
+        </div>
+        <div class="shop-container" id="shop-list"></div>
+
+        <button class="btn-mini close-btn" onclick="game.closeOverlays()">닫기</button>
+    </div>
+
+    <div class="overlay hidden" id="inventory-screen-item"> 
+    <h2 id="inv-title">🎒 아이템 교체</h2>
+    <p style="color:#ddd; font-size:0.9rem; margin-bottom:15px;">보유 중인 아이템을 선택하세요.</p>
+    
+    <div class="shop-container inventory-list" id="inventory-list-item"></div>
+    
+    <button class="btn-mini" onclick="document.getElementById('inventory-screen-item').classList.add('hidden')" style="margin-top:20px;">닫기</button>
+</div>
+
+    <div class="overlay hidden" id="wordbook-screen">
+        <h2>📘 오답 노트</h2>
+        <div style="background:#e3f2fd; padding:10px; border-radius:10px; color:#333; margin-bottom:10px;">
+            졸업한 단어: <b id="master-count" style="color:var(--blue);">0</b> 개
+        </div>
+        <button class="buy-btn" style="background:var(--purple);" onclick="game.startReviewMode()">🔥 복습 테스트 시작</button>
+        <div class="wordbook-list" id="wb-list"></div>
+        <button class="btn-mini close-btn" onclick="document.getElementById('wordbook-screen').classList.add('hidden')">닫기</button>
+    </div>
+
+    <div class="overlay hidden" id="dex-screen">
+        <h2>📖 단어 도감</h2>
+        <div style="background:rgba(0,0,0,.25); border:2px solid rgba(255,202,40,.3); padding:12px; border-radius:14px; color:#fff; margin-bottom:6px; width:90%; max-width:400px;">
+            졸업한 단어 <b id="dex-count" style="color:var(--gold); font-size:1.3rem;">0</b>
+            <span style="opacity:.7;">/ <span id="dex-total">0</span></span>
+            <div style="height:10px; background:rgba(255,255,255,.15); border-radius:5px; margin-top:8px; overflow:hidden;">
+                <div id="dex-bar" style="height:100%; width:0%; background:linear-gradient(90deg,#ffd54f,#ffb300); transition:width .4s;"></div>
+            </div>
+        </div>
+        <div class="wordbook-list" id="dex-list"></div>
+        <button class="btn-mini close-btn" onclick="document.getElementById('dex-screen').classList.add('hidden')">닫기</button>
+    </div>
+
+    <div class="overlay hidden" id="chardex-screen">
+        <h2>🧑‍🤝‍🧑 손님 도감</h2>
+        <div style="background:rgba(0,0,0,.25); border:2px solid rgba(255,202,40,.3); padding:10px; border-radius:14px; color:#fff; margin-bottom:8px; width:90%; max-width:430px;">
+            모은 손님 <b id="chardex-count" style="color:var(--gold); font-size:1.2rem;">0</b>
+            <span style="opacity:.7;">/ <span id="chardex-total">0</span></span>
+        </div>
+        <div id="chardex-grid"></div>
+        <button class="btn-mini close-btn" onclick="document.getElementById('chardex-screen').classList.add('hidden')">닫기</button>
+    </div>
+
+    <div class="overlay hidden" id="day-clear-screen">
+        <h2 style="color:var(--gold)">🌅 영업 종료!</h2>
+        <p>Day <span id="cleared-day">1</span> 완료</p>
+        <button class="buy-btn" onclick="game.startNextDay()">다음 날 영업 시작 👉</button>
+    </div>
+
+    <div class="overlay hidden" id="result-screen">
+        <h2 id="result-title">❌ GAME OVER</h2>
+        <div style="background:rgba(255,255,255,0.1); padding:15px; border-radius:10px; width:80%;">
+            <div style="font-size:1.4rem; color:var(--gold);">Day <span id="final-day">1</span></div>
+            <div>점수: <span id="final-score">0</span></div>
+            <div id="result-msg" style="color:#aaa; font-size:0.9rem;"></div>
+        </div>
+        
+        <div id="input-area" style="margin-top:20px;">
+            <input type="text" id="nickname" placeholder="닉네임" style="padding:10px; text-align:center;">
+            <button class="buy-btn" onclick="game.submitRank()">랭킹 등록</button>
+        </div>
+        <div id="ranking-board" class="quest-list hidden"></div>
+
+        <div style="display:flex; gap:10px; justify-content:center; margin-top:20px; width:90%;">
+            <button id="revive-btn" class="buy-btn" onclick="game.revive()" style="background:#ef5350; flex:1; font-size:1rem;">
+                ❤️ 부활 (450G)
+            </button>
+            <button class="btn-mini" onclick="location.reload()" style="background:#757575; flex:1; font-size:1rem;">
+                🏠 타이틀
+            </button>
+        </div>
+    </div>
+
+<script src="shared/worddata.js"></script>
+<script>
+// ==========================================
+// [0] 카페 BGM 엔진 (MP3 파일 버전)
+// ==========================================
+const BgMusic = {
+    audio: new Audio('bgm.mp3'), // 폴더 내 bgm.mp3 파일을 찾음
+    isMuted: false,
+
+    init: function() {
+        this.audio.loop = true; // 무한 반복 설정
+        
+        // ▼▼▼ [여기 추가] 볼륨을 30%로 설정 (0.0 ~ 1.0) ▼▼▼
+        this.audio.volume = 0.3; 
+        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
+        // 저장된 설정 불러오기
+        const saved = localStorage.getItem('vb_bgm_mute');
+        this.isMuted = (saved === 'true');
+        this.updateBtn();
+
+        // [앱 종료/백그라운드 시 BGM 정지] — 전산회계오락실 방식(visibilitychange) 참고
+        if(!this._lifecycleBound){
+            this._lifecycleBound = true;
+            const self = this;
+            document.addEventListener('visibilitychange', () => {
+                if(document.hidden) self.audio.pause();
+                else if(!self.isMuted) self.play();
+            });
+            window.addEventListener('pagehide', () => self.audio.pause());
+            window.addEventListener('beforeunload', () => self.audio.pause());
+            try {
+                const App = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
+                if(App) App.addListener('appStateChange', (s) => {
+                    if(!s.isActive) self.audio.pause();
+                    else if(!self.isMuted) self.play();
+                });
+            } catch(e){}
+        }
+    },
+
+    play: function() {
+        if(this.isMuted) return;
+        // 브라우저 정책상 사용자 인터랙션 후 재생됨
+        this.audio.play().catch(error => {
+            console.log("사용자 클릭이 필요합니다.");
+        });
+    },
+
+    stop: function() {
+        this.audio.pause();
+    },
+
+    toggle: function() {
+        this.isMuted = !this.isMuted;
+        localStorage.setItem('vb_bgm_mute', this.isMuted);
+        this.updateBtn();
+        
+        if(this.isMuted) this.stop(); 
+        else this.play();
+    },
+
+    updateBtn: function() { 
+        const txt = this.isMuted ? "🔇" : "🎵"; 
+        const btn1 = document.getElementById('bgm-btn');
+        const btn2 = document.getElementById('bgm-pause-btn');
+        if(btn1) btn1.innerText = txt; 
+        if(btn2) btn2.innerText = txt + " BGM"; 
+    }
+};
+
+// ==========================================
+// [1] 전역 통계 및 퀘스트
+// ==========================================
+var totalServedCount = 0;
+var totalVipCount = 0;
+var totalItemsBought = 0;
+
+const QUEST_DB = {
+    normal: [
+        { level: 1, title: '개업 신고', desc: '손님 5명 서빙하기', target: 5, reward: 100 },
+        { level: 2, title: '입소문', desc: '손님 20명 서빙하기', target: 20, reward: 300 },
+        { level: 3, title: '맛집 등극', desc: '손님 50명 서빙하기', target: 50, reward: 800 },
+        { level: 4, title: '줄 서는 식당', desc: '손님 100명 서빙하기', target: 100, reward: 2000 },
+        { level: 5, title: '요식업의 전설', desc: '손님 200명 서빙하기', target: 200, reward: 5000 }
+    ],
+    shop: [
+        { level: 1, title: '인테리어 시작', desc: '아이템 1개 구매하기', target: 1, reward: 300 },
+        { level: 2, title: '매장 꾸미기', desc: '아이템 3개 구매하기', target: 3, reward: 800 },
+        { level: 3, title: '리모델링', desc: '아이템 5개 구매하기', target: 5, reward: 1500 },
+        { level: 4, title: '확장 공사', desc: '아이템 8개 구매하기', target: 8, reward: 3000 },
+        { level: 5, title: '최고급 매장', desc: '아이템 12개 구매하기', target: 12, reward: 6000 }
+    ],
+    vip: [
+        { level: 1, title: 'VIP 전담', desc: 'VIP 손님 3명 성공', target: 3, reward: 600 },
+        { level: 2, title: 'VIP 단골', desc: 'VIP 손님 10명 성공', target: 10, reward: 1500 },
+        { level: 3, title: '귀빈 대접', desc: 'VIP 손님 20명 성공', target: 20, reward: 3000 },
+        { level: 4, title: '셀럽의 성지', desc: 'VIP 손님 40명 성공', target: 40, reward: 6000 },
+        { level: 5, title: '왕실 지정', desc: 'VIP 손님 80명 성공', target: 80, reward: 12000 }
+    ],
+    gold: [
+        { level: 1, title: '저축왕', desc: '지갑에 2,000G 모으기', target: 2000, reward: 1000 },
+        { level: 2, title: '부자의 꿈', desc: '지갑에 10,000G 모으기', target: 10000, reward: 3000 },
+        { level: 3, title: '자산가', desc: '지갑에 30,000G 모으기', target: 30000, reward: 8000 },
+        { level: 4, title: '백만장자', desc: '지갑에 100,000G 모으기', target: 100000, reward: 20000 },
+        { level: 5, title: '경제 대통령', desc: '지갑에 300,000G 모으기', target: 300000, reward: 50000 }
+    ],
+    master: [
+        { level: 1, title: '단어 수집가', desc: '단어 5개 졸업하기', target: 5, reward: 200 },
+        { level: 2, title: '암기왕 입문', desc: '단어 30개 졸업하기', target: 30, reward: 600 },
+        { level: 3, title: '어휘력 상승', desc: '단어 80개 졸업하기', target: 80, reward: 1500 },
+        { level: 4, title: '단어 마스터', desc: '단어 200개 졸업하기', target: 200, reward: 4000 },
+        { level: 5, title: '걸어다니는 사전', desc: '단어 500개 졸업하기', target: 500, reward: 10000 }
+    ],
+    combo: [
+        { level: 1, title: '리듬 타기', desc: '최고 콤보 5 달성', target: 5, reward: 150 },
+        { level: 2, title: '연속 정답', desc: '최고 콤보 10 달성', target: 10, reward: 400 },
+        { level: 3, title: '폭주 기관차', desc: '최고 콤보 20 달성', target: 20, reward: 1000 },
+        { level: 4, title: '멈출 수 없어', desc: '최고 콤보 35 달성', target: 35, reward: 2500 },
+        { level: 5, title: '콤보의 신', desc: '최고 콤보 50 달성', target: 50, reward: 6000 }
+    ]
+};
+
+let currentQuests = [
+    { ...QUEST_DB.normal[0], type: 'normal', progress: 0, completed: false, isReady: false },
+    { ...QUEST_DB.master[0], type: 'master', progress: 0, completed: false, isReady: false },
+    { ...QUEST_DB.combo[0], type: 'combo', progress: 0, completed: false, isReady: false },
+    { ...QUEST_DB.shop[0], type: 'shop', progress: 0, completed: false, isReady: false },
+    { ...QUEST_DB.vip[0], type: 'vip', progress: 0, completed: false, isReady: false },
+    { ...QUEST_DB.gold[0], type: 'gold', progress: 0, completed: false, isReady: false }
+];
+
+// 저장된 게임에 새 퀘스트 트랙이 없으면 추가 (구버전 세이브 마이그레이션)
+function ensureQuestTracks() {
+    const have = new Set(currentQuests.map(q => q.type));
+    Object.keys(QUEST_DB).forEach(type => {
+        if (!have.has(type)) {
+            currentQuests.push({ ...QUEST_DB[type][0], type, progress: 0, completed: false, isReady: false });
+        }
+    });
+}
+
+function checkQuests() {
+    const currentGold = (typeof game !== 'undefined') ? game.wallet : 0;
+    let hasReady = false;
+
+    currentQuests.forEach((quest, index) => {
+        if (quest.completed || quest.isReady) {
+            if(quest.isReady) hasReady = true;
+            return;
+        }
+
+        let isMet = false;
+        if (quest.type === 'normal') {
+            quest.progress = totalServedCount;
+            if (totalServedCount >= quest.target) isMet = true;
+        } else if (quest.type === 'shop') {
+            quest.progress = totalItemsBought;
+            if (totalItemsBought >= quest.target) isMet = true;
+        } else if (quest.type === 'vip') {
+            quest.progress = totalVipCount;
+            if (totalVipCount >= quest.target) isMet = true;
+        } else if (quest.type === 'gold') {
+            quest.progress = currentGold;
+            if (currentGold >= quest.target) isMet = true;
+        } else if (quest.type === 'master') {
+            const m = (typeof game !== 'undefined' && game.mastered) ? game.mastered.length : 0;
+            quest.progress = m;
+            if (m >= quest.target) isMet = true;
+        } else if (quest.type === 'combo') {
+            const mc = (typeof game !== 'undefined') ? (game.maxCombo || 0) : 0;
+            quest.progress = mc;
+            if (mc >= quest.target) isMet = true;
+        }
+
+        if (isMet) {
+            quest.isReady = true; 
+            hasReady = true;
+            // 여기서 game.saveData()를 호출하지 않음
+        }
+    });
+    // 반복문이 끝난 뒤 조건이 충족되었으면 한 번만 저장
+    if(hasReady && typeof game !== 'undefined') game.saveData();
+
+    const noti = document.getElementById('quest-noti');
+    if(noti) {
+        if(hasReady) noti.classList.add('active');
+        else noti.classList.remove('active');
+    }
+}
+
+// 알림창 닫기 버튼을 눌렀을 때 실행할 '할 일'을 저장할 변수
+var onAlertClose = null; 
+
+// [함수 1] 알림창 띄우기 (메시지, 닫은 뒤 할 일)
+function showGameAlert(msg, callback) {
+    document.getElementById('custom-alert-msg').innerHTML = msg;
+    document.getElementById('custom-alert').classList.remove('hidden');
+    onAlertClose = callback; // 확인 버튼 누르면 이 함수 실행
+}
+
+// [함수 2] 알림창 닫기 (HTML 버튼이 이 함수를 호출함)
+function closeCustomAlert() {
+    document.getElementById('custom-alert').classList.add('hidden');
+    if (onAlertClose) {
+        onAlertClose(); // 저장해둔 '할 일' 실행
+        onAlertClose = null; // 초기화
+    }
+}
+
+// 단어 데이터
+// 단어 데이터: shared/worddata.js 로 분리됨 (전역 wordData / window.wordData)
+
+let rawWords = [];
+
+// 단어 조회용 맵 (도감/복습에서 뜻·예문·출처 표시용)
+const WORD_MAP = {};
+['easy','normal','hard'].forEach(t => (wordData[t]||[]).forEach(o => { WORD_MAP[o.w] = o; }));
+const TOTAL_WORDS = Object.keys(WORD_MAP).length;
+
+// 3. 헬퍼 함수
+function showDifficulty() {
+    document.getElementById('start-screen').classList.add('hidden');
+    document.getElementById('difficulty-screen').classList.remove('hidden');
+    document.getElementById('difficulty-screen').style.display = 'flex';
+    BgMusic.init();
+    BgMusic.play(); 
+}
+function closeDifficulty() {
+    document.getElementById('difficulty-screen').classList.add('hidden');
+    document.getElementById('start-screen').classList.remove('hidden');
+}
+function selectDifficulty(mode) {
+    if(!wordData[mode]) { rawWords = wordData.easy; mode = 'easy'; }
+    else rawWords = wordData[mode];
+    game.difficulty = mode; // [버그수정] 난이도 저장 → 점수 계산(Easy100/Normal150/Hard200)에 반영
+    document.getElementById('difficulty-screen').classList.add('hidden');
+    game.start(false);
+}
+
+// ==========================================
+// [신규] 커스텀 SVG 캐릭터 시스템 (이모지 대체)
+// ==========================================
+function _hair(style, c) {
+    switch(style) {
+        case 'bob': return `<path d="M50 92 C44 28 156 28 150 92 C150 118 142 134 134 138 L134 70 C120 52 80 52 66 70 L66 138 C58 134 50 118 50 92 Z" fill="${c}"/>`;
+        case 'bun': return `<circle cx="100" cy="30" r="15" fill="${c}"/><path d="M52 88 C46 34 154 34 148 88 C148 60 136 46 100 46 C64 46 52 60 52 88 Z" fill="${c}"/>`;
+        case 'beanie': return `<path d="M48 86 C48 36 152 36 152 86 Z" fill="${c}"/><rect x="46" y="80" width="108" height="14" rx="7" fill="${c}" filter="brightness(.8)"/><rect x="46" y="80" width="108" height="14" rx="7" fill="rgba(0,0,0,.18)"/>`;
+        case 'bald': return ``;
+        case 'long': return `<path d="M48 95 C42 24 158 24 152 95 C152 60 138 44 100 44 C62 44 48 60 48 95 Z" fill="${c}"/>`
+            + `<path d="M46 92 C38 150 48 205 60 216 L76 210 C66 168 62 118 70 96 Z" fill="${c}"/>`
+            + `<path d="M154 92 C162 150 152 205 140 216 L124 210 C134 168 138 118 130 96 Z" fill="${c}"/>`;
+        case 'ponytail': return `<circle cx="150" cy="60" r="0"/><path d="M150 70 C176 78 178 140 160 175 L146 168 C158 138 152 96 138 84 Z" fill="${c}"/>`
+            + `<path d="M52 90 C46 30 154 30 148 90 C148 62 136 46 100 46 C64 46 52 62 52 90 Z" fill="${c}"/>`;
+        default: return `<path d="M52 90 C46 30 154 30 148 90 C148 62 136 46 100 46 C64 46 52 62 52 90 Z" fill="${c}"/>`; // short
+    }
+}
+function _brows(mood, c) {
+    if(mood==='angry') return `<path d="M70 70 L92 80" stroke="${c}" stroke-width="6" stroke-linecap="round"/><path d="M130 70 L108 80" stroke="${c}" stroke-width="6" stroke-linecap="round"/>`;
+    if(mood==='happy') return `<path d="M70 72 Q80 66 90 70" stroke="${c}" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M110 70 Q120 66 130 72" stroke="${c}" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+    return `<rect x="71" y="72" width="20" height="5" rx="2.5" fill="${c}"/><rect x="109" y="72" width="20" height="5" rx="2.5" fill="${c}"/>`;
+}
+function _mouth(mood) {
+    if(mood==='angry') return `<path d="M84 116 L116 116 L116 124 L84 124 Z" fill="#fff" stroke="#7a4a3a" stroke-width="2.5"/><path d="M92 116 V124 M100 116 V124 M108 116 V124" stroke="#7a4a3a" stroke-width="1.8"/>`;
+    if(mood==='happy') return `<path d="M82 112 Q100 134 118 112 Q100 122 82 112 Z" fill="#fff" stroke="#7a4a3a" stroke-width="3"/>`;
+    return `<path d="M88 116 Q100 123 112 116" stroke="#7a4a3a" stroke-width="4" fill="none" stroke-linecap="round"/>`;
+}
+function buildAvatarSVG(o) {
+    const skin=o.skin, sh=o.skinShade||'#d9a679', shirt=o.shirt, shirtD=o.shirtDark||'rgba(0,0,0,.18)';
+    const browC = o.brow||'#3b2a20';
+    const glasses = o.glasses ? `<g><circle cx="80" cy="92" r="13" fill="rgba(255,255,255,.15)" stroke="#3b2a20" stroke-width="3"/><circle cx="120" cy="92" r="13" fill="rgba(255,255,255,.15)" stroke="#3b2a20" stroke-width="3"/><path d="M93 92 H107" stroke="#3b2a20" stroke-width="3"/></g>` : '';
+    const blush = o.blush ? `<ellipse cx="64" cy="104" rx="9" ry="5" fill="#ff9e9e" opacity=".55"/><ellipse cx="136" cy="104" rx="9" ry="5" fill="#ff9e9e" opacity=".55"/>` : '';
+    const lashes = o.lashes ? `<path d="M71 87 Q80 82 90 87" stroke="#3b2a20" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M110 87 Q120 82 129 87" stroke="#3b2a20" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M70 89 l-5 -3 M130 89 l5 -3" stroke="#3b2a20" stroke-width="2" stroke-linecap="round"/>` : '';
+    const mouthSVG = o.lips ? `<path d="M86 114 Q100 127 114 114 Q100 121 86 114 Z" fill="#e0607e"/><path d="M86 114 Q100 119 114 114" stroke="#c44a66" stroke-width="1.5" fill="none"/>` : _mouth(o.mood);
+    const backHair = (o.hairStyle === 'long' || o.hairStyle === 'ponytail') ? _hair(o.hairStyle, o.hair) : '';
+    return `<svg viewBox="0 -36 200 286" xmlns="http://www.w3.org/2000/svg">
+        ${backHair}
+        <path d="M24 250 C24 176 58 152 100 152 C142 152 176 176 176 250 Z" fill="${shirt}"/>
+        <path d="M80 152 L100 178 L120 152 Z" fill="${shirtD}"/>
+        <rect x="86" y="120" width="28" height="36" rx="13" fill="${sh}"/>
+        <circle cx="52" cy="94" r="11" fill="${skin}"/><circle cx="148" cy="94" r="11" fill="${skin}"/>
+        <ellipse cx="100" cy="90" rx="49" ry="53" fill="${skin}"/>
+        ${(o.special==='vip' || backHair) ? '' : _hair(o.hairStyle, o.hair)}
+        ${backHair ? `<path d="M48 95 C42 24 158 24 152 95 C152 60 138 44 100 44 C62 44 48 60 48 95 Z" fill="${o.hair}"/>` : ''}
+        <ellipse cx="80" cy="92" rx="8" ry="10.5" fill="#fff"/><ellipse cx="120" cy="92" rx="8" ry="10.5" fill="#fff"/>
+        <circle cx="81" cy="94" r="5.2" fill="#3b2a20"/><circle cx="121" cy="94" r="5.2" fill="#3b2a20"/>
+        <circle cx="83" cy="90" r="1.8" fill="#fff"/><circle cx="123" cy="90" r="1.8" fill="#fff"/>
+        ${_brows(o.mood, browC)}
+        ${mouthSVG}
+        ${blush}${lashes}${glasses}
+        ${o.front||''}
+    </svg>`;
+}
+
+// 동물 손님 빌더 (고양이/강아지)
+function buildAnimalSVG(kind, o) {
+    o = o || {};
+    if(kind === 'cat') {
+        const fur=o.fur||'#f0a860', furD=o.furD||'#d98838', eye=o.eye||'#2e9e5b';
+        return `<svg viewBox="0 -36 200 286" xmlns="http://www.w3.org/2000/svg">
+            <path d="M40 250 C40 182 70 160 100 160 C130 160 160 182 160 250 Z" fill="${fur}"/>
+            <ellipse cx="100" cy="226" rx="32" ry="38" fill="#fff5e8"/>
+            <path d="M56 72 L48 26 L88 58 Z" fill="${fur}"/><path d="M144 72 L152 26 L112 58 Z" fill="${fur}"/>
+            <path d="M62 66 L57 38 L80 58 Z" fill="#ffd1a6"/><path d="M138 66 L143 38 L120 58 Z" fill="#ffd1a6"/>
+            <ellipse cx="100" cy="98" rx="56" ry="50" fill="${fur}"/>
+            <g stroke="${furD}" stroke-width="5" stroke-linecap="round"><path d="M100 50 v16 M82 56 l5 14 M118 56 l-5 14"/></g>
+            <ellipse cx="77" cy="98" rx="11" ry="15" fill="#fff"/><ellipse cx="123" cy="98" rx="11" ry="15" fill="#fff"/>
+            <ellipse cx="77" cy="99" rx="5.5" ry="12" fill="${eye}"/><ellipse cx="123" cy="99" rx="5.5" ry="12" fill="${eye}"/>
+            <circle cx="74" cy="93" r="2.4" fill="#fff"/><circle cx="120" cy="93" r="2.4" fill="#fff"/>
+            <path d="M93 111 L107 111 L100 119 Z" fill="#e57689"/>
+            <path d="M100 119 Q92 129 83 123 M100 119 Q108 129 117 123" stroke="#7a4a3a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <g stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".9"><path d="M68 110 L38 103 M68 117 L40 120 M132 110 L162 103 M132 117 L160 120"/></g>
+            <ellipse cx="64" cy="116" rx="8" ry="5" fill="#ff9e9e" opacity=".5"/><ellipse cx="136" cy="116" rx="8" ry="5" fill="#ff9e9e" opacity=".5"/>
+        </svg>`;
+    }
+    // dog
+    const fur=o.fur||'#c99a6a', furD=o.furD||'#9c6f42';
+    return `<svg viewBox="0 -36 200 286" xmlns="http://www.w3.org/2000/svg">
+        <path d="M40 250 C40 182 70 160 100 160 C130 160 160 182 160 250 Z" fill="${fur}"/>
+        <ellipse cx="100" cy="226" rx="30" ry="38" fill="#f5e6cf"/>
+        <ellipse cx="46" cy="104" rx="19" ry="42" fill="${furD}"/><ellipse cx="154" cy="104" rx="19" ry="42" fill="${furD}"/>
+        <ellipse cx="100" cy="96" rx="54" ry="50" fill="${fur}"/>
+        <ellipse cx="100" cy="120" rx="30" ry="24" fill="#f5e6cf"/>
+        <circle cx="80" cy="92" r="9.5" fill="#3b2a20"/><circle cx="120" cy="92" r="9.5" fill="#3b2a20"/>
+        <circle cx="83" cy="89" r="3" fill="#fff"/><circle cx="123" cy="89" r="3" fill="#fff"/>
+        <ellipse cx="100" cy="108" rx="10" ry="7.5" fill="#3b2a20"/>
+        <path d="M100 115 V127" stroke="#7a4a3a" stroke-width="2.5"/>
+        <path d="M100 127 Q89 133 85 126 M100 127 Q111 133 115 126" stroke="#7a4a3a" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <path d="M95 129 q5 13 10 0 Z" fill="#ff7d8a"/>
+        <ellipse cx="62" cy="112" rx="8" ry="5" fill="#ff9e9e" opacity=".45"/><ellipse cx="138" cy="112" rx="8" ry="5" fill="#ff9e9e" opacity=".45"/>
+    </svg>`;
+}
+
+// ==========================================
+// [캐릭터 레지스트리] 손님 도감용 메타 + 렌더 정보
+//   kind: human|cat|dog|main / rarity: common|uncommon|rare|epic|legendary
+//   img: (선택) 외부 이미지 경로 — ChatGPT로 뽑은 PNG를 넣으면 SVG 대신 사용
+// ==========================================
+const CHAR_DEX = [
+    { id:'c_yujin', name:'유진',  kind:'human', rarity:'common', desc:'아침마다 들르는 단골 직장인',
+      spec:{ skin:'#f3c9a0', skinShade:'#e0ad7e', hair:'#3b2a20', hairStyle:'bob', shirt:'#2b3a55', mood:'happy', blush:true } },
+    { id:'c_minjun', name:'민준', kind:'human', rarity:'common', desc:'안경 쓴 차분한 회사원',
+      spec:{ skin:'#e8b58a', skinShade:'#d49b6e', hair:'#241812', hairStyle:'short', shirt:'#455a64', mood:'neutral', glasses:true } },
+    { id:'c_haein', name:'하은', kind:'human', rarity:'common', desc:'발랄한 단골 학생',
+      spec:{ skin:'#f7d3ad', skinShade:'#e6bb8c', hair:'#5d3a1a', hairStyle:'bob', shirt:'#e57373', mood:'happy', blush:true } },
+    { id:'c_doyun', name:'도윤', kind:'human', rarity:'common', desc:'비니가 트레이드마크인 청년',
+      spec:{ skin:'#d9a679', skinShade:'#c28e60', hair:'#2e7d32', hairStyle:'beanie', shirt:'#66bb6a', mood:'neutral' } },
+    { id:'c_grandma', name:'순자 여사', kind:'human', rarity:'common', desc:'정 많은 동네 어르신',
+      spec:{ skin:'#f0c9a6', skinShade:'#ddb088', hair:'#cfcfcf', hairStyle:'bun', shirt:'#9575cd', mood:'happy', glasses:true } },
+    { id:'c_hipster', name:'재이', kind:'human', rarity:'common', desc:'노란 셔츠의 힙스터',
+      spec:{ skin:'#c98a5e', skinShade:'#b5774b', hair:'#1c1c1c', hairStyle:'short', shirt:'#d4a017', mood:'neutral' } },
+
+    { id:'c_seoa', name:'서아', kind:'human', rarity:'uncommon', desc:'긴 머리의 우아한 단골',
+      spec:{ skin:'#f6d5b4', skinShade:'#e7be97', hair:'#4a2c1a', hairStyle:'long', shirt:'#ef9a9a', mood:'happy', blush:true, lashes:true, lips:true } },
+    { id:'c_cat',  name:'나비',  kind:'cat',  rarity:'uncommon', desc:'도도하지만 정 많은 고양이 손님', anim:'cat' },
+    { id:'c_dog',  name:'초코',  kind:'dog',  rarity:'uncommon', desc:'언제나 해맑은 강아지 손님', anim:'dog' },
+
+    { id:'c_rush', name:'버럭 씨', kind:'rush', rarity:'common', desc:'3초도 못 기다리는 성격 급한 손님',
+      spec: { skin:'#e8896f', skinShade:'#d4745a', hair:'#2a1a12', hairStyle:'short', shirt:'#7a2e2e', mood:'angry', brow:'#2a1a12',
+        front:`<g><path d="M150 66 q-7 11 0 16 a4.2 4.2 0 0 0 0 -16 Z" fill="#7ec8ff" opacity=".9"/><g stroke="#ff3b3b" stroke-width="4" stroke-linecap="round"><path d="M150 18 l10 -10 M164 14 l8 2 M158 28 l10 4"/></g><g fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".75"><path d="M74 18 q-7 -10 0 -20"/><path d="M100 12 q-7 -10 0 -20"/></g></g>` } },
+
+    { id:'c_vip', name:'젠틀 경', kind:'vip', rarity:'rare', desc:'실크햇과 모노클의 품격 있는 신사',
+      spec: { skin:'#f1cda3', skinShade:'#e0b483', hair:'#1c1c1c', hairStyle:'short', shirt:'#1a1a1a', shirtDark:'#000', mood:'neutral', special:'vip',
+        front:`<g><path d="M88 156 L100 163 L88 170 Z" fill="#b8860b"/><path d="M112 156 L100 163 L112 170 Z" fill="#b8860b"/><circle cx="100" cy="163" r="4" fill="#8a6508"/><path d="M82 110 Q100 120 118 110 Q110 117 100 115 Q90 117 82 110 Z" fill="#3b2a20"/><circle cx="120" cy="92" r="14" fill="rgba(255,255,255,.12)" stroke="#d4af37" stroke-width="3"/><path d="M122 106 Q128 124 118 136" stroke="#d4af37" stroke-width="2" fill="none"/><rect x="56" y="12" width="88" height="13" rx="4" fill="#141414"/><rect x="72" y="-30" width="56" height="46" rx="5" fill="#141414"/><rect x="72" y="2" width="56" height="9" fill="#b8860b"/></g>` } },
+
+    // ===== 메인 캐릭터 (주기적 등장 · 스토리) =====
+    { id:'m_roa', name:'로아', kind:'main', rarity:'epic', tags:['normal'], img:'chars/roa.png',
+      title:'전설의 떠돌이 바리스타',
+      desc:'세계를 떠돌며 단 한 잔의 완벽한 커피를 찾는 전설의 바리스타. 그의 인정을 받으면 카페의 격이 올라간다고 한다.',
+      story:'"…나쁘지 않군. 하지만 진짜 실력은 단어로 증명하는 법이지. 자, 내 주문을 맞춰보게."',
+      spec:{ skin:'#e9c39a', skinShade:'#d6ab7e', hair:'#e8e8ef', hairStyle:'long', shirt:'#2c3e50', shirtDark:'#1a252f', mood:'neutral', brow:'#9a9aa6',
+        front:`<g><path d="M24 250 C24 200 50 176 100 176 C150 176 176 200 176 250 Z" fill="#37474f"/><rect x="70" y="176" width="60" height="74" fill="#eceff1" opacity=".9"/><path d="M70 176 L100 196 L130 176 Z" fill="#cfd8dc"/><circle cx="100" cy="214" r="9" fill="none" stroke="#8a6d3b" stroke-width="3"/><path d="M100 209 q4 5 0 10 q-4 -5 0 -10" fill="#8a6d3b"/><path d="M118 86 q14 -2 18 10" stroke="#cfa84a" stroke-width="3" fill="none"/></g>` },
+      faceScar:true },
+    { id:'m_luna', name:'루나', kind:'main', rarity:'legendary', tags:['vip'], img:'chars/luna.png',
+      title:'달빛 마녀 단골',
+      desc:'보름달이 뜨는 밤에만 나타나는 신비로운 단골. 그녀의 주문은 늘 어렵지만, 맞히면 마법 같은 행운이 따라온다.',
+      story:'"후훗… 오늘 밤은 운이 좋네. 내 철자 주문을 완성하면, 달빛의 보상을 주지."',
+      spec:{ skin:'#f3dcc4', skinShade:'#e6c5a6', hair:'#7e57c2', hairStyle:'long', shirt:'#311b4f', shirtDark:'#23123b', mood:'happy', brow:'#5e35a8', blush:true, lashes:true, lips:true, special:'vip',
+        front:`<g><path d="M50 18 L150 18 L100 -34 Z" fill="#3b2456"/><path d="M50 18 L150 18 L100 -10 Z" fill="#4a2e6e"/><circle cx="100" cy="-18" r="6" fill="#ffd76a"/><path d="M150 34 l6 -8 l3 9 l9 3 l-9 3 l-3 9 l-3 -9 l-9 -3 l9 -3 z" fill="#ffd76a" opacity=".9"/><circle cx="138" cy="150" r="5" fill="#ffd76a" opacity=".8"/></g>` } },
+    { id:'m_sera', name:'세라', kind:'main', rarity:'epic', tags:['normal','vip'], img:'chars/sera.png',
+      title:'커피 거리의 인기 아이돌',
+      desc:'우연히 우리 카페를 마음에 들어한 톱스타. 그녀가 오면 가게가 들썩인다. 무대 밖에서 처음 \'집\' 같은 걸 느낀다.',
+      story:'"여기선… 그냥 손님이어도 괜찮은 거죠? 자, 제 주문 맞춰주실래요?"' },
+];
+const CHAR_BY_ID = {}; CHAR_DEX.forEach(c => CHAR_BY_ID[c.id] = c);
+
+function charSVG(c) {
+    if(!c) return '';
+    if(c.img) return `<img src="${c.img}" alt="${c.name}" style="width:100%;height:auto;display:block;">`;
+    if(c.anim) return buildAnimalSVG(c.anim, c);
+    return buildAvatarSVG(c.spec);
+}
+const RARITY_WEIGHT = { common:6, uncommon:3, rare:2 };
+const RARITY_REWARD = { common:80, uncommon:200, rare:500, epic:1500, legendary:3000 };
+const RARITY_LABEL  = { common:'일반', uncommon:'희귀', rare:'레어', epic:'에픽', legendary:'전설' };
+const RARITY_COLOR  = { common:'#9e9e9e', uncommon:'#26a69a', rare:'#5c6bc0', epic:'#ab47bc', legendary:'#ffb300' };
+
+function pickCharByType(type) {
+    if(type === 'vip') {
+        const vmains = CHAR_DEX.filter(c => c.kind==='main' && (c.tags||[]).includes('vip'));
+        if(vmains.length && Math.random() < 0.18) return vmains[Math.floor(Math.random()*vmains.length)];
+        return CHAR_BY_ID['c_vip'];
+    }
+    if(type === 'rush') return CHAR_BY_ID['c_rush'];
+    // normal: 7% 확률로 메인 캐릭터, 아니면 일반 손님 풀에서 희귀도 가중 추첨
+    const nmains = CHAR_DEX.filter(c => c.kind==='main' && (c.tags||[]).includes('normal'));
+    if(nmains.length && Math.random() < 0.07) return nmains[Math.floor(Math.random()*nmains.length)];
+    const pool = CHAR_DEX.filter(c => ['human','cat','dog'].includes(c.kind));
+    let total = 0; pool.forEach(c => total += (RARITY_WEIGHT[c.rarity]||1));
+    let r = Math.random() * total;
+    for(const c of pool) { r -= (RARITY_WEIGHT[c.rarity]||1); if(r <= 0) return c; }
+    return pool[0];
+}
+// 하위호환
+function renderCharacter(spec){ return buildAvatarSVG(spec); }
+
+// 4. 효과음 및 TTS
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playSound(type) {
+    if(game.isMuted) return;
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    const now = audioCtx.currentTime;
+    if(type === 'correct') {
+        osc.type = 'sine'; osc.frequency.setValueAtTime(523.25, now); osc.frequency.exponentialRampToValueAtTime(1046.5, now+0.1);
+        gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now+0.3); osc.start(now); osc.stop(now+0.3);
+    } else if(type === 'wrong') {
+        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, now); osc.frequency.linearRampToValueAtTime(100, now+0.2);
+        gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now+0.3); osc.start(now); osc.stop(now+0.3);
+    } else if(type === 'buy') {
+        osc.type = 'square'; osc.frequency.setValueAtTime(1200, now); osc.frequency.exponentialRampToValueAtTime(1800, now+0.1);
+        gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now+0.2); osc.start(now); osc.stop(now+0.2);
+    } else if(type === 'quest') {
+        osc.type = 'triangle'; osc.frequency.setValueAtTime(400, now); osc.frequency.exponentialRampToValueAtTime(800, now+0.2);
+        gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now+0.5); osc.start(now); osc.stop(now+0.5);
+    } else if(type === 'clear' || type === 'bell') {
+        // [추가] 잭팟/다음날 팡파레: 도-미-솔 아르페지오
+        const notes = [523.25, 659.25, 783.99];
+        notes.forEach((f, i) => {
+            const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+            o.connect(g); g.connect(audioCtx.destination);
+            o.type = 'triangle'; o.frequency.setValueAtTime(f, now + i*0.1);
+            g.gain.setValueAtTime(0.0001, now + i*0.1);
+            g.gain.exponentialRampToValueAtTime(0.25, now + i*0.1 + 0.02);
+            g.gain.exponentialRampToValueAtTime(0.0001, now + i*0.1 + 0.4);
+            o.start(now + i*0.1); o.stop(now + i*0.1 + 0.4);
+        });
+    }
+}
+
+let voiceList = [];
+if(speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = () => voiceList = window.speechSynthesis.getVoices();
+
+function speak(text, callback) {
+    const cleanText = text ? text.split('(')[0].trim() : "";
+    if(game.isMuted || !cleanText) {
+        if(callback) setTimeout(callback, 1500); 
+        return;
+    }
+    if('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        if(voiceList.length === 0) voiceList = window.speechSynthesis.getVoices();
+        const u = new SpeechSynthesisUtterance(cleanText);
+        u.lang = 'en-US'; u.rate = 1.0; 
+        const v = voiceList.find(v => v.name.includes('Google US English')) || voiceList.find(v => v.lang === 'en-US');
+        if(v) u.voice = v;
+        if(callback) { u.onend = callback; u.onerror = callback; }
+        window.speechSynthesis.speak(u);
+    } else {
+        if(callback) setTimeout(callback, 1500);
+    }
+}
+
+/* --- Story Data --- */
+const storyLines = [
+    { s: "🥸", name: "부동산 사장님", text: "자, 계약은 끝났네. 영어 마을이라 월세가 좀 비싸지만 목은 좋아." },
+    { s: "👩‍🍳", name: "나(사장)", text: "감사합니다! 그런데 손님들이 다 영어로 주문한다면서요?" },
+    { s: "🥸", name: "부동산 사장님", text: "그렇지. 여긴 손님들이 <b style='color:var(--red)'>단어 뜻</b>을 말하면, 자네가 알맞은 <b style='color:var(--blue)'>영단어 컵</b>을 줘야 해." },
+    { s: "👿", name: "진상 손님", text: "(갑자기 등장) 어이! 빨리빨리 안 줘? 난 성격 급해서 3초밖에 못 기다려!" },
+    { s: "🥸", name: "부동산 사장님", text: "저런 빨간 녀석들은 <b style='color:var(--red)'>진상 손님</b>이야. 시간 제한이 짧으니 서둘러야 해." },
+    { s: "🎩", name: "VIP", text: "흠... 저는 품격 있게 직접 스펠링을 적어서 주문하겠습니다." },
+    { s: "🥸", name: "부동산 사장님", text: "저런 <b style='color:var(--gold)'>VIP</b>는 팁을 많이 주지. 타자를 쳐서 입력해야 해. 그럼 행운을 비네!" }
+];
+
+// ==========================================
+// [2] 상점 및 아이템 데이터 (5단계)
+// ==========================================
+const SHOP_DB = {
+    counter: [
+        { id: 'c1', name: '미니 선인장', desc: 'Lv.1 소박한 시작', price: 400, icon: '🌵', img:'deco/cactus.svg' },
+        { id: 'c2', name: '해바라기 화분', desc: 'Lv.2 화사한 분위기', price: 1200, icon: '🌻', img:'deco/sunflower.svg' },
+        { id: 'c3', name: '고급 커피잔', desc: 'Lv.3 전문가의 향기', price: 3000, icon: '☕', img:'deco/coffeecup.svg' },
+        { id: 'c4', name: '미니 수족관', desc: 'Lv.4 물멍 타임', price: 7000, icon: '🐠', img:'deco/aquarium.svg' },
+        { id: 'c5', name: '황금 고양이상', desc: 'Lv.5 부의 상징', price: 15000, icon: '🐱', img:'deco/goldcat.svg' }
+    ],
+    wall: [
+        { id: 'w1', name: '메뉴 칠판', desc: 'Lv.1 카페의 기본', price: 600, icon: '📋', img:'deco/chalkboard.svg' },
+        { id: 'w2', name: '네온 사인', desc: 'Lv.2 힙한 감성', price: 2000, icon: '💡', img:'deco/neon.svg' },
+        { id: 'w3', name: '앤티크 시계', desc: 'Lv.3 고풍스러운 멋', price: 5000, icon: '🕰️', img:'deco/clock.svg' },
+        { id: 'w4', name: '명화 액자', desc: 'Lv.4 품격 있는 카페', price: 10000, icon: '🖼️', img:'deco/painting.svg' },
+        { id: 'w5', name: '숲속 창문', desc: 'Lv.5 탁 트인 뷰', price: 20000, icon: '🏞️', img:'deco/forestwindow.svg' }
+    ],
+    pet: [
+        { id: 'p1', name: '길냥이', desc: 'Lv.1 귀여운 친구', price: 700, icon: '🐈', img:'deco/cat.svg' },
+        { id: 'p2', name: '리트리버', desc: 'Lv.2 든든한 댕댕이', price: 2500, icon: '🐕', img:'deco/dog.svg' },
+        { id: 'p3', name: '앵무새', desc: 'Lv.3 말하는 새', price: 6000, icon: '🦜', img:'deco/parrot.svg' },
+        { id: 'p4', name: '아기 펭귄', desc: 'Lv.4 뒤뚱뒤뚱', price: 12000, icon: '🐧', img:'deco/penguin.svg' },
+        { id: 'p5', name: '유니콘', desc: 'Lv.5 환상의 동물', price: 30000, icon: '🦄', img:'deco/unicorn.svg' }
+    ]
+};
+// 장식 아이콘 렌더 헬퍼 (img 있으면 SVG, 없으면 이모지)
+function decoIcon(item, px){ const s = px||52; return item.img
+    ? `<img src="${item.img}" alt="${item.name}" style="width:${s}px;height:${s}px;object-fit:contain;filter:drop-shadow(0 3px 3px rgba(0,0,0,.25));">`
+    : `<span style="font-size:2rem;">${item.icon}</span>`; }
+
+const CONSUMABLES = [
+    { id: 'con_potion', name: '체력 물약', desc: '즉시 라이프 +1', price: 300, icon: '❤️' },
+    { id: 'con_hint',   name: '힌트',     desc: '오답 보기 2개 제거 (VIP는 글자 공개)', price: 120, icon: '💡' },
+    { id: 'con_time',   name: '시간 연장', desc: '지금 손님 시간 +5초', price: 100, icon: '⏱️' },
+    { id: 'con_double', name: '점수 2배',  desc: '다음 정답 점수 2배', price: 200, icon: '✨' },
+    { id: 'con_shield', name: '콤보 보호막', desc: '한 번 틀려도 콤보 유지', price: 250, icon: '🛡️' },
+    { id: 'con_skip',   name: '스킵 티켓', desc: '이 손님 패스', price: 150, icon: '⏩' },
+];
+
+// [탐험 조합 아이템] 탐험 조합소에서 만든 특별 아이템 — 카페에서 사용 (gameSave.craftedItems 공유)
+const CRAFTED_DEFS = {
+    cr_score:  { name:'골든 블렌드', icon:'✨', effect:'double', desc:'다음 정답 점수 2배' },
+    cr_time:   { name:'타임 시럽',   icon:'⏳', effect:'time',   desc:'지금 손님 시간 +5초' },
+    cr_shield: { name:'포근한 라떼', icon:'🛡️', effect:'shield', desc:'한 번 틀려도 콤보 유지' },
+    cr_life:   { name:'에너지 샷',   icon:'❤️', effect:'life',   desc:'라이프 +1' },
+};
+
+// ==========================================
+// [5] 게임 엔진 (Game Object)
+// ==========================================
+const game = {
+    wallet: 0, score: 0, lives: 5, day: 1, totalCustomers: 0, dailyCount: 0, masteredCount: 0,
+    isMuted: false, gameMode: 'normal', isActive: false, isPaused: false, timer: null, currentCust: null,
+    activePool: [], sortedWords: [], ownedItems: [], myWords: [],
+    
+    // [신규] 상점 레벨 및 장착 상태
+    shopLevels: { counter: 0, wall: 0, pet: 0 }, 
+    currentEquip: { counter: 0, wall: 0, pet: 0 },
+
+    init: function() {
+        this.isFever = false;
+        this.combo = 0;
+        this. feverTimer = null;
+
+        if(rawWords && rawWords.length > 0) {
+            this.sortedWords = JSON.parse(JSON.stringify(rawWords));
+            this.sortedWords.sort((a,b) => a.w.length - b.w.length);
+        }
+        const vipInput = document.getElementById('vip-input');
+        if(vipInput) vipInput.onkeypress = (e) => { if(e.key==='Enter') game.checkVipAnswer(); };
+
+        this.mastered = JSON.parse(localStorage.getItem('vb_mastered_v7')) || [];
+        const saved = localStorage.getItem('vb_save_v7');
+        
+        if(saved) {
+            const data = JSON.parse(saved);
+            this.wallet = data.wallet || 0;
+            // this.ownedItems = data.ownedItems || []; (이제 사용 안 함)
+            this.myWords = data.myWords || [];
+            this.day = data.day || 1;
+            this.score = data.score || 0;
+            this.lives = data.lives || 5;
+            this.totalCustomers = data.totalCustomers || 0;
+            this.dailyCount = data.dailyCount || 0;
+            this.isMuted = data.isMuted || false;
+            this.masteredCount = data.masteredCount || 0;
+            
+            // [신규] 상점 데이터 로드
+            this.shopLevels = data.shopLevels || { counter: 0, wall: 0, pet: 0 };
+            this.currentEquip = data.currentEquip || { counter: 0, wall: 0, pet: 0 };
+
+            if(data.masteredList) this.mastered = data.masteredList;
+            this.maxCombo = data.maxCombo || 0;       // 최고 콤보(퀘스트)
+            this.turnCount = data.turnCount || 0;      // SRS 턴
+            this.craftedItems = (data.craftedItems && typeof data.craftedItems==='object') ? data.craftedItems : {}; // 탐험 조합 아이템(공유)
+            if(data.stats) {
+                totalServedCount = data.stats.totalServed || 0;
+                totalVipCount = data.stats.totalVip || 0;
+                totalItemsBought = data.stats.totalItems || 0;
+                if(data.stats.currentQuests) currentQuests = data.stats.currentQuests;
+            }
+        } else {
+            // 초기화
+            this.shopLevels = { counter: 0, wall: 0, pet: 0 };
+            this.currentEquip = { counter: 0, wall: 0, pet: 0 };
+        }
+
+        // [SRS 마이그레이션] 구버전 오답노트에 box/due 없으면 채워줌(즉시 복습 대상)
+        this.myWords = (this.myWords || []).map(v => ({
+            w: v.w, m: v.m, ex: v.ex, s: v.s,
+            box: v.box || 1, due: (typeof v.due === 'number') ? v.due : 0
+        }));
+        // 부스터 상태 기본값
+        if(typeof this.maxCombo !== 'number') this.maxCombo = 0;
+        if(typeof this.turnCount !== 'number') this.turnCount = 0;
+        this.doubleNext = false; this.comboShield = false;
+        if(!Array.isArray(this.collectedChars)) this.collectedChars = (saved ? (JSON.parse(saved).collectedChars || []) : []);
+        ensureQuestTracks(); // 새 퀘스트 트랙(학습/콤보) 보강
+
+        checkQuests();
+        this.updateHUD();
+        this.updateDecorations();
+        this.updateSoundIcon();
+        this.updateExploreBtn();
+        BgMusic.init();
+        // ▼▼▼ 여기서부터 복사하세요 ▼▼▼
+
+    },
+
+// [데이터 저장 수정]
+    saveData: function() {
+        const data = {
+            wallet: this.wallet, 
+            shopLevels: this.shopLevels,    // [신규] 보유 레벨
+            currentEquip: this.currentEquip,// [신규] 장착 상태
+            myWords: this.myWords,
+            day: this.day, score: this.score, lives: this.lives,
+            stats: { totalServed: totalServedCount, totalVip: totalVipCount, totalItems: totalItemsBought, currentQuests: currentQuests },
+            totalCustomers: this.totalCustomers, dailyCount: this.dailyCount, isMuted: this.isMuted,
+            masteredCount: this.masteredCount, masteredList: this.mastered,
+            maxCombo: this.maxCombo || 0, turnCount: this.turnCount || 0,
+            collectedChars: this.collectedChars || [],
+            craftedItems: this.craftedItems || {}
+        };
+        localStorage.setItem('vb_save_v7', JSON.stringify(data));
+    },
+
+    // [탐험] 해제 기준: 누적 점수로 '정직원' 랭크 달성 (조정 가능)
+    EXPLORE_UNLOCK_SCORE: 5000,
+    EXPLORE_UNLOCK_RANK: '정직원',
+
+    isExploreUnlocked: function() { return (this.score || 0) >= this.EXPLORE_UNLOCK_SCORE; },
+
+    // 시작화면 탐험 버튼을 랭크에 따라 잠금/해제 표시
+    updateExploreBtn: function() {
+        const btn = document.getElementById('explore-btn');
+        if(!btn) return;
+        if(this.isExploreUnlocked()) {
+            btn.innerHTML = '🗺️ 탐험 (마을 밖)';
+            btn.style.opacity = '1';
+            btn.style.filter = 'none';
+        } else {
+            btn.innerHTML = `🔒 탐험 — ${this.EXPLORE_UNLOCK_RANK} 달성 시 해제`;
+            btn.style.opacity = '0.6';
+            btn.style.filter = 'grayscale(0.5)';
+        }
+    },
+
+    // [탐험] 탐험 모드로 이동 — 잠금 확인 후, 카페 상태 저장하고 explore.html 로
+    goExplore: function() {
+        if(!this.isExploreUnlocked()) {
+            alert(`🔒 탐험은 '${this.EXPLORE_UNLOCK_RANK}' 랭크 달성 시 열립니다.\n(누적 ${this.EXPLORE_UNLOCK_SCORE.toLocaleString()}점 필요 · 현재 ${(this.score||0).toLocaleString()}점)`);
+            return;
+        }
+        try { this.saveData(); } catch(e) {}
+        location.href = 'explore.html';
+    },
+
+    resetData: function() {
+        if(confirm("정말 초기화하시겠습니까?")) {
+            localStorage.removeItem('vb_save_v7');
+            localStorage.removeItem('vb_mastered_v7');
+            localStorage.removeItem('vb_ranks_v4');
+            location.reload();
+        }
+    },
+
+    nextTurn: function() {
+        if(!this.isActive || this.isPaused) return;
+
+        this.turnCount = (this.turnCount || 0) + 1; // [SRS] 턴 카운터
+
+                // 목표(10명)를 달성하면 정비 모드로 진입
+        if(this.gameMode === 'normal' && this.dailyCount >= 10) {
+            this.enterRestMode(); // [변경] 결과창 대신 '다음 날 영업 시작' 버튼 생성
+            this.saveData();
+            return;
+        }
+
+        if(this.gameMode === 'review' && this.activePool.length === 0) {
+            this.isActive = false; clearInterval(this.timer);
+            alert("복습 완료! +100G");
+            this.wallet += 100; checkQuests();
+            document.body.classList.remove('mode-review');
+            this.saveData(); location.reload();
+            return;
+        }
+
+        let wordObj, isReview = false;
+        if(this.gameMode === 'review') {
+            let rIdx = Math.floor(Math.random() * this.activePool.length);
+            wordObj = this.activePool[rIdx];
+            this.activePool.splice(rIdx, 1);
+        } else {
+            if(!rawWords || rawWords.length===0) rawWords = wordData.easy;
+
+            // [SRS] 만기된 복습 단어가 있으면 우선 출제 (45% 확률)
+            let reviewObj = null;
+            const dueList = this.myWords.filter(v => (v.due || 0) <= (this.turnCount || 0));
+            if(dueList.length && Math.random() < 0.45) {
+                dueList.sort((a,b) => (a.due||0) - (b.due||0));
+                reviewObj = dueList[0];
+            }
+
+            if(reviewObj) {
+                wordObj = reviewObj; isReview = true;
+            } else {
+                let availableWords = rawWords.filter(item => !this.mastered.includes(item.w));
+                if(availableWords.length === 0) {
+                    // 새 단어가 없으면 남은 복습 단어로, 그것도 없으면 난이도 마스터
+                    if(this.myWords.length > 0) {
+                        wordObj = this.myWords[0]; isReview = true;
+                    } else {
+                        this.isActive = false;
+                        clearInterval(this.timer);
+                        this.saveData();
+                        BgMusic.stop();
+                        document.getElementById('game-container').classList.remove('effect-rush-bg');
+                        const startScreen = document.getElementById('start-screen');
+                        startScreen.classList.remove('hidden');
+                        startScreen.style.display = 'flex';
+                        setTimeout(() => { alert("🎉 현재 난이도 마스터! 타이틀 화면으로 이동합니다."); }, 50);
+                        return;
+                    }
+                } else {
+                    let rIdx = Math.floor(Math.random() * availableWords.length);
+                    wordObj = availableWords[rIdx];
+                }
+            }
+        }
+
+        let type = 'normal';
+        if(this.gameMode==='normal' && Math.random() < 0.33) {
+            if(Math.random()<0.5) type='rush'; else type='vip';
+        }
+
+        let baseTime = 5000 - ((this.day-1)*200);
+        if(baseTime < 2500) baseTime = 2500;
+        
+        if(type==='rush') baseTime = 3000;
+        if(type==='vip') baseTime += 3000;
+
+        const charObj = pickCharByType(type);
+        const custAvatar = charSVG(charObj);
+
+        this.currentCust = { data: wordObj, type: type, maxTime: baseTime, timeLeft: baseTime, avatar: custAvatar,
+                             char: charObj, isReview: isReview, reviewRef: isReview ? wordObj : null };
+        this.renderScene();
+        this.startTimer();
+    },
+
+
+// ▼▼▼ [최종 수정본] 피버 & 랭크 & 상점 & 정답체크 통합 (복사해서 덮어쓰세요) ▼▼▼
+
+    // 1. 피버 모드 시작
+    startFever: function() {
+        if (this.isFever) return; 
+        this.isFever = true;
+        
+        // 화면 효과
+        document.body.classList.add('fever-mode');
+        const feverMsg = document.getElementById('fever-msg');
+        if(feverMsg) feverMsg.style.opacity = '1';
+
+        // 음악 속도 Up
+        if (typeof BgMusic !== 'undefined' && BgMusic.audio) {
+            BgMusic.audio.playbackRate = 1.3;
+        }
+
+        // 10초 뒤 자동 종료
+        if (this.feverTimer) clearTimeout(this.feverTimer);
+        this.feverTimer = setTimeout(() => {
+            this.endFever();
+        }, 10000); 
+    },
+
+    // 2. 피버 모드 종료
+    endFever: function() {
+        this.isFever = false;
+        document.body.classList.remove('fever-mode');
+        const feverMsg = document.getElementById('fever-msg');
+        if(feverMsg) feverMsg.style.opacity = '0';
+        
+        // 음악 속도 복구
+        if (typeof BgMusic !== 'undefined' && BgMusic.audio) {
+            BgMusic.audio.playbackRate = 1.0;
+        }
+        
+        if (this.feverTimer) clearTimeout(this.feverTimer);
+    },
+
+    // 3. 랭크 시스템
+    checkRank: function() {
+        const s = this.score; 
+        let rank = "알바생";
+        let color = "#fff";
+
+        if (s >= 50000) { rank = "커피의 신"; color = "#e91e63"; }
+        else if (s >= 20000) { rank = "점장"; color = "#ffc107"; }
+        else if (s >= 10000) { rank = "매니저"; color = "#00bcd4"; }
+        else if (s >= 5000) { rank = "정직원"; color = "#8bc34a"; }
+        
+        const el = document.getElementById('my-rank-badge');
+        if(el) {
+            el.innerText = `Rank: ${rank}`;
+            el.style.color = color;
+        }
+        if(typeof this.updateExploreBtn === 'function') this.updateExploreBtn();
+    },
+
+    // 4. 미스터리 박스
+    buyMysteryBox: function() {
+        if(this.wallet < 500) {
+            alert("코인이 부족합니다! (500G 필요)");
+            return;
+        }
+        
+        this.wallet -= 500;
+        this.updateHUD();
+        playSound('correct'); 
+
+        const rand = Math.random();
+        let msg = "";
+        
+        if (rand < 0.05) { 
+            const bonus = 2000;
+            this.wallet += bonus;
+            msg = `🎰 대박! 황금 콩 발견! +${bonus}G`;
+            playSound('clear');
+        } else if (rand < 0.4) { 
+            const bonus = 600;
+            this.wallet += bonus;
+            msg = `🎁 꽤 괜찮은 원두네요. +${bonus}G`;
+        } else if (rand < 0.7) { 
+            const bonus = 100;
+            this.wallet += bonus;
+            msg = `☕ 믹스 커피 당첨... +${bonus}G`;
+        } else { 
+            msg = `💨 텅 비어있습니다. (꽝!)`;
+            playSound('wrong');
+        }
+        
+        alert(msg);
+        this.updateHUD();
+        this.saveData();
+    },
+
+    // 5. 정답 체크 (오류 수정됨)
+    checkAnswer: function(val, btnEl) {
+        if(!this.isActive || this.isPaused) return;
+
+        // [정답인 경우]
+        if(val.toLowerCase() === this.currentCust.data.w.toLowerCase()) {
+            clearInterval(this.timer); playSound('correct');
+
+            // 콤보 로직
+            if (!this.combo) this.combo = 0;
+            this.combo++;
+            this.maxCombo = Math.max(this.maxCombo || 0, this.combo); // 최고 콤보 기록(퀘스트)
+
+            updateComboUI(this.combo);
+
+            // [이펙트] 정답 플래시 + 컵 강조 + 코인 발사
+            flashFX('good');
+            if(btnEl) btnEl.classList.add('correct-pop');
+            const _ce = document.getElementById('cust-el'), _wt = document.getElementById('wallet-target');
+            for(let _i=0; _i<5; _i++) setTimeout(() => this.createCoinAnim(_ce, _wt), _i*70);
+
+            if(this.combo >= 5) this.startFever();
+
+            const afterSpeech = () => {
+                const el = document.getElementById('cust-el');
+                if(el) el.classList.add('leaving');
+                const nc = this._newChar; this._newChar = null;
+                if(nc && nc.ch.kind === 'main') {
+                    // 메인 캐릭터 첫 등장 — 스토리 모달로 성취감
+                    setTimeout(() => {
+                        this.isActive = false;
+                        showGameAlert(
+                            `✨ <b>전설의 손님 등록!</b> ✨<br><br>`+
+                            `<b style="color:#ab47bc;font-size:1.2rem;">${nc.ch.name}</b><br>`+
+                            `<span style="font-size:0.85rem;color:#777;">${nc.ch.title}</span><br><br>`+
+                            `<span style="font-size:0.9rem;color:#444;">${nc.ch.story}</span><br><br>`+
+                            `<img src="sprites/coin.svg" style="width:18px;height:18px;vertical-align:middle;"> +${nc.bonus}G · 손님 도감 등록!`,
+                            () => { this.isActive = true; this.nextTurn(); }
+                        );
+                    }, 450);
+                    return;
+                }
+                if(nc) this.showFloatingText(`📖 ${nc.ch.name} 등록! +${nc.bonus}G`, document.getElementById('cust-el'));
+                setTimeout(() => this.nextTurn(), 400);
+            };
+            this.currentCust.solved = true;
+
+            // 점수 계산
+            let basePts = 100;
+            if (this.difficulty === 'normal') basePts = 150;
+            if (this.difficulty === 'hard')   basePts = 200;
+
+            let pts = basePts;
+            if (this.currentCust.type === 'vip')  pts = basePts * 3;
+            if (this.currentCust.type === 'rush') pts = Math.floor(basePts * 1.5);
+            
+            if (this.isFever) pts *= 2;
+            if (this.doubleNext) { pts *= 2; this.doubleNext = false; } // ✨ 점수 2배 부스터
+
+            // 저장 및 랭크
+            this.score += pts;
+            this.wallet += pts;
+            this.totalCustomers++;
+            // [버그수정] 하루 손님 수 / 누적 서빙 / VIP 카운터 증가 — 날짜진행·퀘스트 정상화
+            if(this.gameMode === 'normal') this.dailyCount++;
+            totalServedCount++;
+            if(this.currentCust.type === 'vip') totalVipCount++;
+            this.checkRank();
+            
+            // [SRS] 복습 단어면 박스 승급(졸업 시 마스터), 일반 정답이면 바로 졸업
+            const _wkey = this.currentCust.data.w;
+            if(this.currentCust.isReview && this.currentCust.reviewRef) {
+                const r = this.currentCust.reviewRef;
+                r.box = (r.box || 1) + 1;
+                if(r.box >= 5) {
+                    this.myWords = this.myWords.filter(v => v.w !== r.w); // 졸업: 오답노트에서 제거
+                    if(!this.mastered.includes(r.w)) this.mastered.push(r.w);
+                } else {
+                    r.due = this.turnCount + this.srsInterval(r.box); // 다음 복습 예약
+                }
+            } else {
+                if(!this.mastered.includes(_wkey)) this.mastered.push(_wkey);
+            }
+            this.masteredCount = this.mastered.length;
+
+            // [손님 도감] 처음 응대한 손님이면 등록 + 보상
+            if(this.currentCust.char) {
+                const ch = this.currentCust.char;
+                if(!this.collectedChars) this.collectedChars = [];
+                if(!this.collectedChars.includes(ch.id)) {
+                    this.collectedChars.push(ch.id);
+                    const bonus = RARITY_REWARD[ch.rarity] || 100;
+                    this.wallet += bonus;
+                    this._newChar = { ch, bonus }; // afterSpeech에서 안내
+                }
+            }
+            checkQuests(); this.saveData();
+
+            // 텍스트 표시
+
+            let msg = `+${pts}`;
+            if(this.isFever) msg = `🔥FEVER +${pts}`;
+            this.showFloatingText(msg, document.getElementById('cust-el'));
+            this.updateHUD();
+
+            // 칭찬 멘트 로직
+            let praise = "Good!";
+            if (this.combo >= 10) {
+                const texts = ["Unstoppable!", "Godlike!", "Crazy!", "Legendary!"];
+                praise = texts[Math.floor(Math.random() * texts.length)];
+            } else if (this.combo >= 5) {
+                const texts = ["Amazing!", "Fantastic!", "Perfect!", "Brilliant!"];
+                praise = texts[Math.floor(Math.random() * texts.length)];
+            } else if (this.combo >= 2) {
+                const texts = ["Tasty!", "Sweet!", "Delicious!", "Fresh!", "Yum!"];
+                praise = texts[Math.floor(Math.random() * texts.length)];
+            } else {
+                const texts = ["Good!", "Nice!", "Great!", "Okay!"];
+                praise = texts[Math.floor(Math.random() * texts.length)];
+            }
+
+            document.getElementById('bubble-el').innerHTML = `
+                <div style="color:var(--green); font-weight:900; font-size:1.2rem;">${praise}</div>
+                <div style="color:#555; font-size:0.9rem; margin-top:5px;">"${this.currentCust.data.ex}"</div>
+            `;
+            speak(this.currentCust.data.ex, afterSpeech);
+
+        } else {
+            // [오답인 경우]
+            if(this.comboShield) {
+                this.comboShield = false; // 🛡️ 보호막 소모 — 콤보/피버 유지
+                this.showFloatingText("🛡️ 콤보 보호!", document.getElementById('cust-el'));
+                this.handleFail(false);
+            } else {
+                this.combo = 0;
+                this.endFever();
+                hideComboUI();
+                this.handleFail(false);
+            }
+        }
+    },
+
+    srsInterval: function(box) { return [0, 3, 8, 20, 50][box] || 50; },
+
+    useHint: function() {
+        const c = this.currentCust; if(!c) return;
+        if(c.type === 'vip') {
+            const word = c.data.w;
+            c.hintLetters = Math.min((c.hintLetters || 1) + 1, word.length);
+            const shown = word.slice(0, c.hintLetters).toUpperCase().split('').join(' ');
+            const rest = Array(Math.max(0, word.length - c.hintLetters)).fill('_').join(' ');
+            const hintEl = document.getElementById('vip-hint-display');
+            if(hintEl) hintEl.innerText = (shown + ' ' + rest).trim();
+        } else {
+            const correct = c.data.w;
+            const wrong = [...document.querySelectorAll('.cup-btn')].filter(b => b.innerText.trim() !== correct && !b.disabled);
+            wrong.sort(() => Math.random() - 0.5);
+            wrong.slice(0, 2).forEach(b => { b.disabled = true; b.style.opacity = '0.25'; b.onclick = null; });
+        }
+    },
+
+    checkVipAnswer: function() {
+        const val = document.getElementById('vip-input').value.trim();
+        this.checkAnswer(val);
+    },
+
+    handleFail: function(isTimeout) {
+        clearInterval(this.timer); playSound('wrong');
+        flashFX('bad'); // [이펙트] 오답 화면 플래시
+        this.lives--; this.updateHUD();
+        
+        // 1. (기존 유지) 일반 손님일 때 버튼 정답 표시
+        if (this.currentCust.type !== 'vip') {
+            const buttons = document.querySelectorAll('.cup-btn');
+            buttons.forEach(btn => {
+                btn.onclick = null; 
+                if (btn.innerText === this.currentCust.data.w) {
+                    btn.style.background = '#4caf50'; 
+                    btn.style.color = 'white';
+                    btn.style.borderColor = '#2e7d32';
+                    btn.style.transform = 'scale(1.05)';
+                } else {
+                    btn.style.opacity = '0.5';
+                }
+            });
+        }
+
+        // 2. 오답 노트 저장 + SRS 예약 (틀린 단어는 곧 다시 출제)
+        const w = this.currentCust.data;
+        const existing = this.myWords.find(v => v.w === w.w);
+        if(existing) {
+            existing.box = 1;                                  // 틀리면 1단계로 강등
+            existing.due = (this.turnCount || 0) + 2;          // 곧 재출제
+        } else {
+            this.myWords.push({ w: w.w, m: w.m, ex: w.ex, s: w.s, box: 1, due: (this.turnCount || 0) + 2 });
+        }
+        // 틀린 단어는 '졸업' 목록에서 제외 (다시 학습 대상)
+        this.mastered = this.mastered.filter(x => x !== w.w);
+        this.masteredCount = this.mastered.length;
+        if(this.gameMode==='normal') this.saveData();
+        if(this.gameMode==='review') {
+            const failedItem = this.activePool.shift();
+            this.activePool.push(failedItem);
+        }
+        
+        // 3. 화면 표시 (수정됨!)
+        // 🚨 수정 전: document.getElementById('cust-el').style.filter = 'grayscale(1)'; 
+        // (이게 말풍선까지 회색으로 만들었습니다)
+        
+        // ✅ 수정 후: 아바타(캐릭터)만 찾아서 흑백으로 만듭니다.
+        const avatar = document.querySelector('#cust-el .avatar');
+        if(avatar) {
+            avatar.style.animation = 'none';       // 1. 반짝이는 효과 강제 종료
+            avatar.style.boxShadow = 'none';       // 2. 혹시 있을지 모를 그림자 제거
+            avatar.style.filter = 'grayscale(1)';  // 3. 흑백 적용
+        }
+        
+        const bubble = document.getElementById('bubble-el');
+        let msg = isTimeout ? "Too slow!" : "Wrong!";
+
+        if (this.currentCust.type === 'vip') {
+            // 빨간색 유지됨!
+            msg += `<br><span style="color:#ff5252;">정답: ${this.currentCust.data.w}</span>`;
+            bubble.innerHTML = `<div>${msg}</div>`; 
+        } else {
+            bubble.innerText = msg;
+        }
+
+        // 4. (기존 유지) 퇴장 처리
+        if(this.lives <= 0) setTimeout(() => this.gameOver(), 1500);
+        else setTimeout(() => {
+            document.getElementById('cust-el').classList.add('leaving');
+            setTimeout(() => this.nextTurn(), 400);
+        }, 1500);
+    },
+
+// [신규 기능] VIP 시간 정지 아이템 구매
+    buyTimeStop: function() {
+        // 1. 이미 정지 상태면 패스
+        if(this.isTimeFrozen) return;
+
+        // 2. 돈 확인 (250G)
+        if(this.wallet < 250) {
+            alert("골드가 부족합니다! (250G 필요)");
+            return;
+        }
+
+        // 3. 결제 진행
+        this.wallet -= 250;
+        document.getElementById('wallet').innerText = this.wallet; // 화면의 돈 즉시 갱신
+        
+        // 4. 시간 정지 발동!
+        this.isTimeFrozen = true;
+        
+        // 5. 버튼 모양을 '사용됨' 상태로 변경 (화면 다시 그리지 않고 즉시 반영)
+        const btn = document.querySelector('#customer-area button'); 
+        if(btn) {
+            btn.innerHTML = "❄️ 시간 정지됨!";
+            btn.disabled = true; // 버튼 비활성화
+            btn.style.background = "#ccc"; 
+            btn.style.border = "none";
+            btn.style.color = "#666";
+            if(btn.parentElement) btn.parentElement.style.animation = "none"; // 깜빡임 효과 끄기
+        }
+
+        // 효과음 재생 (있으면)
+        if(typeof playSound === 'function') playSound('buy');
+    },
+
+    revive: function() {
+        const reviveCost = 450; 
+        
+        if(this.wallet < reviveCost) {
+            alert(`골드가 부족합니다! (필요: ${reviveCost}G)`);
+            return;
+        }
+
+        this.wallet -= reviveCost;
+        this.lives = 1; 
+        this.isActive = true;
+        this.isPaused = false;
+        
+        this.saveData();
+        this.updateHUD();
+        
+        document.getElementById('result-screen').classList.add('hidden');
+        playSound('buy'); 
+        
+        setTimeout(() => {
+    // alert 대신 showGameAlert 함수 호출
+    showGameAlert("❤️ 부활 성공!<br>영업을 재개합니다.", () => {
+
+    // 1. 콤보 끊기 (추가된 부분)
+    this.combo = 0;       // 콤보 점수 0으로
+    this.updateHUD();     // 화면 점수판 갱신
+
+    // 2. 게임 재개 (원래 있던 코드)
+
+        // 확인 버튼을 눌렀을 때 실행될 코드들
+        if(this.currentCust && this.currentCust.solved === false) {
+             this.startTimer();
+        } else {
+             this.nextTurn();
+        }
+    });
+}, 100);
+    },
+
+// [1. 아이템 구매 - 5단계 버전으로 교체됨]
+    buyItem: function(id, category) {
+        // 소비 아이템 처리
+        const consumable = CONSUMABLES.find(i => i.id === id);
+        if (consumable) {
+            if(this.wallet < consumable.price) return alert("골드가 부족합니다!");
+            const charge = () => { this.wallet -= consumable.price; totalItemsBought++; };
+            const refreshShop = () => { const sg=document.getElementById('shop-gold'); if(sg) sg.innerText=this.wallet; this.renderShopItems(); };
+
+            if(id === 'con_potion') {
+                if(this.lives>=5) return alert("체력이 꽉 찼습니다.");
+                this.lives++; charge();
+                this.saveData(); this.updateHUD(); refreshShop(); playSound('buy'); checkQuests(); return;
+            }
+            if(id === 'con_skip') {
+                if(!this.currentCust || this.currentCust.solved) return alert("패스할 손님이 없습니다.");
+                charge(); this.saveData(); this.updateHUD(); playSound('buy'); this.closeOverlays();
+                const ce=document.getElementById('cust-el'); if(ce) ce.classList.add('leaving');
+                setTimeout(() => this.nextTurn(), 400); checkQuests(); return;
+            }
+            if(id === 'con_hint') {
+                if(!this.currentCust || this.currentCust.solved) return alert("힌트를 쓸 손님이 없습니다.");
+                this.useHint(); charge(); this.saveData(); this.updateHUD(); playSound('buy');
+                this.closeOverlays(); checkQuests(); return;
+            }
+            if(id === 'con_time') {
+                if(!this.currentCust || this.currentCust.solved) return alert("시간을 늘릴 손님이 없습니다.");
+                this.currentCust.timeLeft += 5000;
+                if(this.currentCust.timeLeft > this.currentCust.maxTime) this.currentCust.maxTime = this.currentCust.timeLeft;
+                charge(); this.saveData(); this.updateHUD(); playSound('buy');
+                this.closeOverlays(); checkQuests(); return;
+            }
+            if(id === 'con_double') {
+                charge(); this.doubleNext = true;
+                this.saveData(); this.updateHUD(); refreshShop(); playSound('buy');
+                showGameAlert("✨ 다음 정답 점수가 <b>2배</b>가 됩니다!"); checkQuests(); return;
+            }
+            if(id === 'con_shield') {
+                charge(); this.comboShield = true;
+                this.saveData(); this.updateHUD(); refreshShop(); playSound('buy');
+                showGameAlert("🛡️ <b>콤보 보호막</b> 장착!<br>한 번은 틀려도 콤보가 유지됩니다."); checkQuests(); return;
+            }
+            return;
+        }
+
+        // 장식 아이템 (순차 구매)
+        if(category && SHOP_DB[category]) {
+            const nextLvl = (this.shopLevels[category] || 0); 
+            const item = SHOP_DB[category][nextLvl]; 
+            
+            if(!item) return; // 만렙
+
+            if(this.wallet >= item.price) {
+                this.wallet -= item.price;
+                
+                // 레벨 업 및 자동 장착
+                if(!this.shopLevels[category]) this.shopLevels[category] = 0;
+                this.shopLevels[category]++; 
+                this.currentEquip[category] = this.shopLevels[category]; 
+
+                totalItemsBought++;
+                this.saveData(); 
+                playSound('buy'); 
+                
+                // 화면 갱신
+                document.getElementById('shop-gold').innerText = this.wallet;
+                this.updateHUD(); 
+                this.renderShopItems(); 
+                this.updateDecorations(); 
+                checkQuests();
+                
+                alert(`${item.name} 획득! (자동 장착됨)\n기존 아이템은 터치하여 교체 가능합니다.`);
+            } else {
+                alert("돈이 부족합니다!");
+            }
+        }
+    },
+
+    openQuests: function() {
+        this.isActive=false; clearInterval(this.timer);
+        document.getElementById('game-container').classList.remove('effect-rush-bg');
+        
+        const list = document.getElementById('quest-list-el'); list.innerHTML='';
+        currentQuests.forEach((q, index) => {
+            let prog = q.progress; if(prog>q.target) prog=q.target;
+            const isMax = q.title==="MAX LEVEL";
+            const el = document.createElement('div');
+            el.className = `quest-item ${isMax?'completed':''}`;
+            if(q.isReady) el.classList.add('ready');
+
+            let btnHtml = '';
+            if(isMax) btnHtml = `<button class="quest-btn-claim" disabled style="background:#ccc;cursor:default;animation:none;">완료됨</button>`;
+            else if(q.isReady) {
+                btnHtml = `<button class="quest-btn-claim" onclick="game.claimQuest(${index})">보상 ${q.reward}G</button>`;
+            } else {
+                btnHtml = `<span style="font-size:0.8rem;color:#666;">${prog}/${q.target}</span>`;
+            }
+
+            el.innerHTML = `<div><div style="font-weight:bold;">${q.title}</div><div style="font-size:0.8rem;color:#555;">${q.desc}</div></div>` + btnHtml;
+            list.appendChild(el);
+        });
+        document.getElementById('quest-screen').classList.remove('hidden');
+        document.getElementById('quest-screen').style.display='flex';
+    },
+
+    claimQuest: function(index) {
+        const quest = currentQuests[index];
+        if(!quest.isReady) return;
+
+        this.wallet += quest.reward;
+        playSound('quest');
+        
+        const nextLevelData = QUEST_DB[quest.type][quest.level]; 
+        if(nextLevelData) {
+            currentQuests[index] = { ...nextLevelData, type: quest.type, progress: quest.progress, completed: false, isReady: false };
+        } else {
+            quest.completed = true;
+            quest.isReady = false;
+            quest.title = "MAX LEVEL";
+            quest.desc = "모든 도전을 완료했습니다.";
+            quest.target = "-";
+        }
+
+        this.saveData();
+        this.updateHUD();
+        this.openQuests(); 
+        checkQuests(); 
+    },
+
+    closeOverlays: function() {
+        document.querySelectorAll('.overlay').forEach(el => { if(el.id!=='game-container') el.classList.add('hidden'); });
+        
+        this.isActive = true; 
+        
+        // 팝업 닫을 때 진상 손님이면 다시 흔들림 적용
+        if(this.currentCust && this.currentCust.type === 'rush') {
+            document.getElementById('game-container').classList.add('effect-rush-bg');
+        }
+
+        if(this.currentCust && this.currentCust.solved) {
+            this.nextTurn();
+        } 
+        else if(this.currentCust && this.lives > 0 && !this.isPaused) {
+            this.startTimer();
+        }
+    },
+
+// [여기서부터 다시 새로운 상점 기능들 추가]
+    openShop: function() {
+        this.isActive=false; clearInterval(this.timer);
+        document.getElementById('game-container').classList.remove('effect-rush-bg');
+        
+        document.getElementById('shop-gold').innerText = this.wallet;
+        document.getElementById('shop-screen').classList.remove('hidden');
+        document.getElementById('shop-screen').style.display='flex';
+        this.renderShopItems();
+    },
+
+    renderShopItems: function() {
+        const list = document.getElementById('shop-list'); list.innerHTML='';
+
+        // [탐험 조합 아이템] 보유분을 맨 위에 — 사용하면 효과 발동
+        const ci = this.craftedItems || {};
+        const ownedIds = Object.keys(ci).filter(id => ci[id] > 0 && CRAFTED_DEFS[id]);
+        if (ownedIds.length) {
+            const head = document.createElement('div');
+            head.style.cssText = 'font-weight:bold;color:#388e3c;padding:4px 2px;font-size:0.95rem;';
+            head.innerHTML = '🎒 탐험 조합 아이템';
+            list.appendChild(head);
+            ownedIds.forEach(id => {
+                const d = CRAFTED_DEFS[id];
+                const el = document.createElement('div'); el.className = 'shop-item consumable';
+                el.style.borderLeft = '4px solid #66bb6a';
+                el.innerHTML = `<div style="display:flex;align-items:center;"><div class="icon">${d.icon}</div><div><div style="font-weight:bold;">${d.name} <span style="font-size:0.78rem;color:#388e3c;">x${ci[id]}</span></div><div style="font-size:0.8rem;">${d.desc}</div></div></div><button class="buy-btn" style="background:linear-gradient(180deg,#66bb6a,#388e3c);" onclick="game.useCraftedItem('${id}')">사용</button>`;
+                list.appendChild(el);
+            });
+        }
+
+        // 5단계 아이템 렌더링
+        for (const [cat, items] of Object.entries(SHOP_DB)) {
+            const myLvl = this.shopLevels[cat] || 0;
+            
+            if (myLvl < items.length) {
+                const item = items[myLvl]; 
+                const el = document.createElement('div'); el.className = 'shop-item';
+                el.innerHTML = `
+                    <div style="display:flex;align-items:center;">
+                        <div class="icon" style="display:flex;align-items:center;justify-content:center;">${decoIcon(item)}</div>
+                        <div>
+                            <div style="font-weight:bold;">${item.name} <span style="font-size:0.8rem; background:#eee; padding:2px 6px; border-radius:4px;">New Lv.${myLvl+1}</span></div>
+                            <div style="font-size:0.8rem; color:#666;">${item.desc}</div>
+                        </div>
+                    </div>
+                    <button class="buy-btn" onclick="game.buyItem('${item.id}', '${cat}')">${item.price} G</button>`;
+                list.appendChild(el);
+            } else {
+                const el = document.createElement('div'); el.className = 'shop-item sold-out';
+                el.innerHTML = `<div style="color:#aaa; font-weight:bold;">🎉 ${cat.toUpperCase()} 마스터 완료!</div>`;
+                list.appendChild(el);
+            }
+        }
+        
+        // 소비 아이템 렌더링
+        CONSUMABLES.forEach(item => {
+            const el = document.createElement('div'); el.className = 'shop-item consumable';
+            el.innerHTML = `<div style="display:flex;align-items:center;"><div class="icon">${item.icon}</div><div><div style="font-weight:bold;">${item.name}</div><div style="font-size:0.8rem;">${item.desc}</div></div></div><button class="buy-btn" onclick="game.buyItem('${item.id}')">${item.price} G</button>`;
+            list.appendChild(el);
+        });
+    },
+
+    // [탐험 조합 아이템] 사용 — 효과 발동 후 1개 소모
+    useCraftedItem: function(id) {
+        const ci = this.craftedItems || {};
+        if (!ci[id] || ci[id] <= 0) return;
+        const d = CRAFTED_DEFS[id]; if (!d) return;
+        if (d.effect === 'double') { this.doubleNext = true; }
+        else if (d.effect === 'shield') { this.comboShield = true; }
+        else if (d.effect === 'life') { this.lives++; this.updateHUD(); }
+        else if (d.effect === 'time') {
+            if (this.currentCust) { this.currentCust.timeLeft += 5000;
+                if (this.currentCust.timeLeft > this.currentCust.maxTime) this.currentCust.maxTime = this.currentCust.timeLeft; }
+        }
+        ci[id]--; if (ci[id] <= 0) delete ci[id];
+        this.craftedItems = ci; this.saveData();
+        if (typeof playSound === 'function') playSound('buy');
+        this.renderShopItems();
+        showGameAlert(`${d.icon} <b>${d.name}</b> 사용!<br><span style="font-size:0.9rem;color:#555;">${d.desc}</span>`, null);
+    },
+
+    // [신규] 인벤토리 열기
+    openInventory: function(category) {
+    this.isActive = false; clearInterval(this.timer);
+
+    // [수정] ID 변경: inventory-list -> inventory-list-item
+    const list = document.getElementById('inventory-list-item'); 
+    list.innerHTML = '';
+    
+    const items = SHOP_DB[category];
+    const maxLvl = this.shopLevels[category] || 0;
+    const curEquip = this.currentEquip[category] || 0;
+
+    document.getElementById('inv-title').innerText = `🎒 ${category.toUpperCase()} 컬렉션`;
+
+    for(let i=0; i < maxLvl; i++) {
+        const item = items[i];
+        const lvl = i + 1;
+        const isEquipped = (lvl === curEquip);
+        
+        const el = document.createElement('div');
+        el.className = `inv-item ${isEquipped ? 'equipped' : ''}`;
+        el.innerHTML = `<div class="icon">${item.icon}</div><div style="font-weight:bold; font-size:0.9rem;">${item.name}</div>`;
+        el.onclick = () => { game.equipItem(category, lvl); };
+        list.appendChild(el);
+    }
+
+    // [수정] ID 변경: inventory-screen -> inventory-screen-item
+    document.getElementById('inventory-screen-item').classList.remove('hidden');
+    document.getElementById('inventory-screen-item').style.display = 'flex';
+},
+
+    // [기존 유지] 아이템 장착하기
+equipItem: function(category, level) {
+    this.currentEquip[category] = level;
+    this.saveData();
+    this.updateDecorations(); // 장식 업데이트
+    
+    // playSound가 있다면 실행
+    if(typeof playSound === 'function') playSound('buy'); 
+    
+    // [수정] 인벤토리 창 닫기: inventory-screen -> inventory-screen-item
+    document.getElementById('inventory-screen-item').classList.add('hidden');
+    
+    // 게임 재개
+    this.isActive = true;
+    if(this.currentCust && !this.currentCust.solved) this.startTimer();
+},
+
+    // [신규 추가!] 교체 메뉴 (스킨 선택창) 열기
+    openSkinSelector: function(category) {
+        // 게임 일시 정지 효과
+        this.isActive = false;
+        if(this.timer) clearInterval(this.timer);
+
+        const modal = document.getElementById('inventory-screen-item');
+        const list = document.getElementById('inventory-list-item');
+        
+        // 제목 변경 (HTML에 id="inventory-title"이 있다면)
+        // document.getElementById('inventory-title').innerText = category.toUpperCase() + " 교체";
+
+        list.innerHTML = ''; // 기존 목록 비우기
+        modal.classList.remove('hidden'); // 창 열기
+
+        // 데이터베이스에서 해당 카테고리 아이템 가져오기
+        const items = SHOP_DB[category]; 
+        // 내 현재 레벨 (이 레벨 이하의 아이템만 보여줌)
+        const myLevel = this.shopLevels[category] || 0;
+
+        // 아이템 목록 생성
+        items.forEach((item, index) => {
+            const itemLevel = index + 1;
+            
+            // 내가 해금한 레벨까지만 표시
+            if(itemLevel <= myLevel) {
+                const div = document.createElement('div');
+                div.className = 'shop-item'; // 상점 아이템 스타일 재사용
+                
+                // 현재 장착 중인지 확인
+                const isEquipped = (this.currentEquip[category] === itemLevel);
+                
+                div.innerHTML = `
+                    <div style="font-size:2rem; margin-right:15px;">${item.icon}</div>
+                    <div style="flex:1; text-align:left;">
+                        <div style="font-weight:bold; font-size:1.1rem;">${item.name}</div>
+                        <div style="font-size:0.8rem; color:#666;">${item.desc}</div>
+                    </div>
+                    <button style="padding:8px 15px; border:none; border-radius:8px; 
+                                   background:${isEquipped ? '#bdbdbd' : 'var(--green)'}; 
+                                   color:white; font-weight:bold; cursor:pointer;">
+                        ${isEquipped ? '장착중' : '선택'}
+                    </button>
+                `;
+
+                // 장착 중이 아닐 때만 클릭 이벤트 연결
+                if(!isEquipped) {
+                    div.onclick = () => {
+                        this.equipItem(category, itemLevel);
+                    };
+                }
+                
+                list.appendChild(div);
+            }
+        });
+        
+        // 목록이 비어있으면(아직 산 게 없으면) 안내 메시지
+        if(list.innerHTML === '') {
+            list.innerHTML = '<div style="padding:20px; color:#fff;">보유한 아이템이 없습니다.<br>상점에서 먼저 구매해주세요!</div>';
+        }
+    },
+
+    // [수정됨] 장식 업데이트 (onclick 부분 이름을 openSkinSelector로 변경함)
+    updateDecorations: function() {
+        const cL = document.getElementById('counter-layer'); 
+        const wL = document.getElementById('wall-layer');
+        cL.innerHTML=''; wL.innerHTML='';
+        
+        const eq = this.currentEquip || { counter: 0, wall: 0, pet: 0 };
+        
+        const sceneDeco = (src, size) => `<img src="${src}" style="width:${size}px;height:${size}px;object-fit:contain;filter:drop-shadow(0 5px 5px rgba(0,0,0,.4));">`;
+
+        // (1) 카운터 장식 — 카운터 위 왼쪽
+        if(eq.counter > 0) {
+            const item = SHOP_DB.counter[eq.counter - 1];
+            cL.innerHTML += `<div class="deco-item" onclick="game.openSkinSelector('counter')" style="position:absolute; bottom:0; left:14px; z-index:12;" title="눌러서 교체">${sceneDeco(item.img, 72)}</div>`;
+        }
+
+        // (2) 펫 — 카운터 위 오른쪽
+        if(eq.pet > 0) {
+            const item = SHOP_DB.pet[eq.pet - 1];
+            cL.innerHTML += `<div class="deco-item" onclick="game.openSkinSelector('pet')" style="position:absolute; bottom:0; right:14px; z-index:12;" title="눌러서 교체">${sceneDeco(item.img, 66)}</div>`;
+        }
+
+        // (3) 벽 장식 — 벽 우측 상단 (칠판·네온·창문은 가로로 넓게)
+        if(eq.wall > 0) {
+            const item = SHOP_DB.wall[eq.wall - 1];
+            const wide = ['w1','w2','w5'].includes(item.id);
+            const size = wide ? 124 : 100;
+            wL.innerHTML += `<div class="deco-item" onclick="game.openSkinSelector('wall')" style="position:absolute; top:6px; right:22px; z-index:1;" title="눌러서 교체">${sceneDeco(item.img, size)}</div>`;
+        }
+    },
+
+    // [신규] 영업 종료 후 정비 모드 (결과창 대신 실행됨)
+    enterRestMode: function() {
+        this.isActive = false; // 게임 멈춤
+        if(this.timer) clearInterval(this.timer); // 타이머 정지
+
+        // 1. 손님 서 있던 자리 비우기
+        const area = document.querySelector('.customer-area');
+        area.innerHTML = ''; 
+
+        // 2. '다음 날 영업 시작' 버튼 만들기 (크고 잘 보이게!)
+        const container = document.createElement('div');
+        container.style.cssText = "display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; animation: popIn 0.5s;";
+        
+        container.innerHTML = `
+            <div style="background:rgba(255,255,255,0.95); padding:15px 25px; border-radius:20px; margin-bottom:20px; border:4px solid var(--brown-dark); text-align:center; box-shadow:0 4px 10px rgba(0,0,0,0.2);">
+                <div style="font-size:1.5rem; font-weight:bold; color:var(--brown-dark); margin-bottom:5px;">🌙 영업 종료!</div>
+                <div style="font-size:1rem; color:#555;">수고하셨습니다.<br>아이템을 사거나 가게를 꾸며보세요.</div>
+            </div>
+            
+            <button id="next-day-btn" onclick="game.startNextDay()" 
+                style="
+                    background: var(--red); 
+                    color: white; 
+                    font-family: 'Jua', sans-serif;
+                    font-size: 1.8rem; 
+                    padding: 15px 40px; 
+                    border: none; 
+                    border-radius: 50px; 
+                    box-shadow: 0 6px 0 #8e0000, 0 10px 20px rgba(0,0,0,0.3); 
+                    cursor: pointer;
+                    animation: breathe 1.5s infinite;
+                ">
+                🌅 다음 날 영업 시작
+            </button>
+        `;
+        
+        area.appendChild(container);
+        
+        // 안내 메시지 (showFloatText가 없으면 에러날 수 있으니 안전장치 추가)
+        if(this.showFloatText) {
+            this.showFloatText("영업이 끝났습니다! 정비 시간을 가지세요.", document.body);
+        } else {
+            // showFloatText가 없는 경우를 대비해 콘솔에만 출력하거나 생략
+            console.log("영업 종료");
+        }
+    },
+
+    openWordbook: function() {
+        this.isActive=false; clearInterval(this.timer);
+        document.getElementById('game-container').classList.remove('effect-rush-bg');
+
+        document.getElementById('master-count').innerText = this.mastered.length;
+        const list = document.getElementById('wb-list'); list.innerHTML='';
+        if(this.myWords.length===0) list.innerHTML="<p style='text-align:center'>오답 노트가 비어있습니다.</p>";
+        else {
+            [...this.myWords].reverse().forEach(w => {
+                const box = w.box || 1;
+                const dots = '●'.repeat(box) + '○'.repeat(Math.max(0, 4 - box));
+                const el = document.createElement('div'); el.className='wb-item';
+                el.innerHTML = `<div><span class="wb-word">${w.w}</span> <span class="wb-mean">${w.m}</span><div style="font-size:0.62rem;color:#7b1fa2;margin-top:2px;">복습 ${dots} (4번 맞히면 졸업)</div></div><div class="speaker-icon" onclick="speak('${w.w}')">🔊</div>`;
+                list.appendChild(el);
+            });
+        }
+        document.getElementById('wordbook-screen').classList.remove('hidden');
+        document.getElementById('wordbook-screen').style.display='flex';
+    },
+
+    // [신규] 단어 도감 — 졸업(마스터)한 단어 모음
+    openDex: function() {
+        this.isActive=false; if(this.timer) clearInterval(this.timer);
+        document.getElementById('game-container').classList.remove('effect-rush-bg');
+
+        const mastered = this.mastered || [];
+        document.getElementById('dex-count').innerText = mastered.length;
+        document.getElementById('dex-total').innerText = TOTAL_WORDS;
+        const pct = TOTAL_WORDS ? Math.min(100, (mastered.length / TOTAL_WORDS * 100)) : 0;
+        document.getElementById('dex-bar').style.width = pct.toFixed(1) + '%';
+
+        const list = document.getElementById('dex-list'); list.innerHTML='';
+        if(mastered.length === 0) {
+            list.innerHTML = "<p style='text-align:center'>아직 졸업한 단어가 없어요.<br>손님 주문을 맞히면 단어가 도감에 등록됩니다!</p>";
+        } else {
+            [...mastered].reverse().forEach(wkey => {
+                const o = WORD_MAP[wkey] || { w: wkey, m: '', s: '' };
+                const src = o.s ? `<div style="font-size:0.65rem; color:#a98e6a; margin-top:2px;">📄 ${o.s}</div>` : '';
+                const el = document.createElement('div'); el.className='wb-item';
+                el.innerHTML = `<div><span class="wb-word">${o.w}</span> <span class="wb-mean">${o.m}</span>${src}</div><div class="speaker-icon" onclick="speak('${o.w}')">🔊</div>`;
+                list.appendChild(el);
+            });
+        }
+        document.getElementById('dex-screen').classList.remove('hidden');
+        document.getElementById('dex-screen').style.display='flex';
+    },
+
+    // [신규] 손님 도감 — 응대한 손님 캐릭터 수집
+    openCharDex: function() {
+        this.isActive=false; if(this.timer) clearInterval(this.timer);
+        document.getElementById('game-container').classList.remove('effect-rush-bg');
+
+        const got = this.collectedChars || [];
+        document.getElementById('chardex-count').innerText = got.length;
+        document.getElementById('chardex-total').innerText = CHAR_DEX.length;
+
+        const grid = document.getElementById('chardex-grid'); grid.innerHTML='';
+        CHAR_DEX.forEach(ch => {
+            const unlocked = got.includes(ch.id);
+            const col = RARITY_COLOR[ch.rarity] || '#9e9e9e';
+            const card = document.createElement('div');
+            card.className = 'cdex-card' + (unlocked ? '' : ' locked');
+            card.style.setProperty('--rc', col);
+            if(unlocked) {
+                card.innerHTML = `<div class="cdex-art">${charSVG(ch)}</div>
+                    <div class="cdex-name">${ch.name}</div>
+                    <div class="cdex-rarity">${RARITY_LABEL[ch.rarity]||''}</div>`;
+                card.onclick = () => {
+                    showGameAlert(
+                        `<b style="color:${col};font-size:1.15rem;">${ch.name}</b>`+
+                        (ch.title ? `<br><span style="font-size:0.8rem;color:#888;">${ch.title}</span>` : '')+
+                        `<br><br><span style="font-size:0.9rem;color:#444;">${ch.desc||''}</span>`+
+                        (ch.story ? `<br><br><span style="font-size:0.82rem;color:#7b1fa2;font-style:italic;">${ch.story}</span>` : '')
+                    );
+                };
+            } else {
+                card.innerHTML = `<div class="cdex-art"><span class="locked-q">?</span></div>
+                    <div class="cdex-name" style="color:#7a6a58;">???</div>
+                    <div class="cdex-rarity" style="background:#5a4836;">${RARITY_LABEL[ch.rarity]||''}</div>`;
+            }
+            grid.appendChild(card);
+        });
+        document.getElementById('chardex-screen').classList.remove('hidden');
+        document.getElementById('chardex-screen').style.display='flex';
+    },
+
+    updateHUD: function() {
+        document.getElementById('wallet').innerText = this.wallet;
+        document.getElementById('lives').innerText = this.lives;
+        document.getElementById('day-display').innerText = this.day;
+    },
+    showFloatingText: function(text, targetEl) {
+        const el = document.createElement('div'); 
+        el.className='floating-text'; 
+        
+        // 🚨 핵심 수정: innerText -> innerHTML 로 변경!
+        el.innerHTML = text; 
+        
+        const r = targetEl.getBoundingClientRect(); 
+        el.style.left=(window.innerWidth/2-40)+'px'; 
+        el.style.top=r.top+'px';
+        document.body.appendChild(el); 
+        setTimeout(()=>el.remove(), 1000);
+    },
+
+    manualQuit: function() {
+        // ▼▼▼ [추가] 나가기 전에 피버 효과 끄기 ▼▼▼
+        this.endFever(); 
+        // ▲▲▲ 여기까지 ▲▲▲
+
+        this.isActive = false; clearInterval(this.timer);
+        BgMusic.stop(); 
+        if(this.gameMode === 'normal') this.saveData();
+        
+        document.getElementById('result-title').innerText = "⏸️ 영업 중단";
+        document.getElementById('result-msg').innerText = "저장되었습니다.";
+        
+        // 1. 먼저 결과 화면을 켭니다.
+        this.showResultScreen(); 
+
+        // 2. 버튼 숨김 로직 (기존 유지)
+        const revBtn = document.getElementById('revive-btn');
+        if(revBtn) {
+            revBtn.style.display = 'none'; 
+            revBtn.classList.add('hidden'); 
+        }
+    },
+
+    gameOver: function() {
+        // ▼▼▼ [추가] 죽었을 때도 피버 효과 끄기 ▼▼▼
+        this.endFever();
+        // ▲▲▲ 여기까지 ▲▲▲
+
+        this.isActive = false; clearInterval(this.timer);
+        BgMusic.stop(); 
+        
+        const title = this.gameMode === 'review' ? "🤕 복습 실패" : "❌ GAME OVER";
+        document.getElementById('result-title').innerText = title;
+        document.getElementById('result-msg').innerText = this.gameMode === 'review' ? "다시 도전하세요." : "하트 소진!";
+        
+        if(this.gameMode === 'normal') { 
+            this.day = 1; this.lives = 5; this.score = 0; this.dailyCount = 0; this.totalCustomers = 0; this.saveData(); 
+        }
+
+        // 1. 결과 화면 켜기 (기존 유지)
+        this.showResultScreen();
+
+        // 2. 버튼 로직 (기존 유지)
+        const revBtn = document.getElementById('revive-btn');
+        if(revBtn) {
+            if(this.gameMode === 'normal') {
+                revBtn.style.display = 'inline-block';
+                revBtn.classList.remove('hidden');
+            } else {
+                revBtn.style.display = 'none';
+                revBtn.classList.add('hidden');
+            }
+        }
+    },
+
+
+    // 이제 이 함수는 '하트'나 '타입'을 받지 않습니다. 그냥 화면만 켜줍니다.
+    showResultScreen: function() {
+        document.getElementById('final-day').innerText = this.day;
+        document.getElementById('final-score').innerText = this.score;
+        
+        document.getElementById('input-area').classList.toggle('hidden', !(this.gameMode === 'normal' && this.score > 0));
+        
+        document.getElementById('ranking-board').classList.add('hidden');
+        document.getElementById('pause-screen').classList.add('hidden');
+        
+        const resScreen = document.getElementById('result-screen');
+        resScreen.classList.remove('hidden');
+        resScreen.style.display = 'flex';
+        
+        // 🚨 중요: 여기서 revBtn 관련 코드를 아예 삭제했습니다. 
+        // 위쪽 manualQuit과 gameOver 함수가 직접 제어합니다.
+    },
+
+    submitRank: function() {
+        const name = document.getElementById('nickname').value; if(!name) return alert("닉네임 입력!");
+        const rec = { name: name, score: this.score, day: this.day };
+        let ranks = JSON.parse(localStorage.getItem('vb_ranks_v4')) || [];
+        ranks.push(rec); ranks.sort((a,b)=>b.score-a.score); ranks=ranks.slice(0,10);
+        localStorage.setItem('vb_ranks_v4', JSON.stringify(ranks));
+        const board = document.getElementById('ranking-board'); board.innerHTML='';
+        ranks.forEach((r,i) => {
+            const item=document.createElement('div'); item.className='rank-item';
+            item.innerHTML=`<span>${i+1}. ${r.name}</span><span>${r.score} pts</span>`;
+            board.appendChild(item);
+        });
+        document.getElementById('input-area').classList.add('hidden');
+        board.classList.remove('hidden');
+    },
+    
+    toggleSound: function() { this.isMuted = !this.isMuted; this.updateSoundIcon(); this.saveData(); },
+    updateSoundIcon: function() { document.getElementById('sound-btn').innerText = this.isMuted?"🔇 효과음":"🔊 효과음"; },
+    startStory: function() { 
+        BgMusic.init(); 
+        BgMusic.play(); 
+        this.storyIndex=0; document.getElementById('start-screen').classList.add('hidden'); document.getElementById('story-screen').classList.remove('hidden'); document.getElementById('story-screen').style.display='flex'; this.renderStory(); 
+    },
+    
+    renderStory: function() {
+        if(this.storyIndex >= storyLines.length) { 
+            document.getElementById('story-screen').classList.add('hidden'); 
+            showDifficulty(); 
+            return; 
+        }
+        
+        const line = storyLines[this.storyIndex];
+        document.getElementById('story-avatar').innerText = line.s; 
+        document.getElementById('story-speaker').innerText = line.name;
+        document.getElementById('story-text').innerHTML = line.text;
+    },
+    nextStory: function() { this.storyIndex++; this.renderStory(); },
+    
+    start: function(skipInit) {
+        if(!skipInit) this.init(); 
+        BgMusic.play(); 
+        this.gameMode='normal'; document.body.classList.remove('mode-review');
+        this.isActive=true; this.isPaused=false;
+        document.getElementById('start-screen').classList.add('hidden');
+        this.updateHUD(); this.nextTurn();
+    },
+    startReviewMode: function() {
+        if(this.myWords.length<1) return alert("오답 노트가 비어있습니다.");
+        if(!rawWords || rawWords.length===0) rawWords = wordData.easy;
+        BgMusic.play(); 
+        this.gameMode='review';
+        this.activePool = JSON.parse(JSON.stringify(this.myWords));
+        this.activePool.sort(()=>Math.random()-0.5);
+        this.lives=3; this.isActive=true; this.isPaused=false;
+        document.body.classList.add('mode-review');
+        document.querySelectorAll('.overlay').forEach(el => el.classList.add('hidden'));
+        this.updateHUD(); this.showFloatingText("복습 시작!", document.body); this.nextTurn();
+    },
+    startNextDay: function() {
+        playSound('bell');
+        this.day++; this.dailyCount=0; this.isActive=true; this.saveData();
+        document.getElementById('day-clear-screen').classList.add('hidden');
+        this.updateHUD(); this.nextTurn();
+    },
+    togglePause: function() {
+        // ▼▼▼ [수정] 이 줄을 삭제하거나 주석 처리(//) 하세요! ▼▼▼
+        // if(!this.isActive && !this.isPaused) return; 
+
+        if(this.isPaused) { 
+            this.isPaused=false; 
+            document.getElementById('pause-screen').classList.add('hidden'); 
+            
+            // 주의: 상점 모드일 때는 타이머가 없으므로 타이머 재개는 isActive일 때만 해야 에러가 안 납니다.
+            if(this.isActive) this.startTimer(); 
+            
+            BgMusic.play(); 
+            if(this.currentCust && this.currentCust.type === 'rush') {
+                document.getElementById('game-container').classList.add('effect-rush-bg');
+            }
+        }
+        else { 
+            this.isPaused=true; 
+            clearInterval(this.timer); 
+            document.getElementById('pause-screen').classList.remove('hidden'); 
+            document.getElementById('pause-screen').style.display='flex'; 
+            BgMusic.stop(); 
+            document.getElementById('game-container').classList.remove('effect-rush-bg');
+        }
+    },
+
+    renderScene: function() {
+        this.isTimeFrozen = false; // 새 손님 오면 시간 정지 해제
+        
+        const c = this.currentCust;
+        const container = document.getElementById('game-container');
+        container.className = ''; if(c.type==='rush') container.classList.add('effect-rush-bg');
+        
+        let txt = c.data.m; let avClass = 'avatar';
+        const ch = c.char;
+        if(ch && ch.kind === 'main') {
+            avClass += ' main-aura';
+            txt = `<div style="color:#ce93d8;font-size:0.8rem;font-weight:900;margin-bottom:3px;">✨ ${ch.title || ch.name} ✨</div>` + txt;
+        }
+        if(c.type==='rush') txt += `<br><span style='color:red;font-size:0.8rem'>🔥 빨리!!</span>`;
+        if(c.type==='vip') {
+            avClass += ' vip-aura';
+        }
+        if(this.gameMode==='review' || c.isReview) txt += `<br><span style='color:#7b1fa2;font-size:0.8rem'>🔁 복습</span>`;
+
+        // 캐릭터 이름표 — 메인 캐릭터(로아·루나·세라)만 표시
+        let nameTag = '';
+        if(ch && ch.kind === 'main') {
+            const col = RARITY_COLOR[ch.rarity] || '#9e9e9e';
+            nameTag = `<div class="char-name" style="--rc:${col}">${ch.name}</div>`;
+        }
+
+        // [출처] 실제 검증된 기출 출처만 작게 표시 (없으면 표시 안 함 — 거짓 표기 금지)
+        let srcTag = c.data.s ? `<div class="src-tag">📄 ${c.data.s}</div>` : '';
+
+        // [VIP 시간 정지 버튼 로직]
+        let vipItemHtml = '';
+        if(c.type === 'vip') {
+            if(this.isTimeFrozen) {
+                vipItemHtml = `<div style="margin-top:10px; text-align:center;"><button disabled style="background:#ccc; color:#666; border:none; padding:5px 10px; border-radius:15px; font-family:'Jua';">❄️ 시간 정지됨!</button></div>`;
+            } else {
+                vipItemHtml = `<div style="margin-top:10px; text-align:center; animation: bounce 1s infinite;"><button onclick="game.buyTimeStop()" style="background:linear-gradient(45deg, #FF512F, #DD2476); color:white; border:2px solid white; border-radius:20px; padding:5px 12px; font-weight:bold; cursor:pointer; font-family:'Jua'; box-shadow:0 3px 6px rgba(0,0,0,0.3);">🛑 시간 정지 (250G)</button></div>`;
+            }
+        }
+
+        document.getElementById('customer-area').innerHTML = `
+            <div class="customer type-${c.type}" id="cust-el">
+                <div class="bubble" id="bubble-el"><div>${txt}</div>${srcTag}</div>
+                ${nameTag}
+                <div class="timer-bar-wrap"><div class="timer-fill" id="timer-bar"></div></div>
+                ${vipItemHtml}
+                <div class="${avClass}">${c.avatar}</div>
+            </div>`;
+            
+        if(c.type==='vip') {
+            document.getElementById('options-grid').classList.add('hidden');
+            document.getElementById('vip-area').classList.remove('hidden');
+            const inp = document.getElementById('vip-input');
+            inp.value = ''; // 입력창을 깨끗하게 비웁니다!
+            inp.maxLength = c.data.w.length; // 단어 길이만큼만 입력 가능
+            
+            // [힌트 표시] 예: A _ _ _ _
+            const firstChar = c.data.w.charAt(0);
+            const underScores = "_ ".repeat(c.data.w.length - 1);
+            
+            // 힌트 영역이 있는지 확인 후 넣기 (오류 방지)
+            const hintEl = document.getElementById('vip-hint-display');
+            if(hintEl) {
+                hintEl.innerText = firstChar + " " + underScores;
+            }
+
+            document.getElementById('order-info').innerHTML = `VIP 주문: <b style="color:var(--gold)">직접 입력하세요!</b>`;
+            setTimeout(() => inp.focus(), 100);
+            
+        } else {
+            document.getElementById('options-grid').classList.remove('hidden');
+            document.getElementById('vip-area').classList.add('hidden');
+            document.getElementById('order-info').innerHTML = `주문: <b>${c.data.m}</b>`;
+            const grid = document.getElementById('options-grid');
+            grid.innerHTML = '';
+            
+            let opts = [c.data.w];
+            let distractors = rawWords.filter(x => x.w !== c.data.w).map(x => x.w);
+            distractors.sort(() => Math.random() - 0.5);
+            opts.push(...distractors.slice(0, 3)); 
+            
+            opts.sort(() => Math.random() - 0.5);
+
+            const isGold = this.ownedItems.includes('item_cup_gold');
+            opts.forEach(w => {
+                const btn = document.createElement('button');
+                btn.className = 'cup-btn ' + (isGold?'gold-skin':'');
+                btn.innerHTML = `<span>${w}</span>`;
+                btn.onclick = () => this.checkAnswer(w, btn);
+                grid.appendChild(btn);
+            });
+        }
+    },
+    startTimer: function() {
+        if(this.timer) clearInterval(this.timer);
+        const bar = document.getElementById('timer-bar');
+        
+        this.timer = setInterval(() => {
+            if(!this.isActive || this.isPaused) return;
+
+            // [수정됨] 시간 정지 아이템을 썼다면 시간을 깎지 않고 통과!
+            if(this.isTimeFrozen) return; 
+
+            this.currentCust.timeLeft -= 100;
+            const pct = (this.currentCust.timeLeft / this.currentCust.maxTime) * 100;
+            if(bar) bar.style.width = pct + "%";
+            
+            if(this.currentCust.timeLeft <= 0) { 
+                clearInterval(this.timer); 
+                this.handleFail(true); 
+            }
+        }, 100);
+    },
+    createCoinAnim: function(s, e) {
+        if(!s || !e) return;
+        const c = document.createElement('div'); c.innerHTML='<img src="sprites/coin.svg" alt="">'; c.className='fly-coin';
+        const r1 = s.getBoundingClientRect(); c.style.left=(r1.left+r1.width/2)+'px'; c.style.top=(r1.top+r1.height/2)+'px';
+        document.body.appendChild(c);
+        const r2 = e.getBoundingClientRect();
+        setTimeout(() => { c.style.left=r2.left+'px'; c.style.top=r2.top+'px'; c.style.opacity=0; }, 50);
+        setTimeout(() => c.remove(), 900);
+    }
+};
+
+// Start Game
+game.init();
+
+// ▼▼▼ [교체] 고정형 콤보 UI 업데이트 함수 ▼▼▼
+function updateComboUI(count) {
+    // 1. 콤보 UI가 없으면 만들기 (최초 1회)
+    let el = document.getElementById('combo-ui');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'combo-ui';
+        document.body.appendChild(el);
+    }
+
+    // 2. 콤보가 2 미만이면 숨기기
+    if (count < 2) {
+        el.classList.remove('active');
+        return;
+    }
+
+    // 3. 텍스트 업데이트 및 표시
+    el.innerHTML = '<span class="combo-num">' + count + '</span><span class="combo-label">COMBO</span>';
+    el.classList.add('active'); // 보이게 하기
+
+    // 4. 둠칫! 하는 효과 (pulse 클래스 줬다 뺏기)
+    el.classList.remove('pulse');
+    void el.offsetWidth; // 브라우저에게 "새로고침해!"라고 닥달하기
+    el.classList.add('pulse');
+}
+
+// ▼▼▼ [신규] 콤보 UI 숨기는 함수 (틀렸을 때용) ▼▼▼
+function hideComboUI() {
+    const el = document.getElementById('combo-ui');
+    if (el) el.classList.remove('active'); // 부드럽게 사라짐
+}
+
+// [신규] 정답/오답 화면 플래시
+function flashFX(kind) {
+    const f = document.getElementById('fx-flash');
+    if (!f) return;
+    f.className = ''; void f.offsetWidth; // 리플로우로 애니메이션 재시작
+    f.classList.add('go', kind === 'good' ? 'good' : 'bad');
+}
+
+</script>
+
+<style>
+    #install-popup {
+        display: none; position: fixed; bottom: 0; left: 0; right: 0;
+        background: rgba(0,0,0,0.9); color: white; padding: 20px;
+        text-align: center; z-index: 9999; border-top: 4px solid #ffca28;
+        animation: slideUp 0.5s ease-out;
+    }
+    #install-popup h3 { margin: 0 0 10px 0; color: #ffca28; }
+    #install-popup p { margin: 0 0 15px 0; font-size: 14px; color: #ddd; }
+    .close-popup {
+        background: transparent; border: 1px solid #fff; color: #fff;
+        padding: 5px 15px; border-radius: 20px; cursor: pointer;
+    }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+</style>
+
+<div id="install-popup">
+    <h3 id="popup-title">📲 앱으로 설치하기</h3>
+    <p id="popup-desc">
+        더 넓은 화면으로 게임을 즐기려면<br>
+        홈 화면에 추가해주세요!
+    </p>
+    <button class="close-popup" onclick="document.getElementById('install-popup').style.display='none'">닫기 (나중에)</button>
+</div>
+
+<script>
+    window.addEventListener('load', () => {
+        // 이미 앱모드면 중단
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+        if (isStandalone) return;
+
+        const userAgent = navigator.userAgent.toLowerCase();
+        const isIOS = /iphone|ipad|ipod/.test(userAgent);
+        const isAndroid = /android/.test(userAgent);
+        const popup = document.getElementById('install-popup');
+        const desc = document.getElementById('popup-desc');
+
+        if (isIOS) {
+            // 사파리 브라우저일 때만
+            if(userAgent.includes('safari') && !userAgent.includes('crios')) {
+                desc.innerHTML = `하단 <span style="font-size:1.5em">📤</span> 공유 버튼을 누르고<br><strong>'홈 화면에 추가'</strong>를 선택하세요!`;
+                popup.style.display = 'block';
+            }
+        } else if (isAndroid) {
+            desc.innerHTML = `우측 상단 <span style="font-size:1.5em">⋮</span> 메뉴를 누르고<br><strong>'앱 설치'</strong> 또는 <strong>'홈 화면에 추가'</strong>를 누르세요!`;
+            popup.style.display = 'block';
+        }
+    });
+</script>
+
+<script>
+    // ⬇️ 여기에 아까 복사한 '웹 앱 URL'을 붙여넣으세요! (따옴표 안에)
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbySfCSJVLGYcZQq1y9YfEYJJUnkw8XyBI6FSz--z6p5GeLAkBBL20RJ6TnAMF5ifhyN/exec";
+
+    // 오프라인/느린 네트워크에서 fetch가 무한정 멈추지 않도록 타임아웃 래퍼
+    function fetchWithTimeout(url, ms = 8000) {
+        const ctrl = new AbortController();
+        const id = setTimeout(() => ctrl.abort(), ms);
+        return fetch(url, { signal: ctrl.signal }).finally(() => clearTimeout(id));
+    }
+
+    window.addEventListener('load', () => {
+        if(typeof game !== 'undefined') {
+            
+            // 게임의 [랭킹 등록] 버튼 기능 덮어쓰기
+            game.submitRank = function() {
+                const nameInput = document.getElementById('nickname');
+                const name = nameInput.value.trim();
+                const scoreText = document.getElementById('final-score').innerText;
+                const score = parseInt(scoreText.replace(/,/g, ''), 10) || 0;
+
+                if(!name) { alert("닉네임을 입력해주세요!"); return; }
+
+                const btn = document.querySelector('#result-screen .buy-btn');
+                btn.disabled = true;
+                btn.innerText = "등록 중...";
+
+                // 구글 시트로 데이터 쏘기
+                fetchWithTimeout(`${SCRIPT_URL}?action=register&name=${encodeURIComponent(name)}&score=${score}`)
+                .then(res => res.json())
+                .then(data => {
+                    alert("랭킹 등록 완료!");
+                    showSheetRanking(); // 등록 후 랭킹판 보여주기
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert("인터넷 연결을 확인해주세요.");
+                    btn.disabled = false;
+                    btn.innerText = "랭킹 등록";
+                });
+            };
+        }
+    });
+
+    // 구글 시트에서 랭킹 가져오기
+    function showSheetRanking() {
+        const board = document.getElementById('ranking-board');
+        board.classList.remove('hidden');
+        board.innerHTML = '<div style="text-align:center; padding:20px;">랭킹 로딩 중...⏳</div>';
+        
+        // 입력창 숨기기
+        const inputArea = document.getElementById('input-area');
+        if(inputArea) inputArea.style.display = 'none';
+
+        fetchWithTimeout(`${SCRIPT_URL}?action=getRank`)
+        .then(res => res.json())
+        .then(data => {
+            let html = '<h3 style="text-align:center; color:gold; margin-bottom:15px;">🏆 명예의 전당 🏆</h3>';
+            
+            if (data.length === 0) {
+                html += '<div style="text-align:center;">아직 랭킹이 없습니다.</div>';
+            } else {
+                data.forEach((item, index) => {
+                    const rank = index + 1;
+                    let dateStr = "";
+                    try { dateStr = item.date.split('오')[0]; } catch(e){} // 날짜 짧게
+
+                    html += `
+                    <div class="rank-item" style="padding:10px; border-bottom:1px solid #555; display:flex; justify-content:space-between; align-items:center;">
+                        <span>
+                            <span style="color:${rank===1?'gold':rank===2?'silver':rank===3?'#cd7f32':'#fff'}; font-weight:bold; margin-right:10px;">${rank}위</span>
+                            <span style="color:#fff;">${item.name}</span>
+                        </span>
+                        <span>
+                            <span style="color:#ffca28; font-weight:bold;">${item.score}</span>
+                        </span>
+                    </div>`;
+                });
+            }
+            // 닫기 버튼 추가
+            html += '<div style="text-align:center; margin-top:15px;"><button onclick="document.getElementById(\'ranking-board\').classList.add(\'hidden\')" style="padding:5px 15px;">닫기</button></div>';
+            
+            board.innerHTML = html;
+        })
+        .catch(err => {
+            board.innerHTML = '<div style="text-align:center;">랭킹 불러오기 실패</div>';
+        });
+    }
+
+/* 위쪽에 있던 navigator.mediaSession 관련 코드는 
+   모두 깨끗하게 지워졌어야 합니다. 
+*/
+
+// ▼▼▼ [화면 나가면 음악 끄기] 이것만 남겨주세요 ▼▼▼
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        // 홈으로 나가거나 화면 끄면: 음악 정지
+        if (game.bgm) {
+            game.bgm.pause();
+        }
+        // 게임도 일시정지 (선택사항)
+        game.isPaused = true; 
+    } else {
+        // 다시 돌아왔을 때 로직 (필요하면 유지, 아니면 생략 가능)
+        // 사용자가 직접 플레이 버튼을 누르게 하는 것이 가장 오류가 적습니다.
+    }
+});
+
+</script>
+
+<div id="custom-alert" class="hidden">
+    <div class="alert-box">
+        <h2 style="color:var(--brown-dark); margin:0 0 10px 0;">☕ 영업 안내</h2>
+        <p id="custom-alert-msg" style="font-size:1.2rem; margin-bottom:20px; color:#333;"></p>
+        <button class="btn-primary" onclick="closeCustomAlert()">확인</button>
+    </div>
+</div>
+
+</body>
+</html>

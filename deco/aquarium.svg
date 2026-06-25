@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <defs>
+    <linearGradient id="aq_w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fc6e8"/><stop offset="1" stop-color="#1f7fb5"/></linearGradient>
+    <linearGradient id="aq_f" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff9a3d"/><stop offset="1" stop-color="#e8631a"/></linearGradient>
+  </defs>
+  <ellipse cx="60" cy="108" rx="38" ry="6" fill="#000" opacity="0.18"/>
+  <!-- tank -->
+  <rect x="26" y="34" width="68" height="66" rx="8" fill="url(#aq_w)" stroke="#2a3b4a" stroke-width="3"/>
+  <!-- water highlight -->
+  <path d="M30 40 q20 6 60 0 v8 q-30 6 -60 0 z" fill="#ffffff" opacity="0.18"/>
+  <!-- sand -->
+  <path d="M27 92 q20 -8 66 0 v6 a6 6 0 0 1 -6 6 H33 a6 6 0 0 1 -6 -6 z" fill="#e6cf94"/>
+  <!-- plant -->
+  <path d="M40 92 q-6 -16 2 -26 q4 12 -2 26" fill="#3f9c52"/>
+  <!-- fish -->
+  <g transform="translate(64 64)">
+    <ellipse cx="0" cy="0" rx="15" ry="10" fill="url(#aq_f)" stroke="#b84e16" stroke-width="1.5"/>
+    <path d="M14 0 l12 -8 v16 z" fill="#ff9a3d" stroke="#b84e16" stroke-width="1.5"/>
+    <circle cx="-7" cy="-2" r="2.6" fill="#fff"/><circle cx="-7" cy="-2" r="1.3" fill="#222"/>
+    <path d="M-2 -8 q6 -3 10 1" fill="none" stroke="#fff" stroke-width="1.4" opacity="0.6"/>
+  </g>
+  <!-- bubbles -->
+  <g fill="#fff" opacity="0.7"><circle cx="44" cy="50" r="2.5"/><circle cx="50" cy="42" r="1.8"/><circle cx="46" cy="58" r="1.6"/></g>
+  <rect x="26" y="30" width="68" height="9" rx="4" fill="#5d4037" stroke="#3e2723" stroke-width="2"/>
+</svg>

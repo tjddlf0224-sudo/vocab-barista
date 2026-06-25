@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 90">
+  <defs>
+    <filter id="ne_g" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect x="8" y="8" width="134" height="74" rx="12" fill="#1a1320" stroke="#0d0a12" stroke-width="3"/>
+  <rect x="14" y="14" width="122" height="62" rx="9" fill="#241a2e"/>
+  <g filter="url(#ne_g)">
+    <text x="75" y="50" font-size="30" text-anchor="middle" font-family="'Jua',sans-serif" fill="#ff4fa3" stroke="#ff8fc4" stroke-width="0.5">OPEN</text>
+    <rect x="22" y="60" width="106" height="3" rx="1.5" fill="#4fe0ff"/>
+  </g>
+  <g fill="#fff" opacity="0.85"><circle cx="30" cy="42" r="1.4"/><circle cx="120" cy="38" r="1.4"/></g>
+</svg>

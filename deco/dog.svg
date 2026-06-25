@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <defs><linearGradient id="dg_b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0c06a"/><stop offset="1" stop-color="#d09a40"/></linearGradient></defs>
+  <ellipse cx="60" cy="111" rx="30" ry="6" fill="#000" opacity="0.18"/>
+  <!-- tail -->
+  <path d="M84 94 q20 -6 18 -22 q-8 -2 -10 6 q-2 8 -12 10z" fill="url(#dg_b)" stroke="#a9742a" stroke-width="2"/>
+  <!-- body -->
+  <path d="M38 100 q-6 -36 22 -38 q28 2 22 38 z" fill="url(#dg_b)" stroke="#a9742a" stroke-width="2"/>
+  <!-- chest -->
+  <path d="M50 96 q10 6 20 0 q-2 -20 -10 -22 q-8 2 -10 22z" fill="#f7d79a" opacity="0.8"/>
+  <!-- head -->
+  <circle cx="60" cy="50" r="22" fill="url(#dg_b)" stroke="#a9742a" stroke-width="2"/>
+  <!-- ears -->
+  <path d="M40 44 q-10 2 -8 18 q8 2 12 -8z" fill="#c8923a" stroke="#a9742a" stroke-width="2"/>
+  <path d="M80 44 q10 2 8 18 q-8 2 -12 -8z" fill="#c8923a" stroke="#a9742a" stroke-width="2"/>
+  <!-- muzzle -->
+  <ellipse cx="60" cy="58" rx="12" ry="10" fill="#f7d79a"/>
+  <ellipse cx="60" cy="54" rx="4.5" ry="3.5" fill="#3a2a14"/>
+  <path d="M60 57 v5 q-4 3 -7 1M60 62 q4 3 7 1" fill="none" stroke="#7a5230" stroke-width="1.6" stroke-linecap="round"/>
+  <ellipse cx="50" cy="46" rx="3" ry="4.5" fill="#3a2a14"/><ellipse cx="70" cy="46" rx="3" ry="4.5" fill="#3a2a14"/>
+  <circle cx="49" cy="45" r="1.2" fill="#fff"/><circle cx="69" cy="45" r="1.2" fill="#fff"/>
+  <ellipse cx="50" cy="42" rx="6" ry="8" fill="#fff" opacity="0.22"/>
+</svg>

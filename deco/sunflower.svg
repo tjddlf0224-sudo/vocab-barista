@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <defs>
+    <linearGradient id="sf_pot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7fb3e0"/><stop offset="1" stop-color="#3f74ad"/></linearGradient>
+    <radialGradient id="sf_pet" cx="0.5" cy="0.5" r="0.6"><stop offset="0" stop-color="#ffe17a"/><stop offset="1" stop-color="#f5a623"/></radialGradient>
+    <radialGradient id="sf_ctr" cx="0.4" cy="0.4" r="0.7"><stop offset="0" stop-color="#7a4a24"/><stop offset="1" stop-color="#3e2412"/></radialGradient>
+  </defs>
+  <ellipse cx="60" cy="111" rx="32" ry="6" fill="#000" opacity="0.18"/>
+  <path d="M58 70 q-6 -18 2 -34" fill="none" stroke="#3f8c34" stroke-width="4" stroke-linecap="round"/>
+  <path d="M56 52 q-12 -3 -16 -12 q12 -2 16 6 z" fill="#4a9c3c" stroke="#2f6b27" stroke-width="1.5"/>
+  <!-- flower -->
+  <g transform="translate(60 30)">
+    <g fill="url(#sf_pet)" stroke="#e08e1a" stroke-width="1">
+      <g id="p"><ellipse cx="0" cy="-19" rx="5.5" ry="11"/></g>
+      <use href="#p" transform="rotate(45)"/><use href="#p" transform="rotate(90)"/><use href="#p" transform="rotate(135)"/>
+      <use href="#p" transform="rotate(180)"/><use href="#p" transform="rotate(225)"/><use href="#p" transform="rotate(270)"/><use href="#p" transform="rotate(315)"/>
+      <use href="#p" transform="rotate(22)"/><use href="#p" transform="rotate(67)"/><use href="#p" transform="rotate(112)"/><use href="#p" transform="rotate(157)"/>
+      <use href="#p" transform="rotate(202)"/><use href="#p" transform="rotate(247)"/><use href="#p" transform="rotate(292)"/><use href="#p" transform="rotate(337)"/>
+    </g>
+    <circle r="12" fill="url(#sf_ctr)" stroke="#2e1b0e" stroke-width="1.5"/>
+    <circle r="12" fill="none" stroke="#000" stroke-width="0.5" stroke-dasharray="1 2" opacity="0.4"/>
+  </g>
+  <!-- pot -->
+  <path d="M42 70 L78 70 L73 104 L47 104 Z" fill="url(#sf_pot)" stroke="#2c5685" stroke-width="2"/>
+  <rect x="38" y="64" width="44" height="12" rx="4" fill="#8fc0ea" stroke="#2c5685" stroke-width="2"/>
+  <ellipse cx="52" cy="86" rx="4" ry="10" fill="#fff" opacity="0.2"/>
+</svg>

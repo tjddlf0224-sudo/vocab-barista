@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 110">
+  <defs>
+    <linearGradient id="cb_f" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a9784a"/><stop offset="1" stop-color="#7a5230"/></linearGradient>
+    <radialGradient id="cb_b" cx="0.4" cy="0.35" r="0.9"><stop offset="0" stop-color="#2e4a3e"/><stop offset="1" stop-color="#1c2f28"/></radialGradient>
+  </defs>
+  <rect x="8" y="8" width="124" height="94" rx="9" fill="url(#cb_f)" stroke="#5a3a1e" stroke-width="3"/>
+  <rect x="18" y="18" width="104" height="74" rx="4" fill="url(#cb_b)" stroke="#16241f" stroke-width="2"/>
+  <text x="70" y="42" font-size="17" fill="#fff8e1" text-anchor="middle" font-family="'Jua',sans-serif">☕ MENU</text>
+  <g stroke="#cfe8d6" stroke-width="2" stroke-linecap="round" opacity="0.85">
+    <path d="M30 56h60"/><path d="M30 68h74"/><path d="M30 80h48"/>
+  </g>
+  <g fill="#ffe082"><circle cx="112" cy="66" r="2.4"/><circle cx="96" cy="80" r="2"/></g>
+  <ellipse cx="40" cy="30" rx="14" ry="8" fill="#fff" opacity="0.05"/>
+</svg>

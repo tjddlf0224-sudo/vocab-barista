@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <defs>
+    <linearGradient id="ca_pot" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e07a3e"/><stop offset="1" stop-color="#a84f24"/></linearGradient>
+    <linearGradient id="ca_body" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6fbf5a"/><stop offset="1" stop-color="#3f8c34"/></linearGradient>
+  </defs>
+  <ellipse cx="60" cy="111" rx="34" ry="6" fill="#000" opacity="0.18"/>
+  <!-- cactus -->
+  <path d="M52 64 q-2 -22 8 -24 q10 2 8 24 z" fill="url(#ca_body)" stroke="#2f6b27" stroke-width="2"/>
+  <path d="M44 58 q-12 -2 -12 -12 q0 -7 6 -7 q7 0 7 9" fill="url(#ca_body)" stroke="#2f6b27" stroke-width="2"/>
+  <path d="M76 62 q12 -2 12 -14 q0 -7 -6 -7 q-7 0 -7 9" fill="url(#ca_body)" stroke="#2f6b27" stroke-width="2"/>
+  <g stroke="#d8f0c0" stroke-width="1.4" opacity="0.7"><path d="M60 44v18M55 50l10 4M65 50l-10 4"/></g>
+  <circle cx="60" cy="38" r="6" fill="#ff8fab" stroke="#e26d8c" stroke-width="1.5"/>
+  <circle cx="60" cy="38" r="2.4" fill="#ffd9e2"/>
+  <!-- pot -->
+  <path d="M40 66 L80 66 L74 104 L46 104 Z" fill="url(#ca_pot)" stroke="#7e3a18" stroke-width="2"/>
+  <rect x="36" y="60" width="48" height="12" rx="4" fill="#f08c4e" stroke="#7e3a18" stroke-width="2"/>
+  <ellipse cx="50" cy="84" rx="4" ry="10" fill="#fff" opacity="0.16"/>
+</svg>

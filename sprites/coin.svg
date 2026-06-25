@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <radialGradient id="co_face" cx="0.38" cy="0.32" r="0.75">
+      <stop offset="0" stop-color="#fff3b0"/><stop offset="0.45" stop-color="#ffd23f"/><stop offset="1" stop-color="#e0a514"/>
+    </radialGradient>
+    <linearGradient id="co_rim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe27a"/><stop offset="1" stop-color="#b8780c"/>
+    </linearGradient>
+  </defs>
+  <circle cx="24" cy="24" r="22" fill="url(#co_rim)" stroke="#9a6206" stroke-width="1.5"/>
+  <circle cx="24" cy="24" r="17.5" fill="url(#co_face)" stroke="#c98a10" stroke-width="1.5"/>
+  <circle cx="24" cy="24" r="14" fill="none" stroke="#e8b53a" stroke-width="1" opacity="0.7"/>
+  <!-- 커피콩 엠보스 -->
+  <g transform="rotate(-20 24 24)">
+    <ellipse cx="24" cy="24" rx="6.5" ry="9.5" fill="#c98a10" opacity="0.55"/>
+    <path d="M24 15.5 C 21.5 19, 21.5 29, 24 32.5" fill="none" stroke="#a06c08" stroke-width="1.6" opacity="0.7"/>
+  </g>
+  <!-- 하이라이트 -->
+  <path d="M13 16 a 13 13 0 0 1 9 -6" fill="none" stroke="#fffbe0" stroke-width="2.4" stroke-linecap="round" opacity="0.85"/>
+  <circle cx="16" cy="18" r="2.4" fill="#fffbe0" opacity="0.8"/>
+</svg>

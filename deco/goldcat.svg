@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <defs>
+    <linearGradient id="gc_g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe89a"/><stop offset="0.5" stop-color="#f5c63d"/><stop offset="1" stop-color="#c8920f"/></linearGradient>
+  </defs>
+  <ellipse cx="60" cy="110" rx="30" ry="6" fill="#000" opacity="0.2"/>
+  <rect x="38" y="98" width="44" height="12" rx="4" fill="#caa54e" stroke="#8a6a1e" stroke-width="2"/>
+  <path d="M40 98 q-4 -34 20 -36 q24 2 20 36 z" fill="url(#gc_g)" stroke="#9a7416" stroke-width="2"/>
+  <path d="M44 70 q-10 -8 -6 -18 q8 -2 12 8 z" fill="url(#gc_g)" stroke="#9a7416" stroke-width="2"/>
+  <circle cx="60" cy="50" r="22" fill="url(#gc_g)" stroke="#9a7416" stroke-width="2"/>
+  <path d="M44 36 l-4 -14 14 6 z" fill="url(#gc_g)" stroke="#9a7416" stroke-width="2"/>
+  <path d="M76 36 l4 -14 -14 6 z" fill="url(#gc_g)" stroke="#9a7416" stroke-width="2"/>
+  <path d="M44 60 q16 8 32 0" fill="none" stroke="#e0392b" stroke-width="4"/>
+  <circle cx="60" cy="64" r="4.5" fill="#fff3b0" stroke="#9a7416" stroke-width="1.5"/>
+  <ellipse cx="52" cy="50" rx="3" ry="4" fill="#5a430e"/><ellipse cx="68" cy="50" rx="3" ry="4" fill="#5a430e"/>
+  <path d="M57 57 q3 3 6 0" fill="none" stroke="#5a430e" stroke-width="1.6" stroke-linecap="round"/>
+  <ellipse cx="50" cy="44" rx="6" ry="8" fill="#fff" opacity="0.25"/>
+  <text x="60" y="107" font-size="9" fill="#7a5a10" text-anchor="middle" font-family="serif" font-weight="bold">福</text>
+</svg>
