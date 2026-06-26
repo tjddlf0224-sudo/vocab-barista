@@ -788,6 +788,7 @@
 .hic.heart{ display:inline-block; width:20px; height:20px; vertical-align:-4px; margin:0; }
 .bic{ width:1.05em; height:1.05em; vertical-align:-0.16em; margin-right:6px; flex:0 0 auto; }
 .ss-brand .bic, .ss-tag .bic{ vertical-align:-0.12em; }
+.it-ic{ width:30px; height:30px; vertical-align:middle; display:inline-block; }
 
 /* 장식 유휴 애니메이션(전체 살랑·까딱 — 살아있는 느낌) */
 .deco-anim-pet{ transform-origin:bottom center; animation:petSway 2.6s ease-in-out infinite; }
@@ -959,7 +960,7 @@
     </div>
 
     <div class="overlay hidden" id="inventory-screen-item"> 
-    <h2 id="inv-title">🎒 아이템 교체</h2>
+    <h2 id="inv-title">아이템 교체</h2>
     <p style="color:#ddd; font-size:0.9rem; margin-bottom:15px;">보유 중인 아이템을 선택하세요.</p>
     
     <div class="shop-container inventory-list" id="inventory-list-item"></div>
@@ -1660,28 +1661,41 @@ function decoIcon(item, px){ const s = px||52; return item.img
     ? `<img src="${item.img}" alt="${item.name}" style="width:${s}px;height:${s}px;object-fit:contain;filter:drop-shadow(0 3px 3px rgba(0,0,0,.25));">`
     : `<span style="font-size:2rem;">${item.icon}</span>`; }
 
+// 아이템 SVG 아이콘 세트(이모지 대체) — 상점 칩·알림에서 사용
+const ICONS = {
+    heart:'<svg class="it-ic" viewBox="0 0 24 24"><path d="M12 21S3 14.5 3 8.6A4.6 4.6 0 0 1 12 6.3 4.6 4.6 0 0 1 21 8.6C21 14.5 12 21 12 21z" fill="#e87f7f"/></svg>',
+    bulb:'<svg class="it-ic" viewBox="0 0 24 24" fill="#f2b01c"><path d="M9 18h6v1.4a1.6 1.6 0 0 1-1.6 1.6h-2.8A1.6 1.6 0 0 1 9 19.4z"/><path d="M12 2a7 7 0 0 0-4 12.7V16.5h8V14.7A7 7 0 0 0 12 2z"/></svg>',
+    clock:'<svg class="it-ic" viewBox="0 0 24 24" fill="none" stroke="#a07a44" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2" stroke-linecap="round"/></svg>',
+    star:'<svg class="it-ic" viewBox="0 0 24 24" fill="#f2b01c"><path d="M12 2l2.6 6.3 6.8.5-5.2 4.4 1.7 6.6L12 16.8 6.1 20.3l1.7-6.6L2.6 8.8l6.8-.5z"/></svg>',
+    shield:'<svg class="it-ic" viewBox="0 0 24 24" fill="#6fae9a"><path d="M12 2l8 3v6c0 5-3.5 8.6-8 11-4.5-2.4-8-6-8-11V5z"/></svg>',
+    skip:'<svg class="it-ic" viewBox="0 0 24 24" fill="#8a6a4a"><path d="M4 5l8 7-8 7zM13 5l7 7-7 7z"/></svg>',
+    smiley:'<svg class="it-ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="#ffce5c"/><circle cx="9" cy="10.5" r="1.5" fill="#6a4a2a"/><circle cx="15" cy="10.5" r="1.5" fill="#6a4a2a"/><path d="M8 14.5a4.5 4.5 0 0 0 8 0" fill="none" stroke="#6a4a2a" stroke-width="1.8" stroke-linecap="round"/></svg>',
+    hourglass:'<svg class="it-ic" viewBox="0 0 24 24" fill="#c98a3a"><path d="M6 3h12v3.2l-4 5.3 4 5.3V20H6v-3.2l4-5.3-4-5.3z"/></svg>',
+    sword:'<svg class="it-ic" viewBox="0 0 24 24"><path d="M13 4h7v7l-8.5 8.5-3-3z" fill="#c08a6a"/><path d="M3.5 20.5l4-4M2.5 17.5l4 4" stroke="#8a5a3a" stroke-width="2" stroke-linecap="round" fill="none"/></svg>',
+};
+
 const CONSUMABLES = [
-    { id: 'con_potion', name: '체력 물약', desc: '즉시 라이프 +1', price: 300, icon: '❤️' },
-    { id: 'con_hint',   name: '힌트',     desc: '오답 보기 2개 제거 (VIP는 글자 공개)', price: 120, icon: '💡' },
-    { id: 'con_time',   name: '시간 연장', desc: '지금 손님 시간 +5초', price: 100, icon: '⏱️' },
-    { id: 'con_double', name: '점수 2배',  desc: '다음 정답 점수 2배', price: 200, icon: '✨' },
-    { id: 'con_shield', name: '콤보 보호막', desc: '한 번 틀려도 콤보 유지', price: 250, icon: '🛡️' },
-    { id: 'con_skip',   name: '스킵 티켓', desc: '이 손님 패스', price: 150, icon: '⏩' },
+    { id: 'con_potion', name: '체력 물약', desc: '즉시 라이프 +1', price: 300, icon: ICONS.heart },
+    { id: 'con_hint',   name: '힌트',     desc: '오답 보기 2개 제거 (VIP는 글자 공개)', price: 120, icon: ICONS.bulb },
+    { id: 'con_time',   name: '시간 연장', desc: '지금 손님 시간 +5초', price: 100, icon: ICONS.clock },
+    { id: 'con_double', name: '점수 2배',  desc: '다음 정답 점수 2배', price: 200, icon: ICONS.star },
+    { id: 'con_shield', name: '콤보 보호막', desc: '한 번 틀려도 콤보 유지', price: 250, icon: ICONS.shield },
+    { id: 'con_skip',   name: '스킵 티켓', desc: '이 손님 패스', price: 150, icon: ICONS.skip },
 ];
 
 // [탐험 조합 아이템] 탐험 조합소에서 만든 특별 아이템 — 카페에서 사용 (gameSave.craftedItems 공유)
 const CRAFTED_DEFS = {
     // 카페에서 사용(잡화점 '사용' 버튼)
-    cr_mood:   { name:'카페라떼',    icon:'😊', effect:'mood',     where:'cafe', desc:'다음 손님 3명 골드 +50%' },
-    cr_time:   { name:'타임 시럽',   icon:'⏳', effect:'time',     where:'cafe', desc:'지금 손님 시간 +5초' },
-    cr_score:  { name:'골든 블렌드', icon:'💯', effect:'double',   where:'cafe', desc:'다음 정답 점수 2배' },
-    cr_heart:  { name:'하트 마카롱', icon:'💖', effect:'affection', where:'cafe', desc:'메인 손님 호감 +10' },
-    // 탐험 전투에서 사용(전투 화면 🎒 버튼) — 카페 잡화점엔 안 보임
-    cr_atk:    { name:'더블 샷',      icon:'⚔️', effect:'atkup', where:'battle', desc:'탐험 전투 공격력 +50%' },
-    cr_def:    { name:'크림 실드',    icon:'🛡️', effect:'defup', where:'battle', desc:'탐험 전투 받는 피해 −50%' },
+    cr_mood:   { name:'카페라떼',    icon:ICONS.smiley, effect:'mood',     where:'cafe', desc:'다음 손님 3명 골드 +50%' },
+    cr_time:   { name:'타임 시럽',   icon:ICONS.hourglass, effect:'time',     where:'cafe', desc:'지금 손님 시간 +5초' },
+    cr_score:  { name:'골든 블렌드', icon:ICONS.star, effect:'double',   where:'cafe', desc:'다음 정답 점수 2배' },
+    cr_heart:  { name:'하트 마카롱', icon:ICONS.heart, effect:'affection', where:'cafe', desc:'메인 손님 호감 +10' },
+    // 탐험 전투에서 사용(전투 화면 아이템 버튼) — 카페 잡화점엔 안 보임
+    cr_atk:    { name:'더블 샷',      icon:ICONS.sword, effect:'atkup', where:'battle', desc:'탐험 전투 공격력 +50%' },
+    cr_def:    { name:'크림 실드',    icon:ICONS.shield, effect:'defup', where:'battle', desc:'탐험 전투 받는 피해 −50%' },
     // 레거시(이전 세이브 호환 — 더 이상 조합 불가, 보유분은 사용 가능)
-    cr_shield: { name:'포근한 라떼', icon:'🛡️', effect:'shield', where:'cafe', desc:'한 번 틀려도 콤보 유지' },
-    cr_life:   { name:'에너지 샷',   icon:'❤️', effect:'life',   where:'cafe', desc:'라이프 +1' },
+    cr_shield: { name:'포근한 라떼', icon:ICONS.shield, effect:'shield', where:'cafe', desc:'한 번 틀려도 콤보 유지' },
+    cr_life:   { name:'에너지 샷',   icon:ICONS.heart, effect:'life',   where:'cafe', desc:'라이프 +1' },
 };
 
 // ==========================================
@@ -2102,18 +2116,18 @@ const game = {
         if (rand < 0.05) { 
             const bonus = 2000;
             this.wallet += bonus;
-            msg = `🎰 대박! 황금 콩 발견! +${bonus}G`;
+            msg = `대박! 황금 콩 발견! +${bonus}G`;
             playSound('clear');
-        } else if (rand < 0.4) { 
+        } else if (rand < 0.4) {
             const bonus = 600;
             this.wallet += bonus;
-            msg = `🎁 꽤 괜찮은 원두네요. +${bonus}G`;
-        } else if (rand < 0.7) { 
+            msg = `꽤 괜찮은 원두네요. +${bonus}G`;
+        } else if (rand < 0.7) {
             const bonus = 100;
             this.wallet += bonus;
-            msg = `☕ 믹스 커피 당첨... +${bonus}G`;
-        } else { 
-            msg = `💨 텅 비어있습니다. (꽝!)`;
+            msg = `믹스 커피 당첨... +${bonus}G`;
+        } else {
+            msg = `텅 비어있습니다. (꽝!)`;
             playSound('wrong');
         }
         
@@ -2618,7 +2632,7 @@ const game = {
         if (ownedIds.length) {
             const head = document.createElement('div');
             head.style.cssText = 'font-weight:bold;color:#388e3c;padding:4px 2px;font-size:0.95rem;';
-            head.innerHTML = '🎒 탐험 조합 아이템';
+            head.innerHTML = '탐험 조합 아이템';
             list.appendChild(head);
             ownedIds.forEach(id => {
                 const d = CRAFTED_DEFS[id];
