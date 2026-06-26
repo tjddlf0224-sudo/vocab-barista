@@ -786,7 +786,7 @@
 /* 장식 유휴 애니메이션(전체 살랑·까딱 — 살아있는 느낌) */
 .deco-anim-pet{ transform-origin:bottom center; animation:petSway 2.6s ease-in-out infinite; }
 .deco-anim-plant{ transform-origin:bottom center; animation:plantSway 3.6s ease-in-out infinite; }
-@keyframes petSway{ 0%,100%{ transform:rotate(-2.2deg) translateY(0) } 50%{ transform:rotate(2.2deg) translateY(-3px) } }
+@keyframes petSway{ 0%,100%{ transform:rotate(-2.4deg) } 50%{ transform:rotate(2.4deg) } }
 @keyframes plantSway{ 0%,100%{ transform:rotate(-1.6deg) } 50%{ transform:rotate(1.6deg) } }
 
     </style>
@@ -2795,7 +2795,7 @@ equipItem: function(category, level) {
         // (2) 펫 — 카운터 위 오른쪽 (살랑 흔들 — 살아있는 느낌)
         if(eq.pet > 0) {
             const item = SHOP_DB.pet[eq.pet - 1];
-            cL.innerHTML += `<div class="deco-item" onclick="game.openSkinSelector('pet')" style="position:absolute; bottom:0; right:14px; z-index:12;" title="눌러서 교체">${sceneDeco(item.img, 86, 'deco-anim-pet')}</div>`;
+            cL.innerHTML += `<div class="deco-item" onclick="game.openSkinSelector('pet')" style="position:absolute; bottom:-8px; right:14px; z-index:12;" title="눌러서 교체">${sceneDeco(item.img, 90, 'deco-anim-pet')}</div>`;
         }
 
         // (3) 벽 장식 — 벽 중앙 상단
