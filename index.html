@@ -798,8 +798,8 @@
         linear-gradient(180deg, #d2a875 0, #cda06b 11px, #b5804f 12px, #9a6840 55%, #855838 100%);
     border-top:none;
     box-shadow: inset 0 3px 0 rgba(255,246,228,.6), inset 0 -10px 14px rgba(70,44,22,.32), 0 -3px 9px rgba(0,0,0,.16); }
-/* 펫·화분이 바 윗면에 앉도록 데코 베이스라인을 바 높이에 맞춤 */
-.counter-deco-area{ bottom:58px; }
+/* 펫·화분을 바 하단(빨간줄)까지 내림 */
+.counter-deco-area{ bottom:14px; }
 
     </style>
 </head>
@@ -2810,18 +2810,20 @@ equipItem: function(category, level) {
             cL.innerHTML += `<div class="deco-item" onclick="game.openSkinSelector('counter')" style="position:absolute; bottom:-6px; left:16px; z-index:12;" title="눌러서 교체">${sceneDeco(item.img, 80)}</div>`;
         }
 
-        // (2) 펫 — 카운터 위 오른쪽 (살랑 흔들 — 살아있는 느낌)
+        // (2) 펫 — 카운터 위 오른쪽 (살랑 흔들). 펫별 크기 통일(앵무새는 꼬리 때문에 크게)
         if(eq.pet > 0) {
             const item = SHOP_DB.pet[eq.pet - 1];
-            cL.innerHTML += `<div class="deco-item" onclick="game.openSkinSelector('pet')" style="position:absolute; bottom:-8px; right:14px; z-index:12;" title="눌러서 교체">${sceneDeco(item.img, 90, 'deco-anim-pet')}</div>`;
+            const petSizes = { p3:128, p4:104, p5:104 };
+            const psize = petSizes[item.id] || 96;
+            cL.innerHTML += `<div class="deco-item" onclick="game.openSkinSelector('pet')" style="position:absolute; bottom:-8px; right:14px; z-index:12;" title="눌러서 교체">${sceneDeco(item.img, psize, 'deco-anim-pet')}</div>`;
         }
 
-        // (3) 벽 장식 — 벽 중앙 상단
+        // (3) 벽 장식 — 벽 오른쪽
         if(eq.wall > 0) {
             const item = SHOP_DB.wall[eq.wall - 1];
             const wide = ['w1','w2','w5'].includes(item.id);
             const size = wide ? 124 : 104;
-            wL.innerHTML += `<div class="deco-item" onclick="game.openSkinSelector('wall')" style="position:absolute; top:34%; left:74%; transform:translateX(-50%); z-index:1;" title="눌러서 교체">${sceneDeco(item.img, size)}</div>`;
+            wL.innerHTML += `<div class="deco-item" onclick="game.openSkinSelector('wall')" style="position:absolute; top:34%; left:79%; transform:translateX(-50%); z-index:1;" title="눌러서 교체">${sceneDeco(item.img, size)}</div>`;
         }
     },
 
