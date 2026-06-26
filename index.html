@@ -770,12 +770,13 @@
 .no-timer-tag{ color:#9b7b66; background:rgba(255,255,255,.6); }
 
 /* 랭크 명패 — 등급색(밝은색) 대비 위해 어두운 나무는 유지하되 따뜻하게 */
-/* 랭크 명패 — 귀여운 캐러멜 우드 사인(크림 테두리·둥근·부드러운 입체) */
-#my-rank-badge{ padding:5px 16px 7px; border-radius:14px;
-    background:linear-gradient(180deg,#a4703f 0%,#7d5128 100%); border:2px solid #ecd0a4;
-    box-shadow:0 4px 0 #5c3b1c, 0 7px 13px rgba(80,50,25,.4), inset 0 1px 0 rgba(255,242,214,.45), inset 0 0 0 2px rgba(255,236,200,.16);
-    text-shadow:0 1px 2px rgba(55,28,8,.95), 0 0 5px rgba(0,0,0,.25); letter-spacing:0.3px; }
-#my-rank-badge::before{ color:#ffd36a; text-shadow:0 1px 2px rgba(55,28,8,.9), 0 0 6px rgba(255,200,90,.5); }
+/* 랭크 명패 — 밝은 크림 플레이트(파스텔), 등급색은 별 ★에만 */
+#my-rank-badge{ padding:5px 15px 7px; border-radius:16px;
+    background:linear-gradient(180deg,#fff8ec 0%,#fbe7c6 100%); border:2px solid #e8c693;
+    box-shadow:0 4px 0 #dcb579, 0 7px 12px rgba(125,88,45,.26), inset 0 1px 0 rgba(255,255,255,.85);
+    color:#7b5326; text-shadow:0 1px 0 rgba(255,255,255,.6); letter-spacing:0.3px; font-weight:normal; }
+#my-rank-badge::before{ content:'★'; color:var(--rank-color,#e0a23a); font-size:0.92rem;
+    text-shadow:0 1px 1px rgba(150,100,40,.35); margin-right:2px; }
 
 /* ===== SVG 아이콘(이모지 대체) ===== */
 .hic{ width:21px; height:21px; display:block; margin:0 auto; }
@@ -2013,17 +2014,17 @@ const game = {
     checkRank: function() {
         const s = this.lifetimeScore || 0;  // 누적 점수 기준 — 게임오버에도 랭크 유지
         let rank = "알바생";
-        let color = "#fff";
+        let color = "#e0a23a";              // 등급색(별 ★에만 반영, 텍스트는 항상 갈색)
 
-        if (s >= 50000) { rank = "커피의 신"; color = "#e91e63"; }
-        else if (s >= 20000) { rank = "점장"; color = "#ffc107"; }
-        else if (s >= 10000) { rank = "매니저"; color = "#00bcd4"; }
-        else if (s >= 5000) { rank = "정직원"; color = "#8bc34a"; }
-        
+        if (s >= 50000) { rank = "커피의 신"; color = "#ec407a"; }
+        else if (s >= 20000) { rank = "점장"; color = "#f2a31c"; }
+        else if (s >= 10000) { rank = "매니저"; color = "#26b3c9"; }
+        else if (s >= 5000) { rank = "정직원"; color = "#74b342"; }
+
         const el = document.getElementById('my-rank-badge');
         if(el) {
             el.innerText = `Rank: ${rank}`;
-            el.style.color = color;
+            el.style.setProperty('--rank-color', color);  // 별 색만 등급별로
         }
         if(typeof this.updateExploreBtn === 'function') this.updateExploreBtn();
     },
@@ -3326,6 +3327,16 @@ equipItem: function(category, level) {
 
 // Start Game
 game.init();
+
+// [성능] 모든 이미지 미리 로드(손님 PNG·씬·장식) — 첫 등장 시 딜레이 방지(특히 웹 배포)
+(function preloadAllImages(){
+    try {
+        const urls = new Set(['scenes/cafe_pastel.png','scenes/title.png','sprites/coin.svg']);
+        CHAR_DEX.forEach(c => { if(c.img) urls.add(c.img); });
+        ['counter','wall','pet'].forEach(cat => (SHOP_DB[cat]||[]).forEach(it => { if(it.img) urls.add(it.img); }));
+        urls.forEach(u => { const im = new Image(); im.src = u; });
+    } catch(e){}
+})();
 
 // ▼▼▼ [교체] 고정형 콤보 UI 업데이트 함수 ▼▼▼
 function updateComboUI(count) {
