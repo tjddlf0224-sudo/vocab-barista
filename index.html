@@ -2806,7 +2806,7 @@ equipItem: function(category, level) {
         // (1) 카운터 장식 — 카운터 위 왼쪽 (살랑 흔들)
         if(eq.counter > 0) {
             const item = SHOP_DB.counter[eq.counter - 1];
-            cL.innerHTML += `<div class="deco-item" onclick="game.openSkinSelector('counter')" style="position:absolute; bottom:0; left:14px; z-index:12;" title="눌러서 교체">${sceneDeco(item.img, 80, 'deco-anim-plant')}</div>`;
+            cL.innerHTML += `<div class="deco-item" onclick="game.openSkinSelector('counter')" style="position:absolute; bottom:-6px; left:16px; z-index:12;" title="눌러서 교체">${sceneDeco(item.img, 80)}</div>`;
         }
 
         // (2) 펫 — 카운터 위 오른쪽 (살랑 흔들 — 살아있는 느낌)
