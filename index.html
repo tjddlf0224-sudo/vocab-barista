@@ -670,9 +670,10 @@
 
 /* 결과/게임오버 점수 카드 */
 #result-screen > div[style*="rgba(255,255,255,0.1)"] {
-    background:rgba(0,0,0,.25) !important; border:2px solid rgba(255,202,40,.3);
-    box-shadow:inset 0 2px 8px rgba(0,0,0,.3); border-radius:16px;
+    background:linear-gradient(180deg,#fffaf2,#fdeedd) !important; border:2px solid #e7cda8; color:#6f5544 !important;
+    box-shadow:inset 0 2px 0 rgba(255,255,255,.7), 0 6px 14px rgba(90,60,35,.2); border-radius:16px;
 }
+#result-screen > div[style*="rgba(255,255,255,0.1)"] #result-msg { color:#9b7b66 !important; }
 
 /* =========================================================
    [신규] 3단계 게임플레이 이펙트
@@ -714,6 +715,63 @@
 @keyframes correctPop {
     0%{ transform:scale(1) } 35%{ transform:scale(1.08); box-shadow:0 0 0 4px rgba(76,175,80,.5), 0 0 18px rgba(76,175,80,.6) } 100%{ transform:scale(1) }
 }
+
+/* =====================================================================
+   파스텔 UI 테마 — 배경(파스텔 동화풍)에 맞춰 헤더·버튼·팝업·리스트 전역 리스킨
+   (소스 순서상 뒤에 있어 기존 규칙을 덮어씀)
+   ===================================================================== */
+:root{
+    --brown-dark:#7a5c49; --coffee:#9b7b66; --cream:#fdf4e7;
+    --green:#74b06a; --gold:#ffcf78; --red:#e58c84; --blue:#7bb0d8; --purple:#a98fd6;
+}
+#game-container{ background-color:#fdf4e7; }
+
+/* 헤더 — 어두운 우드 → 부드러운 크림/피치 */
+.header{ background:linear-gradient(180deg,#fce8d2,#f4d4b2); color:#74543f;
+    box-shadow:0 3px 0 #e7c19a, 0 6px 14px rgba(150,110,75,.18); border-bottom:3px solid #e7c19a; }
+.hud-center{ color:#9a6428; background:rgba(255,255,255,.6); box-shadow:inset 0 0 0 2px rgba(255,200,130,.6); }
+
+/* 버튼 — 채도 높은 원색 → 파스텔 그라데이션 + 부드러운 입체 */
+.btn-mini{ background:linear-gradient(180deg,#f4a8a0,#e58880); box-shadow:0 3px 0 #cf6f67, 0 5px 8px rgba(150,90,80,.18); color:#fff; }
+.shop-btn{ background:linear-gradient(180deg,#ffe0a0,#f6c469); box-shadow:0 3px 0 #d8a23f, 0 5px 8px rgba(150,110,60,.18); color:#7a5320; }
+.quest-btn{ background:linear-gradient(180deg,#cdb6ee,#ab8fdc); box-shadow:0 3px 0 #8f72c4, 0 5px 8px rgba(110,80,150,.18); color:#fff; }
+.pause-btn,.music-btn{ background:linear-gradient(180deg,#d8c6ad,#b89a78); box-shadow:0 3px 0 #9b7c5c, 0 5px 8px rgba(120,95,65,.18); color:#fff; }
+.buy-btn{ background:linear-gradient(180deg,#97d28d,#6fb267); box-shadow:0 4px 0 #57975a, 0 7px 12px rgba(90,140,80,.22); color:#fff; border-radius:22px; }
+.buy-btn:active{ transform:translateY(4px); box-shadow:0 1px 0 #57975a; }
+.buy-btn.disabled{ background:#d9cebf; box-shadow:none; color:#fff; }
+.quest-btn-claim{ background:linear-gradient(180deg,#ffe0a0,#f6c469); color:#7a5320; box-shadow:0 3px 0 #d8a23f; }
+.vip-submit{ background:linear-gradient(180deg,#ffe0a0,#f6c469); color:#7a5320; box-shadow:0 4px 0 #d8a23f; }
+.vip-input{ border:3px solid #f6c469; }
+.story-btn{ background:linear-gradient(180deg,#97d28d,#6fb267); box-shadow:0 3px 0 #57975a; }
+.btn-primary{ background:linear-gradient(180deg,#97d28d,#6fb267)!important; color:#fff!important; box-shadow:0 4px 0 #57975a!important; border:none; border-radius:22px; }
+.btn-hero{ background:linear-gradient(180deg,#ffe7b0,#ffce78 55%,#f8b94e)!important; color:#7a4f1e!important;
+    box-shadow:0 5px 0 #e0a64e, 0 9px 16px rgba(160,110,50,.3), inset 0 2px 0 rgba(255,255,255,.7)!important; }
+
+/* 오버레이/패널 — 어두운 스크림 → 부드러운 따뜻한 스크림 + 크림 카드 */
+.overlay{ background:linear-gradient(180deg, rgba(124,90,62,.62), rgba(92,64,44,.70)); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); }
+.panel{ background:linear-gradient(180deg,#fffaf2,#fdeedd); border:3px solid #e7cda8; color:#6f5544;
+    border-radius:22px; box-shadow:0 18px 40px rgba(80,55,35,.34), inset 0 2px 0 rgba(255,255,255,.85); }
+.story-box{ background:linear-gradient(180deg,#fffaf2,#fdeedd); border:3px solid #e7cda8; color:#6f5544; }
+
+/* 리스트 보드 + 항목(상점/퀘스트/오답노트/랭킹) */
+.quest-list,.shop-container,.wordbook-list,#ranking-board{ background:rgba(255,255,255,.15); border:1.5px solid rgba(255,255,255,.4); box-shadow:inset 0 2px 8px rgba(120,90,60,.16); }
+.shop-item,.quest-item,.wb-item,.inv-item{ background:linear-gradient(180deg,#fffdf8,#fdf1e0); border:1.5px solid #ecd9bd;
+    box-shadow:0 3px 0 rgba(140,110,80,.12), 0 6px 12px rgba(120,90,60,.14); color:#6f5544; }
+.shop-item .icon,.inv-item .icon{ background:#fff1d8; box-shadow:inset 0 0 0 2px #ffdca0, 0 2px 4px rgba(140,110,70,.14); }
+.quest-item.ready{ border-left-color:#f6c469; background:#fff7e6; }
+.quest-item.completed{ border-left-color:#74b06a; background:#eef7ec; }
+.inv-item.equipped{ border-color:#74b06a; background:#eef7ec; box-shadow:0 0 6px #9ccc8f; }
+.rank-item{ border-bottom:1px solid rgba(255,255,255,.28); color:#fbeede; }
+
+/* 주방(답안 영역) + 컵 버튼 */
+.kitchen{ background:linear-gradient(180deg,#fdf4e7,#f8e9d4); border-top:4px solid #ecd6b8; }
+.info-txt{ color:#8a6a52; }
+.cup-btn{ background:linear-gradient(180deg,#fffdf8,#fcefda); border:2px solid #ecdcc0; border-bottom:6px solid #ddc8a4; color:#7a5a44; }
+.no-timer-tag{ color:#9b7b66; background:rgba(255,255,255,.6); }
+
+/* 랭크 명패 — 등급색(밝은색) 대비 위해 어두운 나무는 유지하되 따뜻하게 */
+#my-rank-badge{ background:linear-gradient(180deg,#4a3120 0%,#2e1d10 100%); border-color:#e0b667;
+    box-shadow:0 4px 0 #1c1109, 0 8px 14px rgba(90,60,35,.45), inset 0 0 0 1px rgba(255,224,138,.4); }
 
     </style>
 </head>
@@ -848,7 +906,7 @@
                 <button class="buy-btn" onclick="selectDifficulty('normal')" style="background:#ffb74d; padding:15px; font-size:1.2rem;">🟡 Normal (중급)</button>
                 <button class="buy-btn" onclick="selectDifficulty('hard')" style="background:#e57373; padding:15px; font-size:1.2rem;">🔴 Hard (고급)</button>
             </div>
-            <button class="btn-mini" onclick="closeDifficulty()" style="background:#ccc; color:#333; padding:8px 20px;">취소</button>
+            <button class="btn-mini" onclick="closeDifficulty()" style="background:linear-gradient(180deg,#cdbfb0,#a89684); color:#fff; box-shadow:0 3px 0 #8a7560; padding:8px 20px;">취소</button>
         </div>
     </div>
 
@@ -866,10 +924,10 @@
         <div class="pause-menu">
             <button class="buy-btn btn-hero pause-cta" onclick="game.togglePause()">▶ 계속 하기</button>
             <div class="pause-row">
-                <button class="btn-mini" style="background:linear-gradient(180deg,#26a69a,#00897b);" onclick="game.openCollection('word')">📚 도감</button>
-                <button id="explore-btn" class="btn-mini" style="background:linear-gradient(180deg,#8d6e63,#5d4037);" onclick="game.goExplore()">🗺️ 탐험</button>
+                <button class="btn-mini" style="background:linear-gradient(180deg,#a3d9cd,#7bc0b0); color:#2f5d52; box-shadow:0 3px 0 #5fa494;" onclick="game.openCollection('word')">📚 도감</button>
+                <button id="explore-btn" class="btn-mini" style="background:linear-gradient(180deg,#e6c794,#caa463); color:#6b4e1e; box-shadow:0 3px 0 #a9863f;" onclick="game.goExplore()">🗺️ 탐험</button>
             </div>
-            <button class="btn-mini" style="background:linear-gradient(180deg,#6d6d6d,#4a4a4a);" onclick="game.manualQuit()">저장하고 타이틀로</button>
+            <button class="btn-mini" style="background:linear-gradient(180deg,#cdbfb0,#a89684); color:#fff; box-shadow:0 3px 0 #8a7560;" onclick="game.manualQuit()">저장하고 타이틀로</button>
             <button class="reset-btn pause-reset" onclick="game.resetData()">⚙️ 데이터 초기화</button>
         </div>
     </div>
@@ -880,7 +938,7 @@
             <div id="inventory-list" class="inventory-list" style="overflow-y:auto; flex:1;">
                 </div>
             <br>
-            <button class="btn-mini" onclick="document.getElementById('inventory-screen').classList.add('hidden'); game.isActive=true; if(game.currentCust && !game.currentCust.solved) game.startTimer();" style="background:#ccc; color:#333; padding:10px; width:100%;">닫기</button>
+            <button class="btn-mini" onclick="document.getElementById('inventory-screen').classList.add('hidden'); game.isActive=true; if(game.currentCust && !game.currentCust.solved) game.startTimer();" style="background:linear-gradient(180deg,#cdbfb0,#a89684); color:#fff; box-shadow:0 3px 0 #8a7560; padding:10px; width:100%;">닫기</button>
         </div>
     </div>
 
@@ -959,9 +1017,9 @@
     <div class="overlay hidden" id="result-screen">
         <h2 id="result-title">❌ GAME OVER</h2>
         <div style="background:rgba(255,255,255,0.1); padding:15px; border-radius:10px; width:80%;">
-            <div style="font-size:1.4rem; color:var(--gold);">Day <span id="final-day">1</span></div>
+            <div style="font-size:1.4rem; color:#c8902f; font-weight:bold;">Day <span id="final-day">1</span></div>
             <div>점수: <span id="final-score">0</span></div>
-            <div id="result-msg" style="color:#aaa; font-size:0.9rem;"></div>
+            <div id="result-msg" style="color:#9b7b66; font-size:0.9rem;"></div>
         </div>
         
         <div id="input-area" style="margin-top:20px;">
@@ -971,10 +1029,10 @@
         <div id="ranking-board" class="quest-list hidden"></div>
 
         <div style="display:flex; gap:10px; justify-content:center; margin-top:20px; width:90%;">
-            <button id="revive-btn" class="buy-btn" onclick="game.revive()" style="background:#ef5350; flex:1; font-size:1rem;">
+            <button id="revive-btn" class="buy-btn" onclick="game.revive()" style="background:linear-gradient(180deg,#f4a8a0,#e58880); box-shadow:0 4px 0 #cf6f67; flex:1; font-size:1rem;">
                 ❤️ 부활 (450G)
             </button>
-            <button class="btn-mini" onclick="location.reload()" style="background:#757575; flex:1; font-size:1rem;">
+            <button class="btn-mini" onclick="location.reload()" style="background:linear-gradient(180deg,#cdbfb0,#a89684); box-shadow:0 3px 0 #8a7560; flex:1; font-size:1rem;">
                 🏠 타이틀
             </button>
         </div>
