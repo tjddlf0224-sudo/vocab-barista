@@ -2820,7 +2820,7 @@ equipItem: function(category, level) {
             const item = SHOP_DB.wall[eq.wall - 1];
             const wide = ['w1','w2','w5'].includes(item.id);
             const size = wide ? 124 : 104;
-            wL.innerHTML += `<div class="deco-item" onclick="game.openSkinSelector('wall')" style="position:absolute; top:5%; left:70%; transform:translateX(-50%); z-index:1;" title="눌러서 교체">${sceneDeco(item.img, size)}</div>`;
+            wL.innerHTML += `<div class="deco-item" onclick="game.openSkinSelector('wall')" style="position:absolute; top:34%; left:74%; transform:translateX(-50%); z-index:1;" title="눌러서 교체">${sceneDeco(item.img, size)}</div>`;
         }
     },
 
