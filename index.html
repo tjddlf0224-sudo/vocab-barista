@@ -650,19 +650,22 @@
 .ss-wrap{ position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; justify-content:space-between;
     width:100%; height:100%; max-width:480px; padding:calc(42px + env(safe-area-inset-top)) 24px calc(30px + env(safe-area-inset-bottom)); }
 .ss-titlegroup{ display:flex; flex-direction:column; align-items:center; }
-.ss-brand{ font-family:'Didot','Bodoni 72',Georgia,'Times New Roman',serif; font-weight:600; font-size:3rem; line-height:1;
-    letter-spacing:1.5px; color:#6f4e37; text-shadow:0 2px 8px rgba(255,255,255,.7), 0 1px 0 rgba(255,255,255,.9); }
-.ss-brand span{ color:#d98a3a; font-style:italic; }
-.ss-rule{ display:flex; align-items:center; gap:11px; margin:13px 0 7px; }
-.ss-rule .ln{ height:1.5px; width:56px; background:linear-gradient(90deg,transparent,#b88a4e); }
-.ss-rule .ln.r{ background:linear-gradient(90deg,#b88a4e,transparent); }
-.ss-tag{ font-family:'Didot',Georgia,serif; letter-spacing:4px; font-size:.74rem; color:#9a7344; text-transform:uppercase; text-shadow:0 1px 4px rgba(255,255,255,.6); }
+/* 둥글둥글 귀여운 스티커풍 타이틀(크림 외곽선 + 부드러운 3D) */
+.ss-brand{ font-family:'Jua',sans-serif; font-weight:400; font-size:3.3rem; line-height:1.02; letter-spacing:0.5px;
+    color:#86592f;
+    text-shadow:-2px -2px 0 #fff8ee, 2px -2px 0 #fff8ee, -2px 2px 0 #fff8ee, 2px 2px 0 #fff8ee,
+        0 4px 0 #dcb486, 0 7px 11px rgba(120,80,40,.32); }
+.ss-brand span{ color:#e6963c; font-style:normal; }
+.ss-rule{ display:flex; align-items:center; gap:10px; margin:14px 0 8px; }
+.ss-rule .ln{ height:2px; width:48px; border-radius:2px; background:linear-gradient(90deg,transparent,#caa169); }
+.ss-rule .ln.r{ background:linear-gradient(90deg,#caa169,transparent); }
+.ss-tag{ font-family:'Jua',sans-serif; font-size:1rem; color:#8a6440; letter-spacing:0.5px;
+    text-shadow:0 1px 0 #fff8ee, 0 2px 6px rgba(255,255,255,.7); }
 .ss-actions{ display:flex; flex-direction:column; align-items:center; gap:13px; width:100%; max-width:340px; }
-.ss-sub{ font-size:.92rem; color:#7a5a40; margin:0 0 4px; font-weight:bold; text-shadow:0 1px 5px rgba(255,255,255,.8); }
 .ss-ghost-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; width:100%; }
-.ss-ghost{ background:rgba(255,252,246,.92); color:#7a5a44; border:1.5px solid #e3c79f; padding:11px 8px; border-radius:14px;
-    font-family:'Jua',sans-serif; font-size:.95rem; cursor:pointer; transition:.15s; box-shadow:0 3px 8px rgba(120,90,60,.18); }
-.ss-ghost:active{ transform:translateY(2px); background:#fff3df; }
+.ss-ghost{ background:rgba(255,253,248,.94); color:#8a6446; border:2px solid #ecd3ab; padding:12px 8px; border-radius:18px;
+    font-family:'Jua',sans-serif; font-size:.98rem; cursor:pointer; transition:.15s; box-shadow:0 4px 0 #e3c79f, 0 6px 10px rgba(120,90,60,.16); }
+.ss-ghost:active{ transform:translateY(3px); background:#fff3df; box-shadow:0 1px 0 #e3c79f; }
 
 /* 결과/게임오버 점수 카드 */
 #result-screen > div[style*="rgba(255,255,255,0.1)"] {
@@ -847,10 +850,9 @@
                     <svg width="15" height="15" viewBox="0 0 24 24"><g transform="rotate(-20 12 12)"><ellipse cx="12" cy="12" rx="6.5" ry="9.5" fill="#c9a45e"/><path d="M12 3 q-3 9 0 18" stroke="#7a5a28" stroke-width="1.6" fill="none"/></g></svg>
                     <span class="ln r"></span>
                 </div>
-                <div class="ss-tag">Freshly Brewed English</div>
+                <div class="ss-tag">갓 내린 영어 한 잔 ☕</div>
             </div>
             <div class="ss-actions">
-                <div class="ss-sub">한 잔의 커피처럼, 매일 단어 한 모금 ☕</div>
                 <button class="buy-btn btn-hero" onclick="showDifficulty()">☕ 영업 시작</button>
                 <div class="ss-ghost-row">
                     <button class="ss-ghost" onclick="game.startStory()">🎬 프롤로그</button>
