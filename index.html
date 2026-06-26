@@ -164,7 +164,8 @@
         .deco-cat { bottom: 0; right: 20px; }
         .deco-neon { top: 20px; right: 20px; color: #ffeb3b; border: 3px solid #ffeb3b; padding: 5px 10px; border-radius: 10px; transform: rotate(-5deg); font-size: 1.5rem; background: rgba(0,0,0,0.5); }
 
-        .customer-area { height: 320px; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 20px; z-index: 2; }
+        .customer-area { height: 320px; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 20px; z-index: 2; pointer-events: none; }
+        .customer-area button { pointer-events: auto; }
         .customer { display: flex; flex-direction: column; align-items: center; transition: 0.3s; animation: popIn 0.4s; }
         .customer.leaving { transform: translateX(300px); opacity: 0; }
         .bubble { background: white; border: 3px solid #333; border-radius: 20px; padding: 15px; margin-bottom: 15px; font-size: 1.3rem; text-align: center; min-width: 180px; box-shadow: 4px 4px 0 rgba(0,0,0,0.1); }
@@ -1629,18 +1630,18 @@ const storyLines = [
 // ==========================================
 const SHOP_DB = {
     counter: [
-        { id: 'c1', name: '미니 선인장', desc: 'Lv.1 소박한 시작', price: 400, icon: '🌵', img:'deco/cactus.svg' },
-        { id: 'c2', name: '해바라기 화분', desc: 'Lv.2 화사한 분위기', price: 1200, icon: '🌻', img:'deco/sunflower.svg' },
-        { id: 'c3', name: '고급 커피잔', desc: 'Lv.3 전문가의 향기', price: 3000, icon: '☕', img:'deco/coffeecup.svg' },
+        { id: 'c1', name: '미니 선인장', desc: 'Lv.1 소박한 시작', price: 400, icon: '🌵', img:'deco/cactus.png' },
+        { id: 'c2', name: '해바라기 화분', desc: 'Lv.2 화사한 분위기', price: 1200, icon: '🌻', img:'deco/sunflower.png' },
+        { id: 'c3', name: '고급 커피잔', desc: 'Lv.3 전문가의 향기', price: 3000, icon: '☕', img:'deco/coffeecup.png' },
         { id: 'c4', name: '미니 수족관', desc: 'Lv.4 물멍 타임', price: 7000, icon: '🐠', img:'deco/aquarium.svg' },
-        { id: 'c5', name: '황금 고양이상', desc: 'Lv.5 부의 상징', price: 15000, icon: '🐱', img:'deco/goldcat.svg' }
+        { id: 'c5', name: '황금 고양이상', desc: 'Lv.5 부의 상징', price: 15000, icon: '🐱', img:'deco/goldcat.png' }
     ],
     wall: [
-        { id: 'w1', name: '메뉴 칠판', desc: 'Lv.1 카페의 기본', price: 600, icon: '📋', img:'deco/chalkboard.svg' },
-        { id: 'w2', name: '네온 사인', desc: 'Lv.2 힙한 감성', price: 2000, icon: '💡', img:'deco/neon.svg' },
-        { id: 'w3', name: '앤티크 시계', desc: 'Lv.3 고풍스러운 멋', price: 5000, icon: '🕰️', img:'deco/clock.svg' },
-        { id: 'w4', name: '명화 액자', desc: 'Lv.4 품격 있는 카페', price: 10000, icon: '🖼️', img:'deco/painting.svg' },
-        { id: 'w5', name: '숲속 창문', desc: 'Lv.5 탁 트인 뷰', price: 20000, icon: '🏞️', img:'deco/forestwindow.svg' }
+        { id: 'w1', name: '메뉴 칠판', desc: 'Lv.1 카페의 기본', price: 600, icon: '📋', img:'deco/chalkboard.png' },
+        { id: 'w2', name: '네온 사인', desc: 'Lv.2 힙한 감성', price: 2000, icon: '💡', img:'deco/neon.png' },
+        { id: 'w3', name: '앤티크 시계', desc: 'Lv.3 고풍스러운 멋', price: 5000, icon: '🕰️', img:'deco/clock.png' },
+        { id: 'w4', name: '명화 액자', desc: 'Lv.4 품격 있는 카페', price: 10000, icon: '🖼️', img:'deco/painting.png' },
+        { id: 'w5', name: '숲속 창문', desc: 'Lv.5 탁 트인 뷰', price: 20000, icon: '🏞️', img:'deco/forestwindow.png' }
     ],
     pet: [
         { id: 'p1', name: '길냥이', desc: 'Lv.1 귀여운 친구', price: 700, icon: '🐈', img:'deco/cat.png' },
