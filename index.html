@@ -772,6 +772,12 @@
 #my-rank-badge{ background:linear-gradient(180deg,#4a3120 0%,#2e1d10 100%); border-color:#e0b667;
     box-shadow:0 4px 0 #1c1109, 0 8px 14px rgba(90,60,35,.45), inset 0 0 0 1px rgba(255,224,138,.4); }
 
+/* ===== SVG 아이콘(이모지 대체) ===== */
+.hic{ width:21px; height:21px; display:block; margin:0 auto; }
+.hic.heart{ display:inline-block; width:20px; height:20px; vertical-align:-4px; margin:0; }
+.bic{ width:1.05em; height:1.05em; vertical-align:-0.16em; margin-right:6px; flex:0 0 auto; }
+.ss-brand .bic, .ss-tag .bic{ vertical-align:-0.12em; }
+
     </style>
 </head>
 <body>
@@ -779,8 +785,8 @@
 <div id="game-container">
     <div class="header">
         <div class="hud-group">
-            <button class="btn-mini pause-btn" onclick="game.togglePause()">⏸️</button>
-            <span style="margin-left:5px">❤️ <span id="lives">5</span></span>
+            <button class="btn-mini pause-btn" onclick="game.togglePause()"><svg class="hic" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1.8"/><rect x="14" y="5" width="4" height="14" rx="1.8"/></svg></button>
+            <span style="margin-left:5px"><svg class="hic heart" viewBox="0 0 24 24"><path d="M12 21S3 14.5 3 8.6A4.6 4.6 0 0 1 12 6.3 4.6 4.6 0 0 1 21 8.6C21 14.5 12 21 12 21z" fill="#e87f7f" stroke="#d96a6a" stroke-width="1"/></svg> <span id="lives">5</span></span>
         </div>
 
         <div class="hud-center" style="flex-direction: column; line-height: 1.2;">
@@ -790,9 +796,9 @@
             <div style="font-size:0.8rem; margin-right:5px;">
                 <img src="sprites/coin.svg" alt="G" style="width:20px;height:20px;vertical-align:middle;filter:drop-shadow(0 1px 1px rgba(0,0,0,.3));"> <span id="wallet">0</span>
             </div>
-            <button class="btn-mini" id="sound-toggle" onclick="game.toggleAllSound()" style="background:linear-gradient(180deg,#6d6d6d,#4a4a4a);box-shadow:0 3px 0 #222;">🔊</button>
-            <button class="btn-mini quest-btn" onclick="game.openQuests()">🏆<div class="noti-dot" id="quest-noti"></div></button>
-            <button class="btn-mini shop-btn" onclick="game.openShop()">🏪</button>
+            <button class="btn-mini music-btn" id="sound-toggle" onclick="game.toggleAllSound()"><svg class="hic" viewBox="0 0 24 24"><path d="M4 9.5h3L11 6v12L7 14.5H4z" fill="currentColor"/><path d="M14.5 9a3.8 3.8 0 0 1 0 6M16.8 6.8a7 7 0 0 1 0 10.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+            <button class="btn-mini quest-btn" onclick="game.openQuests()"><svg class="hic" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h12v3a6 6 0 0 1-12 0V4z"/><path d="M6 5.5H3.5V7A3 3 0 0 0 6 9.9M18 5.5h2.5V7A3 3 0 0 1 18 9.9" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="10.6" y="11.5" width="2.8" height="4.5"/><rect x="7" y="18.4" width="10" height="2.4" rx="1.2"/><rect x="9" y="16" width="6" height="2.6" rx="1"/></svg><div class="noti-dot" id="quest-noti"></div></button>
+            <button class="btn-mini shop-btn" onclick="game.openShop()"><svg class="hic" viewBox="0 0 24 24" fill="currentColor"><path d="M3.5 9 5 4.5h14L20.5 9z"/><path d="M5 10h14v9a1 1 0 0 1-1 1h-4v-5h-4v5H6a1 1 0 0 1-1-1z"/></svg></button>
             <span id="wallet-target" style="width:1px;height:1px;position:absolute;right:10px;top:10px;"></span>
         </div>
     </div>
@@ -850,13 +856,13 @@
                     <svg width="15" height="15" viewBox="0 0 24 24"><g transform="rotate(-20 12 12)"><ellipse cx="12" cy="12" rx="6.5" ry="9.5" fill="#c9a45e"/><path d="M12 3 q-3 9 0 18" stroke="#7a5a28" stroke-width="1.6" fill="none"/></g></svg>
                     <span class="ln r"></span>
                 </div>
-                <div class="ss-tag">갓 내린 영어 한 잔 ☕</div>
+                <div class="ss-tag">갓 내린 영어 한 잔<svg class="bic" style="margin:0 0 0 6px" viewBox="0 0 24 24" fill="currentColor"><path d="M5 9h12v4.5a4.5 4.5 0 0 1-4.5 4.5h-3A4.5 4.5 0 0 1 5 13.5z"/><path d="M17 10h1.6a2.4 2.4 0 0 1 0 4.8H17" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.5 3.2c-.5.9.5 1.5 0 2.4M11.5 3.2c-.5.9.5 1.5 0 2.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
             </div>
             <div class="ss-actions">
-                <button class="buy-btn btn-hero" onclick="showDifficulty()">☕ 영업 시작</button>
+                <button class="buy-btn btn-hero" onclick="showDifficulty()"><svg class="bic" viewBox="0 0 24 24" fill="currentColor"><path d="M5 9h12v4.5a4.5 4.5 0 0 1-4.5 4.5h-3A4.5 4.5 0 0 1 5 13.5z"/><path d="M17 10h1.6a2.4 2.4 0 0 1 0 4.8H17" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8.5 3.2c-.5.9.5 1.5 0 2.4M11.5 3.2c-.5.9.5 1.5 0 2.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>영업 시작</button>
                 <div class="ss-ghost-row">
-                    <button class="ss-ghost" onclick="game.startStory()">🎬 프롤로그</button>
-                    <button class="ss-ghost" onclick="game.openWordbook()">📘 오답 노트</button>
+                    <button class="ss-ghost" onclick="game.startStory()"><svg class="bic" viewBox="0 0 24 24"><rect x="3" y="10" width="18" height="10" rx="1.5" fill="currentColor"/><path d="M3 10l1.4-3.3 17.2 0L20.2 10z" fill="currentColor"/><path d="M7.5 6.9 6.1 10M12.2 6.9 10.8 10M16.9 6.9 15.5 10" stroke="#fff8ee" stroke-width="1.2"/></svg>프롤로그</button>
+                    <button class="ss-ghost" onclick="game.openWordbook()"><svg class="bic" viewBox="0 0 24 24" fill="currentColor"><path d="M12 6.6C9.8 5.1 6.4 4.7 4 5.3v12.5c2.4-.6 5.8-.2 8 1.3 2.2-1.5 5.6-1.9 8-1.3V5.3c-2.4-.6-5.8-.2-8 1.3z"/><path d="M12 6.6v12.5" fill="none" stroke="#fff8ee" stroke-width="1"/></svg>오답 노트</button>
                 </div>
             </div>
         </div>
@@ -864,7 +870,7 @@
 
     <div id="difficulty-screen" class="overlay hidden">
         <div class="panel">
-            <h2>☕ 난이도 선택</h2>
+            <h2>난이도 선택</h2>
             <p>오늘 영업할 단어 난이도를 골라주세요.</p>
             <div style="display:flex; flex-direction:column; gap:15px; margin:20px 0;">
                 <button class="buy-btn" onclick="selectDifficulty('easy')" style="background:#81c784; padding:15px; font-size:1.2rem;">🟢 Easy (초급)</button>
@@ -885,21 +891,21 @@
     </div>
 
     <div class="overlay hidden" id="pause-screen">
-        <h2>⏸️ 일시 정지</h2>
+        <h2>일시 정지</h2>
         <div class="pause-menu">
             <button class="buy-btn btn-hero pause-cta" onclick="game.togglePause()">▶ 계속 하기</button>
             <div class="pause-row">
-                <button class="btn-mini" style="background:linear-gradient(180deg,#a3d9cd,#7bc0b0); color:#2f5d52; box-shadow:0 3px 0 #5fa494;" onclick="game.openCollection('word')">📚 도감</button>
-                <button id="explore-btn" class="btn-mini" style="background:linear-gradient(180deg,#e6c794,#caa463); color:#6b4e1e; box-shadow:0 3px 0 #a9863f;" onclick="game.goExplore()">🗺️ 탐험</button>
+                <button class="btn-mini" style="background:linear-gradient(180deg,#a3d9cd,#7bc0b0); color:#2f5d52; box-shadow:0 3px 0 #5fa494;" onclick="game.openCollection('word')"><svg class="bic" viewBox="0 0 24 24" fill="currentColor"><path d="M12 6.6C9.8 5.1 6.4 4.7 4 5.3v12.5c2.4-.6 5.8-.2 8 1.3 2.2-1.5 5.6-1.9 8-1.3V5.3c-2.4-.6-5.8-.2-8 1.3z"/><path d="M12 6.6v12.5" fill="none" stroke="#fff8ee" stroke-width="1"/></svg>도감</button>
+                <button id="explore-btn" class="btn-mini" style="background:linear-gradient(180deg,#e6c794,#caa463); color:#6b4e1e; box-shadow:0 3px 0 #a9863f;" onclick="game.goExplore()"><svg class="bic" viewBox="0 0 24 24" fill="currentColor"><path d="M9 4.5 3.6 6.3v13.2L9 17.7l6 1.8 5.4-1.8V4.5L15 6.3 9 4.5z"/><path d="M9 4.5v13.2M15 6.3v13.2" stroke="#fff8ee" stroke-width="0.9" opacity=".55"/></svg>탐험</button>
             </div>
             <button class="btn-mini" style="background:linear-gradient(180deg,#cdbfb0,#a89684); color:#fff; box-shadow:0 3px 0 #8a7560;" onclick="game.manualQuit()">저장하고 타이틀로</button>
-            <button class="reset-btn pause-reset" onclick="game.resetData()">⚙️ 데이터 초기화</button>
+            <button class="reset-btn pause-reset" onclick="game.resetData()">데이터 초기화</button>
         </div>
     </div>
 
     <div id="inventory-screen" class="overlay hidden">
         <div class="panel" style="max-height:80vh; display:flex; flex-direction:column;">
-            <h2 id="inventory-title">🎨 스킨 변경</h2>
+            <h2 id="inventory-title">스킨 변경</h2>
             <div id="inventory-list" class="inventory-list" style="overflow-y:auto; flex:1;">
                 </div>
             <br>
@@ -908,13 +914,13 @@
     </div>
 
     <div class="overlay hidden" id="quest-screen">
-        <h2>🏆 도전 과제</h2>
+        <h2>도전 과제</h2>
         <div class="quest-list" id="quest-list-el"></div>
         <button class="btn-mini close-btn" onclick="game.closeOverlays()">닫기</button>
     </div>
 
     <div class="overlay hidden" id="shop-screen">
-        <h2>🏪 잡화점</h2>
+        <h2>잡화점</h2>
         <p>내 지갑: <span id="shop-gold" style="color:var(--gold); font-weight:bold;">0</span> G</p>
         
         <div style="margin: 10px 0; width: 100%; display: flex; justify-content: center;">
@@ -938,7 +944,7 @@
 </div>
 
     <div class="overlay hidden" id="wordbook-screen">
-        <h2>📘 오답 노트</h2>
+        <h2>오답 노트</h2>
         <div style="background:#e3f2fd; padding:10px; border-radius:10px; color:#333; margin-bottom:10px;">
             졸업한 단어: <b id="master-count" style="color:var(--blue);">0</b> 개
         </div>
@@ -948,7 +954,7 @@
     </div>
 
     <div class="overlay hidden" id="dex-screen">
-        <h2>📚 도감</h2>
+        <h2>도감</h2>
         <div class="dex-tabs">
             <button class="dex-tab active" id="dex-tab-word" onclick="game.switchDexTab('word')">📖 단어</button>
             <button class="dex-tab" id="dex-tab-char" onclick="game.switchDexTab('char')">🧑‍🤝‍🧑 손님</button>
@@ -974,13 +980,13 @@
     </div>
 
     <div class="overlay hidden" id="day-clear-screen">
-        <h2 style="color:var(--gold)">🌅 영업 종료!</h2>
+        <h2 style="color:var(--gold)">영업 종료!</h2>
         <p>Day <span id="cleared-day">1</span> 완료</p>
         <button class="buy-btn" onclick="game.startNextDay()">다음 날 영업 시작 👉</button>
     </div>
 
     <div class="overlay hidden" id="result-screen">
-        <h2 id="result-title">❌ GAME OVER</h2>
+        <h2 id="result-title">GAME OVER</h2>
         <div style="background:rgba(255,255,255,0.1); padding:15px; border-radius:10px; width:80%;">
             <div style="font-size:1.4rem; color:#c8902f; font-weight:bold;">Day <span id="final-day">1</span></div>
             <div>점수: <span id="final-score">0</span></div>
@@ -1812,11 +1818,11 @@ const game = {
         const btn = document.getElementById('explore-btn');
         if(!btn) return;
         if(this.isExploreUnlocked()) {
-            btn.innerHTML = '🗺️ 탐험';
+            btn.innerHTML = '<svg class="bic" viewBox="0 0 24 24" fill="currentColor"><path d="M9 4.5 3.6 6.3v13.2L9 17.7l6 1.8 5.4-1.8V4.5L15 6.3 9 4.5z"/><path d="M9 4.5v13.2M15 6.3v13.2" stroke="#fff8ee" stroke-width="0.9" opacity=".55"/></svg>탐험';
             btn.style.opacity = '1';
             btn.style.filter = 'none';
         } else {
-            btn.innerHTML = '🔒 탐험';
+            btn.innerHTML = '<svg class="bic" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="10.5" width="14" height="9" rx="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>탐험';
             btn.style.opacity = '0.6';
             btn.style.filter = 'grayscale(0.5)';
         }
@@ -3083,7 +3089,9 @@ equipItem: function(category, level) {
     updateSoundIcon: function() {
         BgMusic.isMuted = this.isMuted;            // 로드/토글 시 BGM 상태 동기화
         const b = document.getElementById('sound-toggle');
-        if(b) b.innerText = this.isMuted ? "🔇" : "🔊";
+        if(b) b.innerHTML = this.isMuted
+            ? '<svg class="hic" viewBox="0 0 24 24"><path d="M4 9.5h3L11 6v12L7 14.5H4z" fill="currentColor"/><path d="M15 9.5l5 5M20 9.5l-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'
+            : '<svg class="hic" viewBox="0 0 24 24"><path d="M4 9.5h3L11 6v12L7 14.5H4z" fill="currentColor"/><path d="M14.5 9a3.8 3.8 0 0 1 0 6M16.8 6.8a7 7 0 0 1 0 10.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
     },
     startStory: function() { 
         BgMusic.init(); 
@@ -3209,7 +3217,7 @@ equipItem: function(category, level) {
                 <div class="bubble" id="bubble-el"><div>${txt}</div>${srcTag}</div>
                 ${nameTag}
                 ${c.timed ? `<div class="timer-bar-wrap"><div class="timer-fill" id="timer-bar"></div></div>`
-                          : `<div class="no-timer-tag">☕ 천천히 골라요</div>`}
+                          : `<div class="no-timer-tag"><svg class="bic" viewBox="0 0 24 24" fill="currentColor"><path d="M5 9h12v4.5a4.5 4.5 0 0 1-4.5 4.5h-3A4.5 4.5 0 0 1 5 13.5z"/><path d="M17 10h1.6a2.4 2.4 0 0 1 0 4.8H17" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>천천히 골라요</div>`}
                 ${vipItemHtml}
                 <div class="${avClass}">${c.avatar}</div>
             </div>`;
@@ -3493,7 +3501,7 @@ document.addEventListener('visibilitychange', function() {
 
 <div id="custom-alert" class="hidden">
     <div class="alert-box">
-        <h2 style="color:var(--brown-dark); margin:0 0 10px 0;">☕ 영업 안내</h2>
+        <h2 style="color:var(--brown-dark); margin:0 0 10px 0;">영업 안내</h2>
         <p id="custom-alert-msg" style="font-size:1.2rem; margin-bottom:20px; color:#333;"></p>
         <button class="btn-primary" onclick="closeCustomAlert()">확인</button>
     </div>
