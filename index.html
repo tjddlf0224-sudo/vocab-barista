@@ -789,6 +789,16 @@
 @keyframes petSway{ 0%,100%{ transform:rotate(-2.4deg) } 50%{ transform:rotate(2.4deg) } }
 @keyframes plantSway{ 0%,100%{ transform:rotate(-1.6deg) } 50%{ transform:rotate(1.6deg) } }
 
+/* 카페 바(하단 카운터) — 진짜 원목 바 느낌: 윗면(밝음)+앞면(어두움)+나뭇결 */
+.counter{ height:60px;
+    background:
+        repeating-linear-gradient(90deg, rgba(60,36,16,.06) 0 1px, transparent 1px 40px),
+        linear-gradient(180deg, #d2a875 0, #cda06b 11px, #b5804f 12px, #9a6840 55%, #855838 100%);
+    border-top:none;
+    box-shadow: inset 0 3px 0 rgba(255,246,228,.6), inset 0 -10px 14px rgba(70,44,22,.32), 0 -3px 9px rgba(0,0,0,.16); }
+/* 펫·화분이 바 윗면에 앉도록 데코 베이스라인을 바 높이에 맞춤 */
+.counter-deco-area{ bottom:58px; }
+
     </style>
 </head>
 <body>
@@ -1375,16 +1385,16 @@ const CHAR_DEX = [
     { id:'c_hipster', name:'재이', kind:'human', rarity:'common', desc:'노란 셔츠의 힙스터', img:'chars/hipster.png',
       spec:{ skin:'#c98a5e', skinShade:'#b5774b', hair:'#1c1c1c', hairStyle:'short', shirt:'#d4a017', mood:'neutral' } },
 
-    { id:'c_seoa', name:'서아', kind:'human', rarity:'uncommon', desc:'긴 머리의 우아한 단골',
+    { id:'c_seoa', name:'서아', kind:'human', rarity:'uncommon', desc:'긴 머리의 우아한 단골', img:'chars/seoa.png',
       spec:{ skin:'#f6d5b4', skinShade:'#e7be97', hair:'#4a2c1a', hairStyle:'long', shirt:'#ef9a9a', mood:'happy', blush:true, lashes:true, lips:true } },
-    { id:'c_cat',  name:'나비',  kind:'cat',  rarity:'uncommon', desc:'도도하지만 정 많은 고양이 손님', anim:'cat' },
-    { id:'c_dog',  name:'초코',  kind:'dog',  rarity:'uncommon', desc:'언제나 해맑은 강아지 손님', anim:'dog' },
+    { id:'c_cat',  name:'나비',  kind:'cat',  rarity:'uncommon', desc:'도도하지만 정 많은 고양이 손님', anim:'cat', img:'chars/navi.png' },
+    { id:'c_dog',  name:'초코',  kind:'dog',  rarity:'uncommon', desc:'언제나 해맑은 강아지 손님', anim:'dog', img:'chars/choco.png' },
 
-    { id:'c_rush', name:'버럭 씨', kind:'rush', rarity:'common', desc:'3초도 못 기다리는 성격 급한 손님',
+    { id:'c_rush', name:'버럭 씨', kind:'rush', rarity:'common', desc:'3초도 못 기다리는 성격 급한 손님', img:'chars/rush.png',
       spec: { skin:'#e8896f', skinShade:'#d4745a', hair:'#2a1a12', hairStyle:'short', shirt:'#7a2e2e', mood:'angry', brow:'#2a1a12',
         front:`<g><path d="M150 66 q-7 11 0 16 a4.2 4.2 0 0 0 0 -16 Z" fill="#7ec8ff" opacity=".9"/><g stroke="#ff3b3b" stroke-width="4" stroke-linecap="round"><path d="M150 18 l10 -10 M164 14 l8 2 M158 28 l10 4"/></g><g fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".75"><path d="M74 18 q-7 -10 0 -20"/><path d="M100 12 q-7 -10 0 -20"/></g></g>` } },
 
-    { id:'c_vip', name:'젠틀 경', kind:'vip', rarity:'rare', desc:'실크햇과 모노클의 품격 있는 신사',
+    { id:'c_vip', name:'젠틀 경', kind:'vip', rarity:'rare', desc:'실크햇과 모노클의 품격 있는 신사', img:'chars/vip.png',
       spec: { skin:'#f1cda3', skinShade:'#e0b483', hair:'#1c1c1c', hairStyle:'short', shirt:'#1a1a1a', shirtDark:'#000', mood:'neutral', special:'vip',
         front:`<g><path d="M88 156 L100 163 L88 170 Z" fill="#b8860b"/><path d="M112 156 L100 163 L112 170 Z" fill="#b8860b"/><circle cx="100" cy="163" r="4" fill="#8a6508"/><path d="M82 110 Q100 120 118 110 Q110 117 100 115 Q90 117 82 110 Z" fill="#3b2a20"/><circle cx="120" cy="92" r="14" fill="rgba(255,255,255,.12)" stroke="#d4af37" stroke-width="3"/><path d="M122 106 Q128 124 118 136" stroke="#d4af37" stroke-width="2" fill="none"/><rect x="56" y="12" width="88" height="13" rx="4" fill="#141414"/><rect x="72" y="-30" width="56" height="46" rx="5" fill="#141414"/><rect x="72" y="2" width="56" height="9" fill="#b8860b"/></g>` } },
 
@@ -1928,6 +1938,12 @@ const game = {
             else type = Math.random()<0.5 ? 'rush' : 'vip';
         }
         this._lastType = type;
+
+        // [VIP] 스펠링 직접입력이라 — 짧은 단어(3~6글자) 위주로 다시 뽑기(복습 단어는 학습 위해 유지)
+        if(type==='vip' && !isReview && rawWords && rawWords.length) {
+            const shortPool = rawWords.filter(item => /^[a-zA-Z]+$/.test(item.w) && item.w.length>=3 && item.w.length<=6 && !this.mastered.includes(item.w));
+            if(shortPool.length) wordObj = shortPool[Math.floor(Math.random()*shortPool.length)];
+        }
 
         // 제한시간: 5000ms에서 시작, 날마다 단축. Day13 이후에도 하한이 2500→2000으로 서서히 더 빡세짐
         let baseTime = 5000 - ((this.day-1)*200);
@@ -2803,7 +2819,7 @@ equipItem: function(category, level) {
             const item = SHOP_DB.wall[eq.wall - 1];
             const wide = ['w1','w2','w5'].includes(item.id);
             const size = wide ? 124 : 104;
-            wL.innerHTML += `<div class="deco-item" onclick="game.openSkinSelector('wall')" style="position:absolute; top:8px; left:50%; transform:translateX(-50%); z-index:1;" title="눌러서 교체">${sceneDeco(item.img, size)}</div>`;
+            wL.innerHTML += `<div class="deco-item" onclick="game.openSkinSelector('wall')" style="position:absolute; top:5%; left:70%; transform:translateX(-50%); z-index:1;" title="눌러서 교체">${sceneDeco(item.img, size)}</div>`;
         }
     },
 
@@ -3237,14 +3253,15 @@ equipItem: function(category, level) {
             inp.value = ''; // 입력창을 깨끗하게 비웁니다!
             inp.maxLength = c.data.w.length; // 단어 길이만큼만 입력 가능
             
-            // [힌트 표시] 예: A _ _ _ _
-            const firstChar = c.data.w.charAt(0);
-            const underScores = "_ ".repeat(c.data.w.length - 1);
-            
+            // [힌트 표시] 앞 2글자 공개 — 예: A B _ _ _
+            const reveal = Math.min(2, c.data.w.length);
+            const shown = c.data.w.slice(0, reveal).toUpperCase().split('').join(' ');
+            const underScores = "_ ".repeat(Math.max(0, c.data.w.length - reveal));
+
             // 힌트 영역이 있는지 확인 후 넣기 (오류 방지)
             const hintEl = document.getElementById('vip-hint-display');
             if(hintEl) {
-                hintEl.innerText = firstChar + " " + underScores;
+                hintEl.innerText = (shown + " " + underScores).trim();
             }
 
             document.getElementById('order-info').innerHTML = `VIP 주문: <b style="color:var(--gold)">직접 입력하세요!</b>`;
