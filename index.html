@@ -783,6 +783,12 @@
 .bic{ width:1.05em; height:1.05em; vertical-align:-0.16em; margin-right:6px; flex:0 0 auto; }
 .ss-brand .bic, .ss-tag .bic{ vertical-align:-0.12em; }
 
+/* 장식 유휴 애니메이션(전체 살랑·까딱 — 살아있는 느낌) */
+.deco-anim-pet{ transform-origin:bottom center; animation:petSway 2.6s ease-in-out infinite; }
+.deco-anim-plant{ transform-origin:bottom center; animation:plantSway 3.6s ease-in-out infinite; }
+@keyframes petSway{ 0%,100%{ transform:rotate(-2.2deg) translateY(0) } 50%{ transform:rotate(2.2deg) translateY(-3px) } }
+@keyframes plantSway{ 0%,100%{ transform:rotate(-1.6deg) } 50%{ transform:rotate(1.6deg) } }
+
     </style>
 </head>
 <body>
@@ -1626,11 +1632,11 @@ const SHOP_DB = {
         { id: 'w5', name: '숲속 창문', desc: 'Lv.5 탁 트인 뷰', price: 20000, icon: '🏞️', img:'deco/forestwindow.svg' }
     ],
     pet: [
-        { id: 'p1', name: '길냥이', desc: 'Lv.1 귀여운 친구', price: 700, icon: '🐈', img:'deco/cat.svg' },
-        { id: 'p2', name: '리트리버', desc: 'Lv.2 든든한 댕댕이', price: 2500, icon: '🐕', img:'deco/dog.svg' },
-        { id: 'p3', name: '앵무새', desc: 'Lv.3 말하는 새', price: 6000, icon: '🦜', img:'deco/parrot.svg' },
-        { id: 'p4', name: '아기 펭귄', desc: 'Lv.4 뒤뚱뒤뚱', price: 12000, icon: '🐧', img:'deco/penguin.svg' },
-        { id: 'p5', name: '유니콘', desc: 'Lv.5 환상의 동물', price: 30000, icon: '🦄', img:'deco/unicorn.svg' }
+        { id: 'p1', name: '길냥이', desc: 'Lv.1 귀여운 친구', price: 700, icon: '🐈', img:'deco/cat.png' },
+        { id: 'p2', name: '리트리버', desc: 'Lv.2 든든한 댕댕이', price: 2500, icon: '🐕', img:'deco/dog.png' },
+        { id: 'p3', name: '앵무새', desc: 'Lv.3 말하는 새', price: 6000, icon: '🦜', img:'deco/parrot.png' },
+        { id: 'p4', name: '아기 펭귄', desc: 'Lv.4 뒤뚱뒤뚱', price: 12000, icon: '🐧', img:'deco/penguin.png' },
+        { id: 'p5', name: '유니콘', desc: 'Lv.5 환상의 동물', price: 30000, icon: '🦄', img:'deco/unicorn.png' }
     ]
 };
 // 장식 아이콘 렌더 헬퍼 (img 있으면 SVG, 없으면 이모지)
@@ -2778,26 +2784,26 @@ equipItem: function(category, level) {
         
         const eq = this.currentEquip || { counter: 0, wall: 0, pet: 0 };
         
-        const sceneDeco = (src, size) => `<img src="${src}" style="width:${size}px;height:${size}px;object-fit:contain;filter:drop-shadow(0 5px 5px rgba(0,0,0,.4));">`;
+        const sceneDeco = (src, size, cls) => `<img class="${cls||''}" src="${src}" style="width:${size}px;height:${size}px;object-fit:contain;filter:drop-shadow(0 5px 5px rgba(0,0,0,.35));">`;
 
-        // (1) 카운터 장식 — 카운터 위 왼쪽
+        // (1) 카운터 장식 — 카운터 위 왼쪽 (살랑 흔들)
         if(eq.counter > 0) {
             const item = SHOP_DB.counter[eq.counter - 1];
-            cL.innerHTML += `<div class="deco-item" onclick="game.openSkinSelector('counter')" style="position:absolute; bottom:0; left:14px; z-index:12;" title="눌러서 교체">${sceneDeco(item.img, 72)}</div>`;
+            cL.innerHTML += `<div class="deco-item" onclick="game.openSkinSelector('counter')" style="position:absolute; bottom:0; left:14px; z-index:12;" title="눌러서 교체">${sceneDeco(item.img, 80, 'deco-anim-plant')}</div>`;
         }
 
-        // (2) 펫 — 카운터 위 오른쪽
+        // (2) 펫 — 카운터 위 오른쪽 (살랑 흔들 — 살아있는 느낌)
         if(eq.pet > 0) {
             const item = SHOP_DB.pet[eq.pet - 1];
-            cL.innerHTML += `<div class="deco-item" onclick="game.openSkinSelector('pet')" style="position:absolute; bottom:0; right:14px; z-index:12;" title="눌러서 교체">${sceneDeco(item.img, 66)}</div>`;
+            cL.innerHTML += `<div class="deco-item" onclick="game.openSkinSelector('pet')" style="position:absolute; bottom:0; right:14px; z-index:12;" title="눌러서 교체">${sceneDeco(item.img, 86, 'deco-anim-pet')}</div>`;
         }
 
-        // (3) 벽 장식 — 벽 우측 상단 (칠판·네온·창문은 가로로 넓게)
+        // (3) 벽 장식 — 벽 중앙 상단
         if(eq.wall > 0) {
             const item = SHOP_DB.wall[eq.wall - 1];
             const wide = ['w1','w2','w5'].includes(item.id);
-            const size = wide ? 124 : 100;
-            wL.innerHTML += `<div class="deco-item" onclick="game.openSkinSelector('wall')" style="position:absolute; top:6px; right:22px; z-index:1;" title="눌러서 교체">${sceneDeco(item.img, size)}</div>`;
+            const size = wide ? 124 : 104;
+            wL.innerHTML += `<div class="deco-item" onclick="game.openSkinSelector('wall')" style="position:absolute; top:8px; left:50%; transform:translateX(-50%); z-index:1;" title="눌러서 교체">${sceneDeco(item.img, size)}</div>`;
         }
     },
 
