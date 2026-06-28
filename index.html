@@ -803,8 +803,73 @@
         linear-gradient(180deg, #d2a875 0, #cda06b 11px, #b5804f 12px, #9a6840 55%, #855838 100%);
     border-top:none;
     box-shadow: inset 0 3px 0 rgba(255,246,228,.6), inset 0 -10px 14px rgba(70,44,22,.32), 0 -3px 9px rgba(0,0,0,.16); }
-/* 펫·화분이 바 윗면에 하단정렬로 얹히게 */
-.counter-deco-area{ bottom:50px; }
+/* 펫·화분이 바 위에 얹히게: z-index:15 로 카운터(10) 앞으로 */
+.counter-deco-area{ bottom:42px; z-index:15; }
+
+/* ===== 대화 박스 — 메인 캐릭터 JRPG 스타일 하단 대화창 ===== */
+#dlg-box {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 128px;
+    z-index: 60;
+    background: rgba(255, 250, 240, 0.97);
+    border-top: 3px solid #c8a87a;
+    box-shadow: 0 -6px 24px rgba(100, 60, 20, 0.22);
+    padding: 12px 130px 10px 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    transform: translateY(100%);
+    transition: transform 0.26s cubic-bezier(0.34, 1.4, 0.64, 1);
+    cursor: pointer;
+    pointer-events: auto;
+}
+#dlg-box.dlg-active { transform: translateY(0); }
+#dlg-portrait-wrap {
+    position: absolute;
+    right: 10px; bottom: 0;
+    width: 116px; height: 186px;
+    overflow: hidden;
+    pointer-events: none;
+}
+#dlg-portrait-wrap img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    filter: drop-shadow(-2px 0 8px rgba(100,60,20,0.18));
+}
+#dlg-name-tag {
+    font-family: 'Jua', sans-serif;
+    font-size: 0.76rem;
+    color: #fff;
+    background: linear-gradient(90deg, #9b6e40, #b88a55);
+    border-radius: 20px;
+    padding: 2px 13px;
+    display: inline-block;
+    align-self: flex-start;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.18);
+    letter-spacing: 0.4px;
+}
+#dlg-text {
+    font-family: 'Jua', sans-serif;
+    font-size: 0.9rem;
+    color: #3e2723;
+    line-height: 1.45;
+}
+#dlg-tap {
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.64rem;
+    color: #b8956e;
+    align-self: flex-end;
+    margin-top: auto;
+}
+
+/* 대화창 활성 중: 피버 색상 효과 억제 */
+#game-container.dlg-mode .scene-bg { filter: none !important; }
+#game-container.dlg-mode #fever-overlay { opacity: 0 !important; }
+#game-container.dlg-mode.fever-mode .cafe-view { border: none !important; box-shadow: none !important; }
+#game-container.dlg-mode #fever-msg { opacity: 0 !important; pointer-events: none; }
 
     </style>
 </head>
@@ -840,6 +905,13 @@
         <div id="fever-overlay"></div>
         <div id="fx-flash"></div>
         <div id="fever-msg"><svg class="bic" viewBox="0 0 24 24" fill="#ff8a3d"><path d="M12 2c1 3-2 4-2 7a2 2 0 0 0 4 0c0-1 .2-2 1.2-2.5C16.5 8.5 18 11 18 14a6 6 0 0 1-12 0C6 8.5 10 7 12 2z"/></svg> FEVER TIME <svg class="bic" viewBox="0 0 24 24" fill="#ff8a3d"><path d="M12 2c1 3-2 4-2 7a2 2 0 0 0 4 0c0-1 .2-2 1.2-2.5C16.5 8.5 18 11 18 14a6 6 0 0 1-12 0C6 8.5 10 7 12 2z"/></svg></div>
+        <!-- 메인 캐릭터 대화창 -->
+        <div id="dlg-box" onclick="game.hideDialogue()">
+            <div id="dlg-portrait-wrap"><img id="dlg-portrait" src="" alt=""></div>
+            <div id="dlg-name-tag"></div>
+            <div id="dlg-text"></div>
+            <div id="dlg-tap">탭하여 닫기 ▼</div>
+        </div>
     </div>
 
 <div class="kitchen">
@@ -1513,6 +1585,28 @@ const MAIN_DIALOGUE = {
     }
 };
 
+// 오답/시간초과 때 메인 캐릭터 위로 한마디 (30% 확률로 등장)
+const MAIN_WRONG = {
+    m_roa: [
+        '"…틀렸군. 다시."',
+        '"서두르지 말게. 단어는 달아나지 않아."',
+        '"실수는 배움의 일부일 뿐이야."',
+        '"침착하게. 다시 한 번."'
+    ],
+    m_luna: [
+        '"호호… 달도 처음엔 차지 않는단다."',
+        '"괜찮아. 틀려도 별은 여전히 빛나지."',
+        '"이번엔 아니었구나. 다시 해봐."',
+        '"마법도 처음엔 다 틀리는 법이야."'
+    ],
+    m_sera: [
+        '"에이~ 괜찮아요! 다음엔 꼭이에요!"',
+        '"저도 노래 처음엔 틀렸어요. 파이팅!!"',
+        '"아직 기회 있어요! 할 수 있어요!!"',
+        '"같이 화이팅해요~!"'
+    ]
+};
+
 function charSVG(c) {
     if(!c) return '';
     if(c.img) return `<img class="cust-png" src="${c.img}" alt="${c.name}">`;
@@ -2099,6 +2193,35 @@ const game = {
     // 메인 손님 응대 완료 후 작별 대사(호감 단계별)
     mainFarewell: function(id){ const d = MAIN_DIALOGUE[id]; return d ? this.pickLine(d.served[this.affTier(id)]) : ''; },
 
+    // ===== 대화창 시스템 =====
+    showDialogue: function(charId, text, opts) {
+        const ch = CHAR_BY_ID[charId];
+        if(!ch || !text) return;
+        opts = opts || {};
+        const box = document.getElementById('dlg-box');
+        const portrait = document.getElementById('dlg-portrait');
+        const nameTag = document.getElementById('dlg-name-tag');
+        const textEl = document.getElementById('dlg-text');
+        if(!box || !portrait || !nameTag || !textEl) return;
+
+        portrait.src = ch.img || '';
+        nameTag.textContent = ch.name;
+        // 따옴표 HTML 엔티티·이탤릭 마크업 제거 후 순수 텍스트 표시
+        textEl.textContent = text.replace(/<[^>]+>/g, '').replace(/&[a-z]+;/gi, '');
+        box.classList.add('dlg-active');
+        document.getElementById('game-container').classList.add('dlg-mode');
+
+        if(this._dlgTimer) clearTimeout(this._dlgTimer);
+        const dur = opts.duration || 3200;
+        this._dlgTimer = setTimeout(() => this.hideDialogue(), dur);
+    },
+    hideDialogue: function() {
+        const box = document.getElementById('dlg-box');
+        if(box) box.classList.remove('dlg-active');
+        document.getElementById('game-container').classList.remove('dlg-mode');
+        if(this._dlgTimer) { clearTimeout(this._dlgTimer); this._dlgTimer = null; }
+    },
+
     // 4. 미스터리 박스
     buyMysteryBox: function() {
         if(this.wallet < 500) {
@@ -2179,13 +2302,16 @@ const game = {
                     }, 450);
                     return;
                 }
-                // 이미 아는 메인 캐릭터 재방문 — 작별 대사를 잠깐 띄우고 퇴장
+                // 이미 아는 메인 캐릭터 재방문 — 작별 대사를 대화창으로 표시
                 if(cust && cust.char && cust.char.kind === 'main') {
                     const fw = this.mainFarewell(cust.char.id);
-                    const bub = document.getElementById('bubble-el');
-                    if(fw && bub) {
-                        bub.innerHTML = `<div style="color:#7a5a8a;font-size:0.9rem;font-style:italic;line-height:1.4;">${fw}</div>`;
-                        setTimeout(() => { if(el) el.classList.add('leaving'); setTimeout(() => this.nextTurn(), 420); }, 1150);
+                    if(fw) {
+                        this.showDialogue(cust.char.id, fw, { duration: 99999 }); // 수동 닫기
+                        setTimeout(() => {
+                            this.hideDialogue();
+                            if(el) el.classList.add('leaving');
+                            setTimeout(() => this.nextTurn(), 420);
+                        }, 2200);
                         return;
                     }
                 }
@@ -2384,9 +2510,19 @@ const game = {
             bubble.innerText = msg;
         }
 
-        // 4. (기존 유지) 퇴장 처리
+        // 4. 메인 캐릭터 오답 대화 (30% 확률)
+        if(this.currentCust.char && this.currentCust.char.kind === 'main' && Math.random() < 0.30) {
+            const wrongLines = MAIN_WRONG[this.currentCust.char.id];
+            if(wrongLines) {
+                const line = wrongLines[Math.floor(Math.random() * wrongLines.length)];
+                setTimeout(() => this.showDialogue(this.currentCust.char.id, line, { duration: 2000 }), 300);
+            }
+        }
+
+        // 5. 퇴장 처리
         if(this.lives <= 0) setTimeout(() => this.gameOver(), 1500);
         else setTimeout(() => {
+            this.hideDialogue();
             document.getElementById('cust-el').classList.add('leaving');
             setTimeout(() => this.nextTurn(), 400);
         }, 1500);
@@ -3216,6 +3352,7 @@ equipItem: function(category, level) {
 
     renderScene: function() {
         this.isTimeFrozen = false; // 새 손님 오면 시간 정지 해제
+        this.hideDialogue(); // 이전 대화창 즉시 닫기
         
         const c = this.currentCust;
         const container = document.getElementById('game-container');
@@ -3267,6 +3404,20 @@ equipItem: function(category, level) {
                 ${vipItemHtml}
                 <div class="${avClass}">${c.avatar}</div>
             </div>`;
+
+        // 메인 캐릭터 등장 대화창 — 캐릭터 애니메이션 후 650ms 딜레이
+        if(ch && ch.kind === 'main') {
+            const greetLine = c.greetLine;
+            if(greetLine) {
+                if(this._dlgArrTimer) clearTimeout(this._dlgArrTimer);
+                this._dlgArrTimer = setTimeout(() => {
+                    if(this.currentCust && this.currentCust.char && this.currentCust.char.id === ch.id
+                       && this.isActive && !this.isPaused) {
+                        this.showDialogue(ch.id, greetLine, { duration: 3000 });
+                    }
+                }, 650);
+            }
+        }
             
         if(c.type==='vip') {
             document.getElementById('options-grid').classList.add('hidden');
