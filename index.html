@@ -164,7 +164,7 @@
         .deco-cat { bottom: 0; right: 20px; }
         .deco-neon { top: 20px; right: 20px; color: #ffeb3b; border: 3px solid #ffeb3b; padding: 5px 10px; border-radius: 10px; transform: rotate(-5deg); font-size: 1.5rem; background: rgba(0,0,0,0.5); }
 
-        .customer-area { height: 320px; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 20px; z-index: 2; pointer-events: none; }
+        .customer-area { height: 320px; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 20px; position: relative; z-index: 2; pointer-events: none; }
         .customer-area button { pointer-events: auto; }
         /* max-height:100% + overflow:hidden → 말풍선이 절대 잘리지 않도록. 넘치는 부분은 아바타 하단(카운터 뒤)에서만 잘림 */
         .customer { display: flex; flex-direction: column; align-items: center; transition: 0.3s; animation: popIn 0.4s; max-height: 100%; overflow: hidden; }
@@ -345,7 +345,7 @@
     position: absolute;
     top: 30%;                /* 우측 위로 비켜놓음 — 캐릭터/말풍선 안 가림 */
     right: 14px;
-    z-index: 55;             /* 일시정지·잡화점 등 오버레이(z-index:100) 아래 — 메뉴 뜨면 가려짐 */
+    z-index: 25;             /* 대화 오버레이(z:50) 아래 — 대화 중 콤보가 캐릭터 위에 안 뜸 */
     pointer-events: none;
     display: flex;
     flex-direction: column;
@@ -896,6 +896,9 @@
     align-self: flex-end;
     margin-top: auto;
 }
+
+/* 대화 중 콤보 숨김 — 캐릭터가 메인 */
+#game-container.dlg-mode #combo-ui { opacity: 0 !important; pointer-events: none; }
 
 /* 피버·kitchen 비활성 — 오버레이가 시각적으로 덮음 */
 #game-container.dlg-mode #fever-overlay { opacity: 0 !important; }
@@ -3065,7 +3068,7 @@ equipItem: function(category, level) {
 
         // 2. '다음 날 영업 시작' 버튼 만들기 (크고 잘 보이게!)
         const container = document.createElement('div');
-        container.style.cssText = "display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; animation: popIn 0.5s;";
+        container.style.cssText = "display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; animation: popIn 0.5s; position:relative; z-index:30;";
         
         container.innerHTML = `
             <div style="background:rgba(255,255,255,0.95); padding:15px 25px; border-radius:20px; margin-bottom:20px; border:4px solid var(--brown-dark); text-align:center; box-shadow:0 4px 10px rgba(0,0,0,0.2);">
