@@ -906,6 +906,46 @@
 #game-container.dlg-mode #fever-msg { opacity: 0 !important; pointer-events: none; }
 #game-container.dlg-mode .kitchen { pointer-events: none; }
 
+/* ===== 업적/배지 시스템 ===== */
+#ach-toast {
+    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(120px);
+    background: linear-gradient(135deg, #2a1f3d, #3d2d5a);
+    color: #fff8ee; border-radius: 14px; padding: 12px 18px;
+    display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 0 0 2px #d4af37;
+    z-index: 9999; pointer-events: none;
+    transition: transform 0.4s cubic-bezier(0.34, 1.3, 0.64, 1), opacity 0.4s;
+    opacity: 0; min-width: 220px; max-width: 320px;
+}
+#ach-toast.ach-show { transform: translateX(-50%) translateY(0); opacity: 1; }
+#ach-toast .ach-toast-icon { font-size: 2rem; line-height: 1; }
+#ach-toast .ach-toast-info { flex: 1; }
+#ach-toast .ach-toast-label { font-size: 0.68rem; letter-spacing: 1px; color: #d4af37; font-weight: bold; }
+#ach-toast .ach-toast-name { font-size: 1rem; font-weight: bold; }
+#ach-toast .ach-toast-reward { font-size: 0.8rem; color: #ffd700; }
+.ach-grade-badge { display: inline-block; font-size: 0.62rem; padding: 1px 5px; border-radius: 4px; font-weight: bold; letter-spacing: 0.5px; vertical-align: middle; }
+.ach-grade-bronze { background: #cd7f32; color: #fff; }
+.ach-grade-silver { background: #a8a8a8; color: #fff; }
+.ach-grade-gold { background: #d4af37; color: #1a1000; }
+.ach-grade-legendary { background: linear-gradient(90deg, #9b59b6, #e91e8c); color: #fff; }
+#ach-screen { display: flex; flex-direction: column; }
+#ach-screen h2 { margin-bottom: 6px; }
+.ach-cat-label { font-size: 0.7rem; font-weight: bold; color: #a07040; letter-spacing: 1px; margin: 10px 0 4px; padding-left: 2px; }
+.ach-list { overflow-y: auto; flex: 1; padding: 0 2px 8px; display: flex; flex-direction: column; gap: 6px; }
+.ach-card { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: rgba(255,250,240,0.92); border: 1.5px solid #e0d0b0; }
+.ach-card.ach-locked { opacity: 0.45; filter: grayscale(0.6); }
+.ach-card.ach-unlocked { border-color: #d4af37; background: rgba(255,248,220,0.96); }
+.ach-card.ach-legendary-card { border-color: #9b59b6; background: rgba(155,89,182,0.07); }
+.ach-card-icon { font-size: 1.55rem; width: 34px; text-align: center; flex-shrink: 0; }
+.ach-card-body { flex: 1; min-width: 0; }
+.ach-card-name { font-size: 0.88rem; font-weight: bold; color: #3b2810; }
+.ach-card-desc { font-size: 0.73rem; color: #7a5c3a; margin-top: 1px; }
+.ach-prog-bar { height: 5px; background: #e8dcc8; border-radius: 3px; overflow: hidden; margin-top: 5px; }
+.ach-prog-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #c8a87a, #e8c86a); transition: width 0.6s; }
+.ach-prog-fill.fill-legendary { background: linear-gradient(90deg, #9b59b6, #e91e8c); }
+.ach-prog-text { font-size: 0.66rem; color: #a07040; margin-top: 2px; }
+.ach-card-reward { font-size: 0.72rem; color: #b8860b; text-align: right; flex-shrink: 0; white-space: nowrap; }
+
     </style>
 </head>
 <body>
@@ -1031,6 +1071,7 @@
             <div class="pause-row">
                 <button class="btn-mini" style="background:linear-gradient(180deg,#a3d9cd,#7bc0b0); color:#2f5d52; box-shadow:0 3px 0 #5fa494;" onclick="game.openCollection('word')"><svg class="bic" viewBox="0 0 24 24" fill="currentColor"><path d="M12 6.6C9.8 5.1 6.4 4.7 4 5.3v12.5c2.4-.6 5.8-.2 8 1.3 2.2-1.5 5.6-1.9 8-1.3V5.3c-2.4-.6-5.8-.2-8 1.3z"/><path d="M12 6.6v12.5" fill="none" stroke="#fff8ee" stroke-width="1"/></svg>도감</button>
                 <button id="explore-btn" class="btn-mini" style="background:linear-gradient(180deg,#e6c794,#caa463); color:#6b4e1e; box-shadow:0 3px 0 #a9863f;" onclick="game.goExplore()"><svg class="bic" viewBox="0 0 24 24" fill="currentColor"><path d="M9 4.5 3.6 6.3v13.2L9 17.7l6 1.8 5.4-1.8V4.5L15 6.3 9 4.5z"/><path d="M9 4.5v13.2M15 6.3v13.2" stroke="#fff8ee" stroke-width="0.9" opacity=".55"/></svg>탐험</button>
+                <button class="btn-mini" style="background:linear-gradient(180deg,#e8d4f4,#c9a8e8); color:#6b3a9e; box-shadow:0 3px 0 #8a5acc;" onclick="game.openAchievements()"><svg class="bic" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 5.2 5.6.8-4 3.9.9 5.6L12 14.8l-4.9 2.7.9-5.6L4 8 9.6 7.2z"/></svg>업적</button>
             </div>
             <button class="btn-mini" style="background:linear-gradient(180deg,#cdbfb0,#a89684); color:#fff; box-shadow:0 3px 0 #8a7560;" onclick="game.manualQuit()">저장하고 타이틀로</button>
             <button class="reset-btn pause-reset" onclick="game.resetData()">데이터 초기화</button>
@@ -1051,6 +1092,21 @@
         <h2>도전 과제</h2>
         <div class="quest-list" id="quest-list-el"></div>
         <button class="btn-mini close-btn" onclick="game.closeOverlays()">닫기</button>
+    </div>
+
+    <div class="overlay hidden" id="ach-screen">
+        <h2>🏅 업적 · 배지</h2>
+        <div class="ach-list" id="ach-list-el"></div>
+        <button class="btn-mini close-btn" onclick="game.closeOverlays()">닫기</button>
+    </div>
+
+    <div id="ach-toast">
+        <div class="ach-toast-icon" id="ach-toast-icon">🏅</div>
+        <div class="ach-toast-info">
+            <div class="ach-toast-label">🏅 업적 달성!</div>
+            <div class="ach-toast-name" id="ach-toast-name"></div>
+            <div class="ach-toast-reward" id="ach-toast-reward"></div>
+        </div>
     </div>
 
     <div class="overlay hidden" id="shop-screen">
@@ -1644,6 +1700,76 @@ const MAIN_WRONG = {
     ]
 };
 
+// ===== 업적 데이터 =====
+const ACHIEVEMENTS = [
+    // 📚 학습
+    { id:'a_master1',   cat:'학습',  name:'첫 졸업',        desc:'단어 1개 SRS 졸업',        icon:'📖', grade:'bronze',    reward:{gold:100},
+      progress:()=>(game.mastered||[]).length,            threshold:1 },
+    { id:'a_master10',  cat:'학습',  name:'단어 수집가',     desc:'단어 10개 졸업',            icon:'📚', grade:'bronze',    reward:{gold:200},
+      progress:()=>(game.mastered||[]).length,            threshold:10 },
+    { id:'a_master50',  cat:'학습',  name:'단어 사냥꾼',     desc:'단어 50개 졸업',            icon:'🔍', grade:'silver',    reward:{gold:500},
+      progress:()=>(game.mastered||[]).length,            threshold:50 },
+    { id:'a_master100', cat:'학습',  name:'단어 마스터',     desc:'단어 100개 졸업',           icon:'🎓', grade:'gold',      reward:{gold:1000},
+      progress:()=>(game.mastered||[]).length,            threshold:100 },
+    { id:'a_master300', cat:'학습',  name:'단어의 신',       desc:'단어 300개 졸업',           icon:'⚡', grade:'legendary', reward:{gold:3000},
+      progress:()=>(game.mastered||[]).length,            threshold:300 },
+    { id:'a_vip30',     cat:'학습',  name:'VIP 정복자',      desc:'VIP 손님 30명 응대',        icon:'💎', grade:'silver',    reward:{gold:300},
+      progress:()=>totalVipCount,                         threshold:30 },
+    { id:'a_vip100',    cat:'학습',  name:'VIP 황제',        desc:'VIP 손님 100명 응대',       icon:'👑', grade:'gold',      reward:{gold:800},
+      progress:()=>totalVipCount,                         threshold:100 },
+    // ☕ 카페
+    { id:'a_serve1',    cat:'카페',  name:'첫 손님',         desc:'손님 1명 응대',             icon:'☕', grade:'bronze',    reward:{gold:50},
+      progress:()=>(game.totalCustomers||0),              threshold:1 },
+    { id:'a_serve50',   cat:'카페',  name:'수련 바리스타',   desc:'손님 50명 응대',            icon:'🥤', grade:'bronze',    reward:{gold:200},
+      progress:()=>(game.totalCustomers||0),              threshold:50 },
+    { id:'a_serve200',  cat:'카페',  name:'숙련 바리스타',   desc:'손님 200명 응대',           icon:'🍵', grade:'silver',    reward:{gold:500},
+      progress:()=>(game.totalCustomers||0),              threshold:200 },
+    { id:'a_serve500',  cat:'카페',  name:'전설의 바리스타', desc:'손님 500명 응대',           icon:'🏆', grade:'gold',      reward:{gold:2000},
+      progress:()=>(game.totalCustomers||0),              threshold:500 },
+    { id:'a_combo10',   cat:'카페',  name:'콤보 킹',         desc:'콤보 10 달성',              icon:'🔥', grade:'bronze',    reward:{gold:200},
+      progress:()=>(game.maxCombo||0),                    threshold:10 },
+    { id:'a_combo20',   cat:'카페',  name:'콤보 전설',       desc:'콤보 20 달성',              icon:'💥', grade:'silver',    reward:{gold:600},
+      progress:()=>(game.maxCombo||0),                    threshold:20 },
+    { id:'a_fever1',    cat:'카페',  name:'피버 첫 발동',    desc:'피버 모드 1회 발동',        icon:'🌡️', grade:'bronze',    reward:{gold:100},
+      progress:()=>(game.feverCount||0),                  threshold:1 },
+    { id:'a_fever10',   cat:'카페',  name:'피버 중독',       desc:'피버 모드 10회 발동',       icon:'🌋', grade:'silver',    reward:{gold:400},
+      progress:()=>(game.feverCount||0),                  threshold:10 },
+    { id:'a_rank_staff',cat:'카페',  name:'정직원 달성',     desc:'누적 점수 5,000점',         icon:'💼', grade:'silver',    reward:{gold:500},
+      progress:()=>(game.lifetimeScore||0),               threshold:5000 },
+    { id:'a_rank_mgr',  cat:'카페',  name:'매니저 달성',     desc:'누적 점수 10,000점',        icon:'🎖️', grade:'gold',      reward:{gold:1000},
+      progress:()=>(game.lifetimeScore||0),               threshold:10000 },
+    { id:'a_rank_god',  cat:'카페',  name:'커피의 신',       desc:'누적 점수 50,000점',        icon:'✨', grade:'legendary', reward:{gold:5000},
+      progress:()=>(game.lifetimeScore||0),               threshold:50000 },
+    // 📅 출석
+    { id:'a_streak3',   cat:'출석',  name:'개근 3일',        desc:'3일 연속 출석',             icon:'📅', grade:'bronze',    reward:{gold:150},
+      progress:()=>(game.dailyStreak||0),                 threshold:3 },
+    { id:'a_streak7',   cat:'출석',  name:'개근 7일',        desc:'7일 연속 출석',             icon:'🗓️', grade:'silver',    reward:{gold:500},
+      progress:()=>(game.dailyStreak||0),                 threshold:7 },
+    { id:'a_streak30',  cat:'출석',  name:'개근 30일',       desc:'30일 연속 출석',            icon:'🌟', grade:'gold',      reward:{gold:2000},
+      progress:()=>(game.dailyStreak||0),                 threshold:30 },
+    // 💝 캐릭터
+    { id:'a_char5',     cat:'캐릭터',name:'캐릭터 발굴',     desc:'캐릭터 도감 5종 수집',      icon:'👥', grade:'bronze',    reward:{gold:150},
+      progress:()=>(game.collectedChars||[]).length,      threshold:5 },
+    { id:'a_char10',    cat:'캐릭터',name:'도감 마니아',      desc:'캐릭터 도감 10종 수집',     icon:'📇', grade:'silver',    reward:{gold:500},
+      progress:()=>(game.collectedChars||[]).length,      threshold:10 },
+    { id:'a_char_all',  cat:'캐릭터',name:'도감 완성',       desc:'모든 캐릭터 수집',          icon:'🌈', grade:'gold',      reward:{gold:1500},
+      progress:()=>(game.collectedChars||[]).length,      threshold:CHAR_DEX.length },
+    { id:'a_aff30',     cat:'캐릭터',name:'단골 단골',       desc:'메인 캐릭터 호감도 30',     icon:'💕', grade:'silver',    reward:{gold:400},
+      progress:()=>Math.max(0,...['m_roa','m_luna','m_sera'].map(id=>(game.affection&&game.affection[id])||0)), threshold:30 },
+    { id:'a_aff100',    cat:'캐릭터',name:'영원한 인연',     desc:'메인 캐릭터 호감도 100',    icon:'💞', grade:'gold',      reward:{gold:1500},
+      progress:()=>Math.max(0,...['m_roa','m_luna','m_sera'].map(id=>(game.affection&&game.affection[id])||0)), threshold:100 },
+    // 🛍️ 장식
+    { id:'a_deco1',     cat:'장식',  name:'인테리어 시작',   desc:'카페 장식 첫 구매',         icon:'🪴', grade:'bronze',    reward:{gold:100},
+      progress:()=>{const s=game.shopLevels||{}; return ((s.counter||0)+(s.pet||0)+(s.wall||0))>0?1:0;}, threshold:1 },
+    { id:'a_deco_all',  cat:'장식',  name:'카페 꾸미기',     desc:'카운터·펫·벽 전부 장착',   icon:'🏠', grade:'silver',    reward:{gold:300},
+      progress:()=>{const s=game.shopLevels||{}; return ((s.counter||0)>0&&(s.pet||0)>0&&(s.wall||0)>0)?1:0;}, threshold:1 },
+    // 🗺️ 탐험
+    { id:'a_explore1',  cat:'탐험',  name:'첫 탐험',         desc:'탐험 화면 첫 방문',         icon:'🗺️', grade:'bronze',    reward:{gold:100},
+      progress:()=>(game.exploreVisits||0),               threshold:1 },
+    { id:'a_explore5',  cat:'탐험',  name:'탐험 마니아',     desc:'탐험 5회 방문',             icon:'⛺', grade:'silver',    reward:{gold:300},
+      progress:()=>(game.exploreVisits||0),               threshold:5 },
+];
+
 function charSVG(c) {
     if(!c) return '';
     if(c.img) return `<img class="cust-png" src="${c.img}" alt="${c.name}">`;
@@ -1892,6 +2018,9 @@ const game = {
             this.maxCombo = data.maxCombo || 0;       // 최고 콤보(퀘스트)
             this.turnCount = data.turnCount || 0;      // SRS 턴
             this.craftedItems = (data.craftedItems && typeof data.craftedItems==='object') ? data.craftedItems : {}; // 탐험 조합 아이템(공유)
+            this.feverCount = data.feverCount || 0;
+            this.exploreVisits = data.exploreVisits || 0;
+            this.unlockedAchievements = Array.isArray(data.unlockedAchievements) ? data.unlockedAchievements : [];
             if(data.stats) {
                 totalServedCount = data.stats.totalServed || 0;
                 totalVipCount = data.stats.totalVip || 0;
@@ -1902,6 +2031,9 @@ const game = {
             // 초기화
             this.shopLevels = { counter: 0, wall: 0, pet: 0 };
             this.currentEquip = { counter: 0, wall: 0, pet: 0 };
+            this.feverCount = 0;
+            this.exploreVisits = 0;
+            this.unlockedAchievements = [];
         }
 
         // [SRS 마이그레이션] 구버전 오답노트에 box/due 없으면 채워줌(즉시 복습 대상)
@@ -1924,6 +2056,7 @@ const game = {
         BgMusic.init();
         BgMusic.isMuted = this.isMuted; if(this.isMuted) BgMusic.stop(); // 통합 음소거 상태로 동기화
         this.checkDailyReward(); // 일일 출석 보상(새 날이면 보상 지급)
+        this.checkAchievements(); // 기존 세이브 마이그레이션: 달성 조건 일괄 체크
         // 탐험에서 카페로 돌아온 경우 → 시작화면이 아니라 일시정지 화면으로 복귀
         try { if(localStorage.getItem('vb_resume_paused')==='1'){ localStorage.removeItem('vb_resume_paused'); this.resumeFromExplore(); } } catch(e){}
     },
@@ -1951,7 +2084,7 @@ const game = {
         this.lastDaily = today;
         const reward = Math.min(1000, 200 + (this.dailyStreak-1)*100); // 200부터 +100씩, 최대 1000
         this.wallet += reward;
-        this.saveData(); this.updateHUD();
+        this.saveData(); this.updateHUD(); this.checkAchievements();
         showGameAlert(`🎁 <b>${this.dailyStreak}일 연속 출석!</b><br>오늘의 보상 🪙 +${reward}G<br><span style="font-size:0.82rem;color:#777;">매일 접속할수록 보상이 커져요 (최대 1,000G)</span>`, null);
     },
 
@@ -1971,7 +2104,10 @@ const game = {
             masteredCount: this.masteredCount, masteredList: this.mastered,
             maxCombo: this.maxCombo || 0, turnCount: this.turnCount || 0,
             collectedChars: this.collectedChars || [],
-            craftedItems: this.craftedItems || {}
+            craftedItems: this.craftedItems || {},
+            feverCount: this.feverCount || 0,
+            exploreVisits: this.exploreVisits || 0,
+            unlockedAchievements: this.unlockedAchievements || []
         };
         localStorage.setItem('vb_save_v7', JSON.stringify(data));
     },
@@ -2003,6 +2139,8 @@ const game = {
             showGameAlert(`🔒 탐험은 '${this.EXPLORE_UNLOCK_RANK}' 랭크 달성 시 열립니다.<br>(누적 ${this.EXPLORE_UNLOCK_SCORE.toLocaleString()}점 필요 · 현재 ${(this.lifetimeScore||0).toLocaleString()}점)`);
             return;
         }
+        this.exploreVisits = (this.exploreVisits || 0) + 1;
+        this.checkAchievements();
         try { this.saveData(); } catch(e) {}
         location.href = 'explore.html';
     },
@@ -2157,6 +2295,7 @@ const game = {
     startFever: function() {
         if (this.isFever) return;
         this.isFever = true;
+        this.feverCount = (this.feverCount || 0) + 1;
         haptic('success');
         
         // 화면 효과
@@ -2219,7 +2358,7 @@ const game = {
         const ce = document.getElementById('cust-el');
         if(ce) this.showFloatingText(`💕 ${ch?ch.name:''} +${amt}`, ce);
         this.checkAffectionActs(id);
-        this.saveData();
+        this.saveData(); this.checkAchievements();
     },
     checkAffectionActs: function(id) {
         const aff = (this.affection && this.affection[id]) || 0;
@@ -2454,7 +2593,7 @@ const game = {
                     this._newChar = { ch, bonus }; // afterSpeech에서 안내
                 }
             }
-            checkQuests(); this.saveData();
+            checkQuests(); this.saveData(); this.checkAchievements();
 
             // 텍스트 표시
 
@@ -3557,6 +3696,82 @@ equipItem: function(category, level) {
         const r2 = e.getBoundingClientRect();
         setTimeout(() => { c.style.left=r2.left+'px'; c.style.top=r2.top+'px'; c.style.opacity=0; }, 50);
         setTimeout(() => c.remove(), 900);
+    },
+
+    // ===== 업적/배지 시스템 =====
+    checkAchievements: function() {
+        if(!Array.isArray(this.unlockedAchievements)) this.unlockedAchievements = [];
+        let newlyUnlocked = false;
+        ACHIEVEMENTS.forEach(ach => {
+            if(this.unlockedAchievements.includes(ach.id)) return;
+            let prog = 0;
+            try { prog = ach.progress(); } catch(e) { return; }
+            if(prog >= ach.threshold) {
+                this.unlockedAchievements.push(ach.id);
+                newlyUnlocked = true;
+                this.wallet = (this.wallet || 0) + (ach.reward.gold || 0);
+                this.showAchievementToast(ach);
+            }
+        });
+        if(newlyUnlocked) {
+            this.updateHUD();
+            this.saveData();
+        }
+    },
+
+    showAchievementToast: function(ach) {
+        const toast = document.getElementById('ach-toast');
+        if(!toast) return;
+        const gradeNames = { bronze:'브론즈', silver:'실버', gold:'골드', legendary:'레전더리' };
+        document.getElementById('ach-toast-icon').textContent = ach.icon;
+        document.getElementById('ach-toast-name').textContent = ach.name;
+        document.getElementById('ach-toast-reward').textContent = '+' + ach.reward.gold + 'G · ' + (gradeNames[ach.grade] || ach.grade);
+        if(this._achToastQueue) clearTimeout(this._achToastQueue);
+        toast.classList.add('ach-show');
+        this._achToastQueue = setTimeout(() => toast.classList.remove('ach-show'), 3200);
+    },
+
+    openAchievements: function() {
+        this.isActive = false; clearInterval(this.timer);
+        document.getElementById('game-container').classList.remove('effect-rush-bg');
+        const screen = document.getElementById('ach-screen');
+        const list = document.getElementById('ach-list-el');
+        if(!screen || !list) return;
+        if(!Array.isArray(this.unlockedAchievements)) this.unlockedAchievements = [];
+        const gradeNames = { bronze:'브론즈', silver:'실버', gold:'골드', legendary:'레전더리' };
+        const catOrder = ['학습','카페','출석','캐릭터','장식','탐험'];
+        const bycat = {};
+        catOrder.forEach(c => { bycat[c] = []; });
+        ACHIEVEMENTS.forEach(a => { if(bycat[a.cat]) bycat[a.cat].push(a); });
+        list.innerHTML = '';
+        catOrder.forEach(cat => {
+            const items = bycat[cat];
+            if(!items || !items.length) return;
+            const label = document.createElement('div');
+            label.className = 'ach-cat-label';
+            label.textContent = '── ' + cat + ' ──';
+            list.appendChild(label);
+            items.forEach(ach => {
+                const unlocked = this.unlockedAchievements.includes(ach.id);
+                let prog = 0; try { prog = ach.progress(); } catch(e) {}
+                const pct = Math.min(100, Math.floor(prog / ach.threshold * 100));
+                const gradeCls = 'ach-grade-' + ach.grade;
+                const card = document.createElement('div');
+                card.className = 'ach-card' + (unlocked ? ' ach-unlocked' : ' ach-locked') + (ach.grade === 'legendary' ? ' ach-legendary-card' : '');
+                card.innerHTML =
+                    '<div class="ach-card-icon">' + ach.icon + '</div>' +
+                    '<div class="ach-card-body">' +
+                        '<div class="ach-card-name">' + ach.name + ' <span class="ach-grade-badge ' + gradeCls + '">' + (gradeNames[ach.grade] || ach.grade) + '</span></div>' +
+                        '<div class="ach-card-desc">' + (unlocked ? ach.desc : '???') + '</div>' +
+                        '<div class="ach-prog-bar"><div class="ach-prog-fill' + (ach.grade === 'legendary' ? ' fill-legendary' : '') + '" style="width:' + pct + '%"></div></div>' +
+                        '<div class="ach-prog-text">' + (unlocked ? '✅ 달성!' : prog + ' / ' + ach.threshold) + '</div>' +
+                    '</div>' +
+                    '<div class="ach-card-reward">🪙 ' + ach.reward.gold + 'G</div>';
+                list.appendChild(card);
+            });
+        });
+        screen.classList.remove('hidden');
+        screen.style.display = 'flex';
     }
 };
 
