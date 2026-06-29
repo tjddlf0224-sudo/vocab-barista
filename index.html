@@ -1204,69 +1204,109 @@
 // ==========================================
 // [0] 카페 BGM 엔진 (MP3 파일 버전)
 // ==========================================
+// BGM 트랙 정의
+const BGM_TRACKS = {
+    title:  'bgm/타이틀 : 메인 화면.mp3',
+    cafe:   'bgm/카페 메인 테마.mp3',
+    fever:  'bgm/피버 모드.mp3',
+    shop:   'bgm/상점 : 정비.mp3',
+    result: 'bgm/결과 : 랭킹 화면.mp3',
+};
+const BGM_JINGLES = {
+    levelup:'bgm/레벨업 : 조합성공 징글.mp3',
+    roa:    'bgm/로아 호감도 해금.mp3',
+    luna:   'bgm/루나 호감도 해금.mp3',
+    sera:   'bgm/세라 호감도 해금.mp3',
+    defeat: 'bgm/패배 : 기절.mp3',
+};
+
 const BgMusic = {
-    audio: new Audio('bgm.mp3'), // 폴더 내 bgm.mp3 파일을 찾음
     isMuted: false,
+    _current: null,
+    _audio: null,
+    _pool: {},
+    _jingle: null,
 
     init: function() {
-        this.audio.loop = true; // 무한 반복 설정
-        
-        // ▼▼▼ [여기 추가] 볼륨을 30%로 설정 (0.0 ~ 1.0) ▼▼▼
-        this.audio.volume = 0.3; 
-        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-
-        // 저장된 설정 불러오기
+        if(this._initialized) return;
+        this._initialized = true;
+        // 트랙 프리로드
+        Object.entries(BGM_TRACKS).forEach(([k, src]) => {
+            const a = new Audio(src);
+            a.loop = true; a.volume = 0.35;
+            this._pool[k] = a;
+        });
         const saved = localStorage.getItem('vb_bgm_mute');
         this.isMuted = (saved === 'true');
         this.updateBtn();
-
-        // [앱 종료/백그라운드 시 BGM 정지] — 전산회계오락실 방식(visibilitychange) 참고
-        if(!this._lifecycleBound){
+        if(!this._lifecycleBound) {
             this._lifecycleBound = true;
             const self = this;
             document.addEventListener('visibilitychange', () => {
-                if(document.hidden) self.audio.pause();
-                else if(!self.isMuted && !(window.game && game.isPaused)) self.play();
+                if(document.hidden) { if(self._audio) self._audio.pause(); }
+                else if(!self.isMuted && !(window.game && game.isPaused)) {
+                    if(self._audio) self._audio.play().catch(()=>{});
+                }
             });
-            window.addEventListener('pagehide', () => self.audio.pause());
-            window.addEventListener('beforeunload', () => self.audio.pause());
+            window.addEventListener('pagehide', () => { if(self._audio) self._audio.pause(); });
+            window.addEventListener('beforeunload', () => { if(self._audio) self._audio.pause(); });
             try {
                 const App = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
-                if(App) App.addListener('appStateChange', (s) => {
-                    if(!s.isActive) self.audio.pause();
-                    else if(!self.isMuted) self.play();
+                if(App) App.addListener('appStateChange', s => {
+                    if(!s.isActive) { if(self._audio) self._audio.pause(); }
+                    else if(!self.isMuted && self._audio) self._audio.play().catch(()=>{});
                 });
-            } catch(e){}
+            } catch(e) {}
         }
     },
 
-    play: function() {
-        if(this.isMuted) return;
-        // 브라우저 정책상 사용자 인터랙션 후 재생됨
-        this.audio.play().catch(error => {
-            console.log("사용자 클릭이 필요합니다.");
+    playTrack: function(key) {
+        if(!BGM_TRACKS[key]) return;
+        if(this._current === key && this._audio && !this._audio.paused) return;
+        if(this._audio) { this._audio.pause(); this._audio.currentTime = 0; }
+        this._current = key;
+        this._audio = this._pool[key] || new Audio(BGM_TRACKS[key]);
+        this._audio.loop = true; this._audio.volume = 0.35;
+        this._pool[key] = this._audio;
+        if(!this.isMuted) this._audio.play().catch(()=>{});
+    },
+
+    playJingle: function(key) {
+        if(!BGM_JINGLES[key] || this.isMuted) return;
+        if(this._jingle) { this._jingle.pause(); this._jingle = null; }
+        if(this._audio) this._audio.volume = 0.12;
+        const j = new Audio(BGM_JINGLES[key]);
+        j.volume = 0.7; this._jingle = j;
+        j.play().catch(()=>{});
+        j.addEventListener('ended', () => {
+            if(this._audio) this._audio.volume = 0.35;
+            this._jingle = null;
         });
     },
 
+    play: function() {
+        if(this.isMuted || !this._audio) return;
+        this._audio.play().catch(()=>{});
+    },
+
     stop: function() {
-        this.audio.pause();
+        if(this._audio) this._audio.pause();
+        if(this._jingle) { this._jingle.pause(); this._jingle = null; }
     },
 
     toggle: function() {
         this.isMuted = !this.isMuted;
         localStorage.setItem('vb_bgm_mute', this.isMuted);
         this.updateBtn();
-        
-        if(this.isMuted) this.stop(); 
-        else this.play();
+        if(this.isMuted) this.stop(); else this.play();
     },
 
-    updateBtn: function() { 
-        const txt = this.isMuted ? "🔇" : "🎵"; 
+    updateBtn: function() {
+        const txt = this.isMuted ? "🔇" : "🎵";
         const btn1 = document.getElementById('bgm-btn');
         const btn2 = document.getElementById('bgm-pause-btn');
-        if(btn1) btn1.innerText = txt; 
-        if(btn2) btn2.innerText = txt + " BGM"; 
+        if(btn1) btn1.innerText = txt;
+        if(btn2) btn2.innerText = txt + " BGM";
     }
 };
 
@@ -1430,8 +1470,6 @@ function showDifficulty() {
     document.getElementById('start-screen').classList.add('hidden');
     document.getElementById('difficulty-screen').classList.remove('hidden');
     document.getElementById('difficulty-screen').style.display = 'flex';
-    BgMusic.init();
-    BgMusic.play();
 }
 function closeDifficulty() {
     document.getElementById('difficulty-screen').classList.add('hidden');
@@ -2054,7 +2092,7 @@ const game = {
         this.updateSoundIcon();
         this.updateExploreBtn();
         BgMusic.init();
-        BgMusic.isMuted = this.isMuted; if(this.isMuted) BgMusic.stop(); // 통합 음소거 상태로 동기화
+        BgMusic.isMuted = this.isMuted; if(this.isMuted) BgMusic.stop();
         this.checkDailyReward(); // 일일 출석 보상(새 날이면 보상 지급)
         this.checkAchievements(); // 기존 세이브 마이그레이션: 달성 조건 일괄 체크
         // 탐험에서 카페로 돌아온 경우 → 시작화면이 아니라 일시정지 화면으로 복귀
@@ -2203,7 +2241,7 @@ const game = {
                         this.isActive = false;
                         clearInterval(this.timer);
                         this.saveData();
-                        BgMusic.stop();
+                        BgMusic.playTrack('title');
                         document.getElementById('game-container').classList.remove('effect-rush-bg');
                         const startScreen = document.getElementById('start-screen');
                         startScreen.classList.remove('hidden');
@@ -2304,9 +2342,7 @@ const game = {
         if(feverMsg) feverMsg.style.opacity = '1';
 
         // 음악 속도 Up
-        if (typeof BgMusic !== 'undefined' && BgMusic.audio) {
-            BgMusic.audio.playbackRate = 1.3;
-        }
+        BgMusic.playTrack('fever');
 
         // 10초 뒤 자동 종료
         if (this.feverTimer) clearTimeout(this.feverTimer);
@@ -2323,9 +2359,7 @@ const game = {
         if(feverMsg) feverMsg.style.opacity = '0';
         
         // 음악 속도 복구
-        if (typeof BgMusic !== 'undefined' && BgMusic.audio) {
-            BgMusic.audio.playbackRate = 1.0;
-        }
+        BgMusic.playTrack('cafe');
         
         if (this.feverTimer) clearTimeout(this.feverTimer);
     },
@@ -2344,8 +2378,10 @@ const game = {
         const el = document.getElementById('my-rank-badge');
         if(el) {
             el.innerText = `Rank: ${rank}`;
-            el.style.setProperty('--rank-color', color);  // 별 색만 등급별로
+            el.style.setProperty('--rank-color', color);
         }
+        if(this._lastRank && rank !== this._lastRank) BgMusic.playJingle('levelup');
+        this._lastRank = rank;
         if(typeof this.updateExploreBtn === 'function') this.updateExploreBtn();
     },
 
@@ -2373,6 +2409,7 @@ const game = {
             this.wallet += reward; this.updateHUD();
             const ch = CHAR_BY_ID[id];
             const story = (AFFECTION_STORY[id] || [])[actIdx] || '';
+            BgMusic.playJingle(id.replace('m_', ''));
             showGameAlert(
                 `💞 <b>${ch?ch.name:''}</b>와의 유대 ${actIdx+1}막 해금!<br><br>`+
                 `<span style="font-size:0.92rem;color:#444;">${story}</span><br><br>`+
@@ -2946,8 +2983,8 @@ const game = {
 
     closeOverlays: function() {
         document.querySelectorAll('.overlay').forEach(el => { if(el.id!=='game-container') el.classList.add('hidden'); });
-        
-        this.isActive = true; 
+        BgMusic.playTrack('cafe');
+        this.isActive = true;
         
         // 팝업 닫을 때 진상 손님이면 다시 흔들림 적용
         if(this.currentCust && this.currentCust.type === 'rush') {
@@ -2965,6 +3002,7 @@ const game = {
 // [여기서부터 다시 새로운 상점 기능들 추가]
     openShop: function() {
         this.isActive=false; clearInterval(this.timer);
+        BgMusic.playTrack('shop');
         document.getElementById('game-container').classList.remove('effect-rush-bg');
         
         document.getElementById('shop-gold').innerText = this.wallet;
@@ -3198,8 +3236,9 @@ equipItem: function(category, level) {
 
     // [신규] 영업 종료 후 정비 모드 (결과창 대신 실행됨)
     enterRestMode: function() {
-        this.isActive = false; // 게임 멈춤
-        if(this.timer) clearInterval(this.timer); // 타이머 정지
+        this.isActive = false;
+        if(this.timer) clearInterval(this.timer);
+        BgMusic.playTrack('shop');
 
         // 1. 손님 서 있던 자리 비우기
         const area = document.querySelector('.customer-area');
@@ -3378,11 +3417,11 @@ equipItem: function(category, level) {
 
     manualQuit: function() {
         // ▼▼▼ [추가] 나가기 전에 피버 효과 끄기 ▼▼▼
-        this.endFever(); 
+        this.endFever();
         // ▲▲▲ 여기까지 ▲▲▲
 
         this.isActive = false; clearInterval(this.timer);
-        BgMusic.stop(); 
+        BgMusic.playTrack('result');
         if(this.gameMode === 'normal') this.saveData();
         
         document.getElementById('result-title').innerText = "⏸️ 영업 중단";
@@ -3405,8 +3444,9 @@ equipItem: function(category, level) {
         // ▲▲▲ 여기까지 ▲▲▲
 
         this.isActive = false; clearInterval(this.timer);
-        BgMusic.stop(); 
-        
+        BgMusic.playJingle('defeat');
+        setTimeout(() => BgMusic.playTrack('result'), 1200);
+
         const title = this.gameMode === 'review' ? "🤕 복습 실패" : "❌ GAME OVER";
         document.getElementById('result-title').innerText = title;
 
@@ -3490,9 +3530,8 @@ equipItem: function(category, level) {
             ? '<svg class="hic" viewBox="0 0 24 24"><path d="M4 9.5h3L11 6v12L7 14.5H4z" fill="currentColor"/><path d="M15 9.5l5 5M20 9.5l-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'
             : '<svg class="hic" viewBox="0 0 24 24"><path d="M4 9.5h3L11 6v12L7 14.5H4z" fill="currentColor"/><path d="M14.5 9a3.8 3.8 0 0 1 0 6M16.8 6.8a7 7 0 0 1 0 10.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
     },
-    startStory: function() { 
-        BgMusic.init(); 
-        BgMusic.play(); 
+    startStory: function() {
+        BgMusic.playTrack('cafe');
         this.storyIndex=0; document.getElementById('start-screen').classList.add('hidden'); document.getElementById('story-screen').classList.remove('hidden'); document.getElementById('story-screen').style.display='flex'; this.renderStory(); 
     },
     
@@ -3511,8 +3550,8 @@ equipItem: function(category, level) {
     nextStory: function() { this.storyIndex++; this.renderStory(); },
     
     start: function(skipInit) {
-        if(!skipInit) this.init(); 
-        BgMusic.play(); 
+        if(!skipInit) this.init();
+        BgMusic.playTrack('cafe');
         this.gameMode='normal'; document.body.classList.remove('mode-review');
         this.isActive=true; this.isPaused=false;
         document.getElementById('start-screen').classList.add('hidden');
@@ -3521,7 +3560,7 @@ equipItem: function(category, level) {
     startReviewMode: function() {
         if(this.myWords.length<1) return showGameAlert("오답 노트가 비어있습니다.");
         if(!rawWords || rawWords.length===0) rawWords = wordData.easy;
-        BgMusic.play(); 
+        BgMusic.playTrack('cafe');
         this.gameMode='review';
         this.activePool = JSON.parse(JSON.stringify(this.myWords));
         this.activePool.sort(()=>Math.random()-0.5);
@@ -3532,6 +3571,7 @@ equipItem: function(category, level) {
     },
     startNextDay: function() {
         playSound('bell');
+        BgMusic.playTrack('cafe');
         this.day++; this.dailyCount=0; this.isActive=true; this.saveData();
         document.getElementById('day-clear-screen').classList.add('hidden');
         this.updateHUD(); this.nextTurn();
@@ -3543,7 +3583,7 @@ equipItem: function(category, level) {
         if(this.isPaused) {
             this.isPaused=false;
             document.getElementById('pause-screen').classList.add('hidden');
-            BgMusic.play();
+            BgMusic.playTrack('cafe');
             // 탐험 복귀 등으로 진행 중 손님이 없으면 새 손님(턴)부터 시작
             if(this._needTurn) {
                 this._needTurn=false; this.isActive=true; this.nextTurn();
@@ -3777,6 +3817,7 @@ equipItem: function(category, level) {
 
 // Start Game
 game.init();
+BgMusic.playTrack('title');
 
 // [성능] 모든 이미지 미리 로드(손님 PNG·씬·장식) — 첫 등장 시 딜레이 방지(특히 웹 배포)
 (function preloadAllImages(){

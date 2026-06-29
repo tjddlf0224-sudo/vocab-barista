@@ -358,6 +358,41 @@
 // ============================================================
 // Vocab Barista — 탐험 (가로 / 스크롤 맵 / 조이스틱 / 전투)
 // ============================================================
+
+// ===== 탐험 BGM =====
+const ExploreBgm = {
+  _tracks: {
+    map:    'bgm/탐험 맵.mp3',
+    battle: 'bgm/일반 전투.mp3',
+    boss:   'bgm/보스 전투.mp3',
+    craft:  'bgm/조합 : 크래프팅.mp3',
+  },
+  _pool: {}, _audio: null, _current: null,
+  isMuted: false,
+  init() {
+    const saved = localStorage.getItem('vb_bgm_mute');
+    this.isMuted = (saved === 'true');
+    Object.entries(this._tracks).forEach(([k,src]) => {
+      const a = new Audio(src); a.loop = true; a.volume = 0.35;
+      this._pool[k] = a;
+    });
+    if(!this.isMuted) this.play('map');
+    document.addEventListener('visibilitychange', () => {
+      if(document.hidden) { if(this._audio) this._audio.pause(); }
+      else if(!this.isMuted && this._audio) this._audio.play().catch(()=>{});
+    });
+  },
+  play(key) {
+    if(!this._tracks[key]) return;
+    if(this._current === key && this._audio && !this._audio.paused) return;
+    if(this._audio) { this._audio.pause(); this._audio.currentTime = 0; }
+    this._current = key;
+    this._audio = this._pool[key];
+    if(!this.isMuted) this._audio.play().catch(()=>{});
+  },
+  stop() { if(this._audio) this._audio.pause(); }
+};
+
 const CAFE_KEY='vb_save_v7', EXPLORE_KEY='vb_explore_v1';
 
 const SaveBridge = {
@@ -982,8 +1017,8 @@ const World = {
     Explore.persist(); Explore.refreshHUD(); this.renderStats(); },
   equipItem(slot,id){ Explore.state.equip[slot]=id; Explore.persist(); Explore.refreshHUD(); this.renderStats(); },
   // ----- 조합소 -----
-  openCraft(){ this.renderCraft(); document.getElementById('craft-screen').classList.add('show'); },
-  closeCraft(){ document.getElementById('craft-screen').classList.remove('show'); },
+  openCraft(){ this.renderCraft(); document.getElementById('craft-screen').classList.add('show'); ExploreBgm.play('craft'); },
+  closeCraft(){ document.getElementById('craft-screen').classList.remove('show'); ExploreBgm.play('map'); },
   renderCraft(){ this.renderMats(); const owned=Explore.cafe.craftedItems||{}; let h='<div class="eq-grid">';
     CRAFT_DB.forEach(r=>{ const can=this.canAfford(r.cost); const have=owned[r.id]||0;
       h+=`<div class="eq-card"><span class="eq-ic">${r.icon}</span><div class="eq-info">`
@@ -1106,6 +1141,7 @@ const Battle = {
     const arena=document.getElementById('b-arena');
     arena.classList.remove('zone-forest','zone-deepwood'); arena.classList.add('zone-'+(Explore.state.map.zone||'forest'));
     const battle=document.getElementById('battle'); battle.classList.add('show','intro');
+    ExploreBgm.play(m.isBoss ? 'boss' : 'battle');
     void es.offsetWidth; es.classList.add('enter');
     this.setButtons(false);
     this.msg(m.isBoss ? `⚔️ <b>${m.name}</b> — 보스가 길을 막아섰다!` : `🐾 앗! 야생 <b>${m.name}</b>이(가) 나타났다!`);
@@ -1210,6 +1246,7 @@ const Battle = {
     if(this._rand()<0.55){ this.msg('무사히 도망쳤다!'); await this.wait(700); return this.close(); }
     this.msg('도망치지 못했다!'); await this.wait(700); await this.enemyTurn(); },
   close(){ this.active=false; this.busy=false; clearTimeout(this._introT);
+    ExploreBgm.play('map');
     const battle=document.getElementById('battle'); battle.classList.remove('show','intro');
     document.getElementById('e-sprite').classList.remove('dead','hit','lunge','enter');
     document.getElementById('p-self').classList.remove('hit','lunge');
@@ -1262,7 +1299,7 @@ window.SpellQuiz=SpellQuiz;
 window.Battle=Battle; window.World=World; window.Explore=Explore;
 
 window.addEventListener('pagehide', ()=>{ try{ Explore.state.pos={x:World.px,y:World.py}; Explore.persist(); }catch(e){} });
-window.addEventListener('DOMContentLoaded', ()=>Explore.init());
+window.addEventListener('DOMContentLoaded', ()=>{ Explore.init(); ExploreBgm.init(); });
 </script>
 </body>
 </html>
