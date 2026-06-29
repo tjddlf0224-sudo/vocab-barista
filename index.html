@@ -1206,18 +1206,18 @@
 // ==========================================
 // BGM 트랙 정의
 const BGM_TRACKS = {
-    title:  'bgm/타이틀 : 메인 화면.mp3',
-    cafe:   'bgm/카페 메인 테마.mp3',
-    fever:  'bgm/피버 모드.mp3',
-    shop:   'bgm/상점 : 정비.mp3',
-    result: 'bgm/결과 : 랭킹 화면.mp3',
+    title:  'bgm/title.mp3',
+    cafe:   'bgm/cafe.mp3',
+    fever:  'bgm/fever.mp3',
+    shop:   'bgm/shop.mp3',
+    result: 'bgm/result.mp3',
 };
 const BGM_JINGLES = {
-    levelup:'bgm/레벨업 : 조합성공 징글.mp3',
-    roa:    'bgm/로아 호감도 해금.mp3',
-    luna:   'bgm/루나 호감도 해금.mp3',
-    sera:   'bgm/세라 호감도 해금.mp3',
-    defeat: 'bgm/패배 : 기절.mp3',
+    levelup:'bgm/levelup.mp3',
+    roa:    'bgm/roa.mp3',
+    luna:   'bgm/luna.mp3',
+    sera:   'bgm/sera.mp3',
+    defeat: 'bgm/defeat.mp3',
 };
 
 const BgMusic = {
@@ -1230,7 +1230,6 @@ const BgMusic = {
     init: function() {
         if(this._initialized) return;
         this._initialized = true;
-        // 트랙 프리로드
         Object.entries(BGM_TRACKS).forEach(([k, src]) => {
             const a = new Audio(src);
             a.loop = true; a.volume = 0.35;
@@ -1242,6 +1241,18 @@ const BgMusic = {
         if(!this._lifecycleBound) {
             this._lifecycleBound = true;
             const self = this;
+            // 첫 인터랙션(클릭·터치)에 BGM 재생 — 브라우저 Autoplay 정책 대응
+            const resumeOnInteraction = () => {
+                if(!self.isMuted && self._audio && self._audio.paused) {
+                    self._audio.play().catch(()=>{});
+                }
+                document.removeEventListener('click', resumeOnInteraction, true);
+                document.removeEventListener('touchstart', resumeOnInteraction, true);
+                document.removeEventListener('keydown', resumeOnInteraction, true);
+            };
+            document.addEventListener('click', resumeOnInteraction, true);
+            document.addEventListener('touchstart', resumeOnInteraction, true);
+            document.addEventListener('keydown', resumeOnInteraction, true);
             document.addEventListener('visibilitychange', () => {
                 if(document.hidden) { if(self._audio) self._audio.pause(); }
                 else if(!self.isMuted && !(window.game && game.isPaused)) {

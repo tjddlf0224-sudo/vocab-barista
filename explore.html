@@ -362,10 +362,10 @@
 // ===== 탐험 BGM =====
 const ExploreBgm = {
   _tracks: {
-    map:    'bgm/탐험 맵.mp3',
-    battle: 'bgm/일반 전투.mp3',
-    boss:   'bgm/보스 전투.mp3',
-    craft:  'bgm/조합 : 크래프팅.mp3',
+    map:    'bgm/explore.mp3',
+    battle: 'bgm/battle.mp3',
+    boss:   'bgm/boss.mp3',
+    craft:  'bgm/craft.mp3',
   },
   _pool: {}, _audio: null, _current: null,
   isMuted: false,
@@ -376,7 +376,20 @@ const ExploreBgm = {
       const a = new Audio(src); a.loop = true; a.volume = 0.35;
       this._pool[k] = a;
     });
-    if(!this.isMuted) this.play('map');
+    // 첫 인터랙션(클릭·터치)에 BGM 재생 — 브라우저 Autoplay 정책 대응
+    this._audio = this._pool['map'];
+    this._current = 'map';
+    if(!this.isMuted) this._audio.play().catch(()=>{});
+    const self = this;
+    const resumeOnInteraction = () => {
+      if(!self.isMuted && self._audio && self._audio.paused) {
+        self._audio.play().catch(()=>{});
+      }
+      document.removeEventListener('click', resumeOnInteraction, true);
+      document.removeEventListener('touchstart', resumeOnInteraction, true);
+    };
+    document.addEventListener('click', resumeOnInteraction, true);
+    document.addEventListener('touchstart', resumeOnInteraction, true);
     document.addEventListener('visibilitychange', () => {
       if(document.hidden) { if(this._audio) this._audio.pause(); }
       else if(!this.isMuted && this._audio) this._audio.play().catch(()=>{});
