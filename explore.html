@@ -558,6 +558,11 @@ const CHIBI = {
   luna: { skin:'#f3d6b6', hair:'#cdb8ea', shirt:'#3a2456', legs:'#2a1840', hat:true, longhair:true },
   sera: { skin:'#f6d8b6', hair:'#d8a85c', shirt:'#cdbdf0', legs:'#9b86c9', longhair:true },
 };
+// [에셋] 걷기 스프라이트 4프레임 로드 (동행별). none은 chef 스프라이트 사용. 로드 전엔 drawChibi가 절차적으로 폴백.
+const WALK_FRAMES = {};
+['chef','roa','luna','sera'].forEach(name=>{
+  WALK_FRAMES[name] = [0,1,2,3].map(i=>{ const im=new Image(); im.src='chars/walk_'+name+'_'+i+'.png'; return im; });
+});
 // ---------- 동행 패시브 ----------
 const COMP_PASSIVE = {
   none: null,
@@ -903,12 +908,29 @@ const World = {
     // 플레이어(중앙) — 현재 이모지(채용 캐릭터는 다음 Stage)
     const pcx=Math.round(this.px*TS-camX), pcy=Math.round(this.py*TS-camY);
     const ckey=Explore.state.companion||'none'; const pal=CHIBI[ckey]||CHIBI.none;
-    this.drawChibi(pcx+TS/2, pcy+TS*1.02, pal, TS*0.95, this.walkT||0, !!this.moving, this.facing);
+    this.drawChibi(pcx+TS/2, pcy+TS*1.02, pal, TS*0.95, this.walkT||0, !!this.moving, this.facing, ckey);
   },
 
-  // 걷는 치비 캐릭터 (팔다리 스윙)
-  drawChibi(cx, footY, pal, s, wp, moving, facing){
+  // 걷는 치비 캐릭터 — [에셋] 걷기 스프라이트 4프레임(로드되면), 아니면 절차적 폴백
+  drawChibi(cx, footY, pal, s, wp, moving, facing, ckey){
     const ctx=this.ctx;
+    // ===== 스프라이트 경로 =====
+    const name = (!ckey || ckey==='none') ? 'chef' : ckey;
+    const frames = WALK_FRAMES[name];
+    if(frames && frames[0] && frames[0].complete && frames[0].naturalWidth>0){
+      const idx = moving ? (((Math.floor(wp/(Math.PI/2))%4)+4)%4) : 0;
+      const img = (frames[idx] && frames[idx].complete && frames[idx].naturalWidth) ? frames[idx] : frames[0];
+      const bob = moving ? Math.abs(Math.sin(wp))*s*0.06 : Math.sin(this.bob)*s*0.03;
+      const h = s*1.55, w = h*(img.naturalWidth/img.naturalHeight);
+      // 접지 그림자(맵에선 은은히 — 캐릭터가 떠 보이지 않게)
+      ctx.fillStyle='rgba(0,0,0,.20)'; ctx.beginPath(); ctx.ellipse(cx, footY, w*0.32, s*0.10, 0,0,7); ctx.fill();
+      ctx.save(); ctx.translate(cx, footY-bob); if(facing<0) ctx.scale(-1,1);
+      ctx.imageSmoothingEnabled=true;
+      ctx.drawImage(img, -w/2, -h, w, h);
+      ctx.restore();
+      return;
+    }
+    // ===== 절차적 폴백(스프라이트 로드 전) =====
     const rr=(x,y,w,h,r,col)=>{ ctx.fillStyle=col; ctx.beginPath();
       ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); ctx.fill(); };
     const skin=pal.skin, hair=pal.hair, shirt=pal.shirt, legs=pal.legs||'#4e342e';
