@@ -147,30 +147,40 @@
   #battle{ position:fixed; inset:0; z-index:20; display:none; flex-direction:column; }
   #battle.show{ display:flex; }
   .b-arena{ flex:1; position:relative; overflow:hidden;
-    background:
-      radial-gradient(ellipse 50% 34% at 76% 26%, rgba(255,248,200,.45), transparent 62%), /* 햇살 */
-      linear-gradient(180deg,#bfe7f5 0%,#cdeef0 38%,#e6f3d8 50%,#86c95f 50%,#5fae49 100%); }
+    background:#cdeef0 url('scenes/forest.png') center/cover no-repeat; }  /* [에셋] 원두 숲 전투 배경 */
   .b-arena.shake{ animation:bshake .28s; }
   @keyframes bshake{ 0%,100%{transform:translate(0,0)} 25%{transform:translate(-6px,3px)} 50%{transform:translate(6px,-3px)} 75%{transform:translate(-4px,-2px)} }
-  /* 먼 나무 실루엣(둥근 수관) — 줄무늬 대신 */
-  .b-trees{ position:absolute; top:34%; left:0; right:0; height:18%; pointer-events:none; opacity:.55;
-    background:radial-gradient(circle at 18px 22px, #4f9a44 15px, transparent 16px) repeat-x;
-    background-size:38px 36px; }
-  .b-trees.far{ top:30%; height:14%; opacity:.32; background-size:30px 30px;
-    background:radial-gradient(circle at 14px 18px, #5aa84f 12px, transparent 13px) repeat-x; background-size:30px 30px; }
-  /* 깊은 숲(밤) 테마 */
-  .b-arena.zone-deepwood{
-    background:
-      radial-gradient(circle at 82% 20%, #f2f5ff 0 15px, rgba(242,245,255,0) 16px),       /* 달 */
-      radial-gradient(circle at 82% 20%, rgba(190,205,255,.5), transparent 16%),           /* 달무리 */
-      linear-gradient(180deg,#161a40 0%,#222452 40%,#2a2c46 50%,#21351f 50%,#16271a 100%); }
-  .b-arena.zone-deepwood .b-trees{ opacity:.6;
-    background:radial-gradient(circle at 18px 22px, #16271c 15px, transparent 16px) repeat-x; background-size:38px 36px; }
-  .b-arena.zone-deepwood .b-trees.far{ opacity:.4;
-    background:radial-gradient(circle at 14px 18px, #1d3325 12px, transparent 13px) repeat-x; background-size:30px 30px; }
-  .platform{ position:absolute; border-radius:50%; background:radial-gradient(ellipse at center, #84c95f 0%, #5da046 68%, transparent 71%); pointer-events:none; }
+  /* [에셋] 배경 이미지에 실제 나무·안개가 있으므로 CSS 나무/안개 레이어는 숨김 */
+  .b-trees, .b-fog{ display:none; }
+  /* 깊은 숲(밤) 전투 배경 */
+  .b-arena.zone-deepwood{ background:#161a40 url('scenes/deepwood.png') center/cover no-repeat; }
+  /* [수정] 접지 그림자/플랫폼 제거 — 배경 이미지에 지면이 있어 불필요 */
+  .platform{ display:none; }
   .plat-enemy{ width:40%; height:13%; top:40%; right:7%; }
   .plat-self{ width:46%; height:15%; bottom:2%; left:1%; }
+  /* ===== [트랙A] 저비용 전투 연출(juice) — 에셋 없이 CSS/JS만 ===== */
+  /* 근경 파스텔 안개(깊이감) */
+  .b-fog{ position:absolute; left:0; right:0; bottom:0; height:28%; pointer-events:none; z-index:3;
+    background:radial-gradient(ellipse 62% 100% at 50% 125%, rgba(255,255,255,.22), transparent 72%); }
+  .b-arena.zone-deepwood .b-fog{ background:radial-gradient(ellipse 62% 100% at 50% 125%, rgba(150,170,255,.14), transparent 72%); }
+  /* 비네트(가장자리 어둡게 → 시선을 중앙 캐릭터로) + 존별 톤 */
+  .b-vignette{ position:absolute; inset:0; pointer-events:none; z-index:4;
+    background:radial-gradient(ellipse 80% 72% at 50% 46%, transparent 56%, rgba(0,0,0,.26) 100%); mix-blend-mode:multiply; }
+  .b-arena.zone-deepwood .b-vignette{ background:radial-gradient(ellipse 82% 74% at 50% 46%, transparent 54%, rgba(8,6,26,.34) 100%); }
+  /* 스프라이트는 안개·비네트 위(선명하게 도드라지게) */
+  .sprite-enemy, .sprite-self{ z-index:5; }
+  /* idle 미세 바운스 — 스프라이트 '이미지'에만 적용해 hit/lunge 컨테이너 트랜스폼과 충돌 없음 */
+  @keyframes idleBob{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
+  .sprite-enemy img{ animation:idleBob 3.2s ease-in-out infinite; }
+  .sprite-self.has-img img{ animation:idleBob 3.8s ease-in-out infinite; }
+  /* 타격 파티클 */
+  .hit-particle{ position:absolute; width:9px; height:9px; border-radius:50%; background:#fff; pointer-events:none; z-index:9;
+    box-shadow:0 0 6px 1px rgba(255,240,180,.9); animation:hpart .5s ease-out forwards; }
+  .hit-particle.crit{ background:#ffd54f; width:12px; height:12px; box-shadow:0 0 8px 2px rgba(255,213,79,.95); }
+  @keyframes hpart{ 0%{transform:translate(0,0) scale(1); opacity:1} 100%{transform:translate(var(--dx),var(--dy)) scale(.3); opacity:0} }
+  /* 임팩트 플래시(히트스탑 느낌) */
+  .impact-flash{ position:absolute; inset:0; pointer-events:none; z-index:6; background:rgba(255,255,255,.5); animation:impflash .13s ease-out forwards; }
+  @keyframes impflash{ 0%{opacity:.55} 100%{opacity:0} }
   .sprite-enemy{ position:absolute; top:24%; right:12%; width:33%; max-width:148px; filter:drop-shadow(0 8px 6px rgba(0,0,0,.4)); }
   .sprite-enemy img{ width:100%; height:auto; display:block; }
   .sprite-enemy.emoji{ font-size:4.6rem; text-align:center; }
@@ -180,9 +190,9 @@
   .sprite-self{ position:absolute; bottom:4%; left:6%; width:40%; max-width:185px; filter:drop-shadow(0 8px 6px rgba(0,0,0,.4)); }
   .sprite-self img{ width:100%; height:auto; display:block; }
   .sprite-self.emoji{ font-size:4.2rem; text-align:center; }
-  /* 뒷모습 캐릭터: 상반신만(하반신은 하단에 붙여 잘라 안 보이게) */
-  .sprite-self.has-img{ bottom:0; left:5%; width:50%; max-width:240px; aspect-ratio:4/3; overflow:hidden; filter:none; }
-  .sprite-self.has-img img{ width:100%; height:auto; display:block; }
+  /* 뒷모습 캐릭터: 상반신(머리~허리)만 일관 크롭 — 바닥 앵커+cover+top으로 4종 PNG 프레이밍 차이 흡수, 몬스터(33%)와 크기 밸런스 */
+  .sprite-self.has-img{ bottom:0; left:6%; width:42%; max-width:190px; aspect-ratio:4/3; overflow:hidden; filter:drop-shadow(0 6px 5px rgba(0,0,0,.4)); }
+  .sprite-self.has-img img{ width:100%; height:100%; object-fit:cover; object-position:top center; display:block; }
   .sprite-enemy.enter{ animation:enemyEnter .6s ease-out; }
   @keyframes enemyEnter{ 0%{ transform:translateX(150%) scale(.6); opacity:0 } 100%{ transform:translateX(0) scale(1); opacity:1 } }
   .sprite-enemy.hit{ animation:ehit .4s; } @keyframes ehit{ 0%,100%{transform:none; filter:none} 25%,55%{transform:translateX(5px); filter:brightness(2.4) drop-shadow(0 0 14px #fff)} 40%{transform:translateX(-5px)} }
@@ -216,8 +226,9 @@
   .bi-empty{ background:rgba(255,255,255,.95); border-radius:13px; padding:12px; margin:0 14px 8px; text-align:center; color:#7a5a2a; font-size:.88rem; }
   .b-cmd{ position:relative; overflow:hidden; border:none; border-radius:15px; font-family:inherit; cursor:pointer;
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; padding:9px 6px 8px; line-height:1.05; }
-  .b-cmd .cmd-ic{ font-size:1.45rem; } .b-cmd .cmd-lb{ font-size:.92rem; font-weight:bold; }
-  .b-cmd:active{ transform:translateY(2px); }
+  .b-cmd .cmd-ic{ font-size:1.45rem; height:1.55rem; display:flex; align-items:center; justify-content:center; } .b-cmd .cmd-lb{ font-size:.92rem; font-weight:bold; }
+  .b-cmd .cmd-ic svg{ width:1.5rem; height:1.5rem; display:block; filter:drop-shadow(0 1px 0 rgba(0,0,0,.12)); }  /* [버튼] 이모지 대신 깔끔한 SVG 아이콘 */
+  .b-cmd:active{ transform:scale(.94) translateY(2px); }
   .b-cmd:disabled{ opacity:.55; }
   .cmd-atk{ background:linear-gradient(180deg,#ffe7a8,#ffc34d); box-shadow:0 4px 0 #a9740f; color:#5a3a10; }
   .cmd-atk:active{ box-shadow:0 2px 0 #a9740f; }
@@ -282,7 +293,7 @@
 
 <!-- 스탯 & 장비 -->
 <div id="stats-screen" class="ex-overlay">
-  <div class="cs-panel" style="max-width:760px; max-height:92vh; overflow-y:auto;">
+  <div class="cs-panel" style="max-width:760px; max-height:92%; overflow-y:auto; padding-bottom:calc(14px + env(safe-area-inset-bottom));">
     <div class="cs-title">📊 스탯 & 장비</div>
     <div id="stats-body"></div>
     <button class="cs-close" onclick="World.closeStats()">닫기</button>
@@ -291,7 +302,7 @@
 
 <!-- 조합소 -->
 <div id="craft-screen" class="ex-overlay">
-  <div class="cs-panel" style="max-width:700px; max-height:92vh; overflow-y:auto;">
+  <div class="cs-panel" style="max-width:700px; max-height:92%; overflow-y:auto; padding-bottom:calc(14px + env(safe-area-inset-bottom));">
     <div class="cs-title">🧪 조합소</div>
     <div style="font-size:.82rem; color:#cdbf9e; margin-bottom:10px;">재료를 모아 특별 아이템을 만들어요. 마지막에 <b style="color:#ffd54f">스펠링 조합</b>을 완성해야 성공! (만든 건 카페 잡화점에서 사용)</div>
     <div class="cm-label">🎒 보유 재료</div>
@@ -322,6 +333,8 @@
   <div class="b-arena" id="b-arena" onpointerdown="Battle.skipTap()">
     <div class="b-trees far"></div>
     <div class="b-trees"></div>
+    <div class="b-fog"></div>
+    <div class="b-vignette"></div>
     <div class="platform plat-enemy"></div>
     <div class="platform plat-self"></div>
     <div class="binfo binfo-self">
@@ -344,10 +357,10 @@
     <div id="b-itemmenu"></div>
     <div class="b-msg" id="b-msg" onpointerdown="Battle.skipTap()">전투 시작!</div>
     <div class="b-cmds">
-      <button class="b-cmd cmd-atk" id="cmd-atk" onclick="Battle.playerAttack('normal')"><span class="cmd-ic">🗡️</span><span class="cmd-lb">공격</span></button>
-      <button class="b-cmd cmd-skill" id="cmd-skill" onclick="Battle.useSkill()" disabled><span class="skill-fill" id="skill-fill"></span><span class="cmd-ic" id="skill-ic">✨</span><span class="cmd-lb" id="skill-lb">스킬</span></button>
-      <button class="b-cmd cmd-item" id="cmd-item" onclick="Battle.toggleItems()"><span class="cmd-ic">🎒</span><span class="cmd-lb">아이템</span></button>
-      <button class="b-cmd cmd-flee" id="cmd-flee" onclick="Battle.flee()"><span class="cmd-ic">🏃</span><span class="cmd-lb">도망</span></button>
+      <button class="b-cmd cmd-atk" id="cmd-atk" onclick="Battle.playerAttack('normal')"><span class="cmd-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5 4 7V4h3l10.5 10.5"/><path d="m13 19 6-6"/><path d="m16 16 4 4"/><path d="m19 21 2-2"/></svg></span><span class="cmd-lb">공격</span></button>
+      <button class="b-cmd cmd-skill" id="cmd-skill" onclick="Battle.useSkill()" disabled><span class="skill-fill" id="skill-fill"></span><span class="cmd-ic" id="skill-ic"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.5 6.9L21.5 11l-7 2.1L12 20l-2.5-6.9L2.5 11l7-2.1z"/></svg></span><span class="cmd-lb" id="skill-lb">스킬</span></button>
+      <button class="b-cmd cmd-item" id="cmd-item" onclick="Battle.toggleItems()"><span class="cmd-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8V6.5a5 5 0 0 1 10 0V8"/><rect x="3.5" y="8" width="17" height="12.5" rx="3.2"/><path d="M3.5 13h17"/></svg></span><span class="cmd-lb">아이템</span></button>
+      <button class="b-cmd cmd-flee" id="cmd-flee" onclick="Battle.flee()"><span class="cmd-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M10 21H5.5A1.5 1.5 0 0 1 4 19.5v-15A1.5 1.5 0 0 1 5.5 3H10"/><path d="m15 16 4-4-4-4"/><path d="M19 12H9"/></svg></span><span class="cmd-lb">도망</span></button>
     </div>
   </div>
 </div>
@@ -1087,12 +1100,12 @@ const World = {
 // ============================================================
 // 몬스터 도감(id로 조회) — 존이 이 id들을 참조
 const MONSTERS = {
-  slime:      { id:'slime',      name:'원두 슬라임', emoji:'🫧', art:'monsters/slime.svg',      lv:3, hp:24, atk:7,  def:2,  exp:14, gold:12, drop:'bean'  },
-  boar:       { id:'boar',       name:'들 멧돼지',   emoji:'🐗', art:'monsters/boar.svg',       lv:5, hp:34, atk:10, def:4,  exp:22, gold:20, drop:'berry' },
-  crow:       { id:'crow',       name:'까마귀 떼',   emoji:'🐦‍⬛', art:'monsters/crow.svg',      lv:4, hp:18, atk:12, def:1,  exp:18, gold:16, drop:'bean'  },
-  golem:      { id:'golem',      name:'로스팅 골렘', emoji:'🪨', art:'monsters/golem.svg',      lv:8, hp:80, atk:16, def:10, exp:60, gold:50, drop:'berry' },
-  shadowwolf: { id:'shadowwolf', name:'그림자 늑대', emoji:'🐺', art:'monsters/shadowwolf.svg', lv:7, hp:42, atk:16, def:4,  exp:32, gold:26, drop:'berry' },
-  wisp:       { id:'wisp',       name:'도깨비불',   emoji:'🔵', art:'monsters/wisp.svg',       lv:6, hp:28, atk:14, def:2,  exp:28, gold:24, drop:'bean'  },
+  slime:      { id:'slime',      name:'원두 슬라임', emoji:'🫧', art:'monsters/slime.png',      lv:3, hp:24, atk:7,  def:2,  exp:14, gold:12, drop:'bean'  },
+  boar:       { id:'boar',       name:'들 멧돼지',   emoji:'🐗', art:'monsters/boar.png',       lv:5, hp:34, atk:10, def:4,  exp:22, gold:20, drop:'berry' },
+  crow:       { id:'crow',       name:'까마귀 떼',   emoji:'🐦‍⬛', art:'monsters/crow.png',      lv:4, hp:18, atk:12, def:1,  exp:18, gold:16, drop:'bean'  },
+  golem:      { id:'golem',      name:'로스팅 골렘', emoji:'🪨', art:'monsters/golem.png',      lv:8, hp:80, atk:16, def:10, exp:60, gold:50, drop:'berry' },
+  shadowwolf: { id:'shadowwolf', name:'그림자 늑대', emoji:'🐺', art:'monsters/shadowwolf.png', lv:7, hp:42, atk:16, def:4,  exp:32, gold:26, drop:'berry' },
+  wisp:       { id:'wisp',       name:'도깨비불',   emoji:'🔵', art:'monsters/wisp.png',       lv:6, hp:28, atk:14, def:2,  exp:28, gold:24, drop:'bean'  },
 };
 // 존(지역) 레지스트리 — 이름/해제레벨/난이도/틴트/몬스터풀/보스/이웃
 const ZONES = {
@@ -1198,7 +1211,7 @@ const Battle = {
     const fill=document.getElementById('skill-fill'); if(fill) fill.style.height=Math.min(100,this.gauge/this.GMAX*100)+'%';
     sb.disabled=!(this._canAct&&ready); sb.classList.toggle('ready', ready&&!!this._canAct); },
   addGauge(n){ this.gauge=Math.min(this.GMAX,(this.gauge||0)+n); this.refreshSkill(); },
-  setSkillLabel(){ const sk=SKILLS[Explore.state.companion||'none']||SKILLS.none; document.getElementById('skill-ic').textContent=sk.icon; document.getElementById('skill-lb').textContent=sk.name; },
+  setSkillLabel(){ const sk=SKILLS[Explore.state.companion||'none']||SKILLS.none; document.getElementById('skill-lb').textContent=sk.name; },  /* [버튼] 스킬 아이콘은 고정 별 SVG 유지, 이름만 동적 갱신 */
   skillFlash(sk){ const f=document.getElementById('b-flash'); if(!f)return; f.style.background='radial-gradient(circle, '+(sk.color||'#fff')+'cc, transparent 72%)'; f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); },
   async useSkill(){ if(this.busy||!this.active||this.gauge<this.GMAX)return; this.busy=true; this.setButtons(false);
     const sk=SKILLS[Explore.state.companion||'none']||SKILLS.none; const p=this.pStat();
@@ -1206,7 +1219,7 @@ const Battle = {
     this.msg(`${sk.icon} <b>${sk.name}</b>!`); this.skillFlash(sk); ps.classList.add('lunge'); await this.wait(230);
     const def=sk.ignoreDef?0:this.enemy.def; let b=p.atk*sk.mult-def*0.5; b*=0.95+this._rand()*0.2;
     const crit=sk.alwaysCrit||this._rand()<0.2; if(crit)b*=1.6; const dmg=Math.max(1,Math.round(b));
-    this.eHp-=dmg; es.classList.add('hit'); this.shake();
+    this.eHp-=dmg; es.classList.add('hit'); this.shake(); this.hitFx('e-sprite', false);
     Sfx.play(crit?'crit':'hit'); exHaptic('heavy');
     this.pop('e','-'+dmg+(crit?'!':''),crit?'crit':null);
     let m=`${sk.name}! ${this.enemy.name}에게 <b>${dmg}</b> 피해!${crit?' 치명타!':''}`;
@@ -1216,6 +1229,22 @@ const Battle = {
     if(this.eHp<=0) return this.win(); await this.enemyTurn(); },
   msg(h){ document.getElementById('b-msg').innerHTML=h; },
   shake(){ const a=document.getElementById('b-arena'); a.classList.remove('shake'); void a.offsetWidth; a.classList.add('shake'); setTimeout(()=>a.classList.remove('shake'),300); },
+  // [트랙A] 타격 순간 임팩트 플래시 + 파티클. 위치는 아레나 로컬좌표(offsetLeft/Top)로 계산 → 가로모드 회전과 무관.
+  hitFx(anchorId, crit){
+    const arena=document.getElementById('b-arena'); const el=document.getElementById(anchorId);
+    if(!arena||!el) return;
+    const fl=document.createElement('div'); fl.className='impact-flash'; arena.appendChild(fl); setTimeout(()=>fl.remove(),150);
+    const cx=el.offsetLeft + el.offsetWidth/2, cy=el.offsetTop + el.offsetHeight*0.42;
+    const n=crit?7:5;
+    for(let i=0;i<n;i++){
+      const p=document.createElement('div'); p.className='hit-particle'+(crit?' crit':'');
+      const ang=this._rand()*Math.PI*2, dist=22+this._rand()*30;
+      p.style.left=cx+'px'; p.style.top=cy+'px';
+      p.style.setProperty('--dx', (Math.cos(ang)*dist).toFixed(0)+'px');
+      p.style.setProperty('--dy', (Math.sin(ang)*dist-10).toFixed(0)+'px');
+      arena.appendChild(p); setTimeout(()=>p.remove(),540);
+    }
+  },
   pop(who,t,k){ const host=document.getElementById(who+'-pop'); const el=document.createElement('div'); el.className='dmg-pop'+(k?' '+k:''); el.textContent=t; el.style.left=(this._rand()*26)+'px'; host.appendChild(el); setTimeout(()=>el.remove(),1000); },
   wait(ms){ return new Promise(r=>{ this._skip=r; this._skipT=setTimeout(()=>{ this._skip=null; r(); }, ms); }); },
   async playerAttack(kind){ if(this.busy||!this.active)return; this.busy=true; this.setButtons(false);
@@ -1225,7 +1254,7 @@ const Battle = {
     if(this._rand()<miss){ Sfx.play('miss'); this.pop('e','MISS','miss'); this.msg('공격이 빗나갔다…'); await this.wait(650); }
     else { const {dmg,crit}=this.calc(p.atk,this.enemy.def,(power?1.7:1.0)*(this.atkBuff||1)); this.eHp-=dmg;
       Sfx.play(crit?'crit':'hit'); exHaptic(crit?'heavy':'light');
-      es.classList.add('hit'); this.shake(); this.pop('e','-'+dmg+(crit?'!':''),crit?'crit':null);
+      es.classList.add('hit'); this.shake(); this.hitFx('e-sprite', crit); this.pop('e','-'+dmg+(crit?'!':''),crit?'crit':null);
       this.msg(`${power?'강공격! ':''}${this.enemy.name}에게 <b>${dmg}</b> 피해!${crit?' 치명타!':''}`); this.renderBars(); await this.wait(550); es.classList.remove('hit'); }
     ps.classList.remove('lunge'); this.addGauge(22);
     if(this.eHp<=0) return this.win(); await this.enemyTurn(); },
@@ -1234,7 +1263,7 @@ const Battle = {
     if(this._rand()<0.05){ this.pop('p','MISS','miss'); this.msg(`${this.enemy.name}의 공격이 빗나갔다!`); await this.wait(600); }
     else { let {dmg,crit}=this.calc(this.enemy.atk,p.def,1.0); dmg=Math.max(1,Math.round(dmg*(1-(this.dmgReduce||0)))); Explore.state.stats.hp=p.hp-dmg;
       Sfx.play('enemy'); exHaptic('heavy');
-      ps.classList.add('hit'); this.shake(); this.pop('p','-'+dmg,crit?'crit':null);
+      ps.classList.add('hit'); this.shake(); this.hitFx('p-self', crit); this.pop('p','-'+dmg,crit?'crit':null);
       this.msg(`${this.enemy.name}의 공격! 나에게 <b>${dmg}</b> 피해!`); this.renderBars(); Explore.refreshHUD(); this.addGauge(16); await this.wait(600); ps.classList.remove('hit'); }
     es.classList.remove('lunge');
     if(Explore.state.stats.hp<=0) return this.lose(); this.busy=false; this.setButtons(true); },
@@ -1263,7 +1292,7 @@ const Battle = {
     const battle=document.getElementById('battle'); battle.classList.remove('show','intro');
     document.getElementById('e-sprite').classList.remove('dead','hit','lunge','enter');
     document.getElementById('p-self').classList.remove('hit','lunge');
-    const f=document.getElementById('cmd-flee'); f.textContent='🏃 도망'; f.onclick=()=>Battle.flee();
+    // [버그수정] 예전 f.textContent='🏃 도망' 리셋 제거 — cmd-ic/cmd-lb span을 파괴해 2번째 전투부터 도망 버튼 레이아웃이 깨졌음(라벨을 바꾸는 곳도 없어 불필요). 인라인 onclick 유지.
     Explore.refreshHUD(); Explore.persist(); },
 };
 // ============================================================

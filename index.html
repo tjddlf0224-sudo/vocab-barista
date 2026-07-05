@@ -169,7 +169,10 @@
         /* max-height:100% + overflow:hidden → 말풍선이 절대 잘리지 않도록. 넘치는 부분은 아바타 하단(카운터 뒤)에서만 잘림 */
         .customer { display: flex; flex-direction: column; align-items: center; transition: 0.3s; animation: popIn 0.4s; max-height: 100%; overflow: hidden; }
         .customer.leaving { transform: translateX(300px); opacity: 0; }
-        .bubble { background: white; border: 3px solid #333; border-radius: 20px; padding: 15px; margin-bottom: 15px; font-size: 1.3rem; text-align: center; min-width: 180px; box-shadow: 4px 4px 0 rgba(0,0,0,0.1); }
+        .bubble { position: relative; background: white; border: 3px solid #333; border-radius: 20px; padding: 15px; margin-bottom: 15px; font-size: 1.3rem; text-align: center; min-width: 180px; box-shadow: 4px 4px 0 rgba(0,0,0,0.1); }
+        /* [신규] 말풍선 발음 버튼 — 항상 노출, speak() 재사용으로 현재 단어 발음 */
+        .bubble-speak-btn { position: absolute; top: -12px; right: -12px; width: 30px; height: 30px; border-radius: 50%; background: var(--gold); border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.3); font-size: 0.95rem; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; pointer-events: auto; }
+        .bubble-speak-btn:active { transform: scale(0.9); }
         .avatar { width: 150px; filter: drop-shadow(0 6px 5px rgba(0,0,0,0.35)); animation: idleBob 3s ease-in-out infinite; transform-origin: bottom center; }
         .avatar svg { width: 100%; height: auto; display: block; }
         /* 손님 PNG: 높이 상한 줄여서 말풍선·이름표·타이머바가 항상 보이도록 */
@@ -198,8 +201,9 @@
 .cdex-card { background:linear-gradient(180deg,#fffdf6,#fff2d4); border-radius:14px; border:2px solid var(--rc,#e0d3b0); padding:8px 4px 6px; text-align:center; box-shadow:0 4px 0 rgba(0,0,0,.12); cursor:pointer; transition:transform .1s; }
 .cdex-card:active { transform:scale(.95); }
 .cdex-card.locked { background:#2a2018; border-color:#3e2f22; cursor:default; }
-.cdex-art { width:100%; height:70px; display:flex; align-items:flex-end; justify-content:center; overflow:hidden; }
-.cdex-art svg { width:64px; height:auto; }
+.cdex-art { width:100%; height:88px; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:9px; background:rgba(93,64,55,.04); }
+.cdex-art svg { width:auto; height:82px; max-width:100%; }
+.cdex-art img.cust-png { width:100%; height:100%; object-fit:cover; object-position:top center; display:block; }
 .cdex-art .locked-q { font-size:2.4rem; color:#5a4836; }
 .cdex-name { font-family:'Jua',sans-serif; font-size:0.72rem; color:#3e2723; margin-top:3px; }
 .cdex-rarity { font-size:0.58rem; color:#fff; background:var(--rc,#9e9e9e); border-radius:8px; padding:1px 7px; display:inline-block; margin-top:2px; }
@@ -442,6 +446,10 @@
 #pause-screen .pause-menu .pause-cta { padding:16px 10px; font-size:1.3rem; border-radius:14px; }
 #pause-screen .pause-menu .pause-reset { background:none; border:none; color:#9b8e84; text-decoration:underline;
     box-shadow:none; padding:8px; font-size:0.82rem; margin-top:2px; }
+/* [신규] TTS 속도 선택 버튼 */
+.tts-rate-btn { width:auto !important; padding:5px 12px !important; font-size:0.85rem !important; border-radius:14px !important;
+    border:1.5px solid #c8a87a; background:#fff8ee; color:#7a5c3a; cursor:pointer; font-family:'Jua',sans-serif; box-shadow:none !important; }
+.tts-rate-btn.active { background:var(--gold); color:#3e2723; border-color:#b28900; font-weight:bold; }
 /* 도감 모달 탭 */
 .dex-tabs { display:flex; gap:8px; margin-bottom:10px; width:90%; max-width:430px; }
 .dex-tab { flex:1; padding:11px 8px; border:none; border-radius:12px 12px 0 0; cursor:pointer;
@@ -748,6 +756,13 @@
 .quest-btn-claim{ background:linear-gradient(180deg,#ffe0a0,#f6c469); color:#7a5320; box-shadow:0 3px 0 #d8a23f; }
 .vip-submit{ background:linear-gradient(180deg,#ffe0a0,#f6c469); color:#7a5320; box-shadow:0 4px 0 #d8a23f; }
 .vip-input{ border:3px solid #f6c469; }
+/* [스펠링 실시간 슬롯] 타이핑이 문제 글자칸에 즉시 반영 — 제시글자=금색, 입력글자=진한색, 남은칸=밑줄 */
+#vip-hint-display{ display:flex !important; justify-content:center; align-items:flex-end; gap:6px; flex-wrap:wrap; letter-spacing:0 !important; }
+.vs{ width:1.05em; min-height:1.5em; display:inline-flex; align-items:center; justify-content:center; font-family:'Nunito',sans-serif; font-weight:900; font-size:1.55rem; line-height:1; border-bottom:3px solid #cbb892; transition:color .08s; }
+.vs-typed{ color:#3e2723; border-bottom-color:#3e2723; }
+.vs-hint{ color:#c99a2e; border-bottom-color:#e6c56a; }
+.vs-empty{ color:transparent; border-bottom-color:#cbb892; }
+.vs-empty::after{ content:'\00a0'; }
 .story-btn{ background:linear-gradient(180deg,#97d28d,#6fb267); box-shadow:0 3px 0 #57975a; }
 .btn-primary{ background:linear-gradient(180deg,#97d28d,#6fb267)!important; color:#fff!important; box-shadow:0 4px 0 #57975a!important; border:none; border-radius:22px; }
 .btn-hero{ background:linear-gradient(180deg,#ffe7b0,#ffce78 55%,#f8b94e)!important; color:#7a4f1e!important;
@@ -955,7 +970,7 @@
         <div class="hud-group">
             <button class="btn-mini pause-btn" onclick="game.togglePause()"><svg class="hic" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1.8"/><rect x="14" y="5" width="4" height="14" rx="1.8"/></svg></button>
             <span style="margin-left:5px"><svg class="hic heart" viewBox="0 0 24 24"><path d="M12 21S3 14.5 3 8.6A4.6 4.6 0 0 1 12 6.3 4.6 4.6 0 0 1 21 8.6C21 14.5 12 21 12 21z" fill="#e87f7f" stroke="#d96a6a" stroke-width="1"/></svg> <span id="lives">5</span></span>
-            <div class="hud-center" style="margin-left:8px;">Day <span id="day-display">1</span></div>
+            <div class="hud-center" style="margin-left:8px;">Day <span id="day-display">1</span><span id="day-progress" style="font-size:0.72rem; opacity:0.85; margin-left:4px;"></span></div>
         </div>
         <div class="hud-group" style="justify-content: flex-end;">
             <div style="font-size:0.85rem; margin-right:10px; white-space:nowrap;">
@@ -1013,9 +1028,9 @@
 </div>
 
 <!-- 대화 전면 레이어 — game-container 전체 위에 배치 -->
-<div id="dlg-overlay" onclick="game.hideDialogue()"></div>
+<div id="dlg-overlay" onclick="game.hideDialogue(true)"></div>
 <img id="dlg-char-large" src="" alt="">
-<div id="dlg-box" onclick="game.hideDialogue()">
+<div id="dlg-box" onclick="game.hideDialogue(true)">
     <div id="dlg-name-tag"></div>
     <div id="dlg-text"></div>
     <div id="dlg-tap">탭하여 계속 ▼</div>
@@ -1072,6 +1087,13 @@
                 <button class="btn-mini" style="background:linear-gradient(180deg,#a3d9cd,#7bc0b0); color:#2f5d52; box-shadow:0 3px 0 #5fa494;" onclick="game.openCollection('word')"><svg class="bic" viewBox="0 0 24 24" fill="currentColor"><path d="M12 6.6C9.8 5.1 6.4 4.7 4 5.3v12.5c2.4-.6 5.8-.2 8 1.3 2.2-1.5 5.6-1.9 8-1.3V5.3c-2.4-.6-5.8-.2-8 1.3z"/><path d="M12 6.6v12.5" fill="none" stroke="#fff8ee" stroke-width="1"/></svg>도감</button>
                 <button id="explore-btn" class="btn-mini" style="background:linear-gradient(180deg,#e6c794,#caa463); color:#6b4e1e; box-shadow:0 3px 0 #a9863f;" onclick="game.goExplore()"><svg class="bic" viewBox="0 0 24 24" fill="currentColor"><path d="M9 4.5 3.6 6.3v13.2L9 17.7l6 1.8 5.4-1.8V4.5L15 6.3 9 4.5z"/><path d="M9 4.5v13.2M15 6.3v13.2" stroke="#fff8ee" stroke-width="0.9" opacity=".55"/></svg>탐험</button>
                 <button class="btn-mini" style="background:linear-gradient(180deg,#e8d4f4,#c9a8e8); color:#6b3a9e; box-shadow:0 3px 0 #8a5acc;" onclick="game.openAchievements()"><svg class="bic" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 5.2 5.6.8-4 3.9.9 5.6L12 14.8l-4.9 2.7.9-5.6L4 8 9.6 7.2z"/></svg>업적</button>
+                <button class="btn-mini" style="background:linear-gradient(180deg,#9fc3e8,#6fa0d4); color:#1c3d5e; box-shadow:0 3px 0 #4f7fb0;" onclick="game.openStats()"><svg class="bic" viewBox="0 0 24 24" fill="currentColor"><path d="M5 19h14v1.6H5zM6.5 17V10h2.4v7zM10.8 17V6h2.4v11zM15.1 17v-9h2.4v9z"/></svg>통계</button>
+            </div>
+            <div class="pause-row" style="display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:6px; font-size:0.78rem; color:#7a5c3a;">
+                <span>🔊 발음 속도</span>
+                <button type="button" class="tts-rate-btn" data-rate="0.8" onclick="setTtsRate(0.8)">0.8x</button>
+                <button type="button" class="tts-rate-btn" data-rate="1.0" onclick="setTtsRate(1.0)">1.0x</button>
+                <button type="button" class="tts-rate-btn" data-rate="1.2" onclick="setTtsRate(1.2)">1.2x</button>
             </div>
             <button class="btn-mini" style="background:linear-gradient(180deg,#cdbfb0,#a89684); color:#fff; box-shadow:0 3px 0 #8a7560;" onclick="game.manualQuit()">저장하고 타이틀로</button>
             <button class="reset-btn pause-reset" onclick="game.resetData()">데이터 초기화</button>
@@ -1097,6 +1119,12 @@
     <div class="overlay hidden" id="ach-screen">
         <h2>🏅 업적 · 배지</h2>
         <div class="ach-list" id="ach-list-el"></div>
+        <button class="btn-mini close-btn" onclick="game.closeOverlays()">닫기</button>
+    </div>
+
+    <div class="overlay hidden" id="stats-screen">
+        <h2>📊 학습 통계</h2>
+        <div id="stats-body" class="quest-list" style="width:90%; max-width:430px;"></div>
         <button class="btn-mini close-btn" onclick="game.closeOverlays()">닫기</button>
     </div>
 
@@ -1193,7 +1221,7 @@
             <button id="revive-btn" class="buy-btn" onclick="game.revive()" style="background:linear-gradient(180deg,#f4a8a0,#e58880); box-shadow:0 4px 0 #cf6f67; flex:1; font-size:1rem;">
                 ❤️ 부활 (450G)
             </button>
-            <button class="btn-mini" onclick="location.reload()" style="background:linear-gradient(180deg,#cdbfb0,#a89684); box-shadow:0 3px 0 #8a7560; flex:1; font-size:1rem;">
+            <button class="btn-mini" onclick="game.exitToTitle()" style="background:linear-gradient(180deg,#cdbfb0,#a89684); box-shadow:0 3px 0 #8a7560; flex:1; font-size:1rem;">
                 🏠 타이틀
             </button>
         </div>
@@ -1327,6 +1355,8 @@ const BgMusic = {
 var totalServedCount = 0;
 var totalVipCount = 0;
 var totalItemsBought = 0;
+var totalCorrectCount = 0; // [신규] 학습 통계용 — 누적 정답 수
+var totalWrongCount = 0;   // [신규] 학습 통계용 — 누적 오답 수
 
 const QUEST_DB = {
     normal: [
@@ -1469,6 +1499,30 @@ let rawWords = [];
 const WORD_MAP = {};
 ['easy','normal','hard'].forEach(t => (wordData[t]||[]).forEach(o => { WORD_MAP[o.w] = o; }));
 const TOTAL_WORDS = Object.keys(WORD_MAP).length;
+
+// [스펠링 필터] VIP(직접 타이핑) 단어에서 파생형·굴절형을 제외해 'base form'만 출제.
+// 복수(-s)·과거(-ed)·-ing·부사(-ly)·추상명사(-tion/-ness/-ment/-ity) 등을 배제. 예: humans/shaped/items → 제외, shape/carbon → 허용.
+function looksInflected(w) {
+    const wl = (w || '').toLowerCase();
+    const has = s => Object.prototype.hasOwnProperty.call(WORD_MAP, s);
+    // 복수/3인칭 -s (단, ss·us·is로 끝나는 base는 예외)
+    if (wl.endsWith('s') && !wl.endsWith('ss') && !wl.endsWith('us') && !wl.endsWith('is')) {
+        const stem = wl.slice(0, -1);
+        const stemEs = wl.endsWith('es') ? wl.slice(0, -2) : null;
+        const stemIes = wl.endsWith('ies') ? wl.slice(0, -3) + 'y' : null;
+        if (has(stem) || (stemEs && has(stemEs)) || (stemIes && has(stemIes))) return true;
+        if (wl.length >= 5) return true; // 5글자+ -s는 복수로 추정
+    }
+    // 과거(-ed)·현재분사(-ing): 길이가 충분하면 파생으로 보고 제외 (bed/feed/king/ring 등 짧은 base는 보존)
+    for (const suf of ['ed', 'ing']) {
+        if (wl.endsWith(suf) && wl.length > suf.length + 2) return true;
+    }
+    // 부사·추상명사 접미사
+    for (const suf of ['ly', 'ment', 'tion', 'sion', 'ness', 'ity', 'est']) {
+        if (wl.endsWith(suf) && wl.length > suf.length + 2) return true;
+    }
+    return false;
+}
 
 // 3. 헬퍼 함수
 function showDifficulty() {
@@ -1905,17 +1959,33 @@ function playSound(type) {
 let voiceList = [];
 if(speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = () => voiceList = window.speechSynthesis.getVoices();
 
+// [신규] TTS 속도 설정 — localStorage에 저장(0.8/1.0/1.2), speak()의 utterance.rate에 반영
+function getTtsRate() {
+    const saved = parseFloat(localStorage.getItem('vb_tts_rate'));
+    return (saved === 0.8 || saved === 1.0 || saved === 1.2) ? saved : 1.0;
+}
+function setTtsRate(rate) {
+    localStorage.setItem('vb_tts_rate', rate);
+    updateTtsRateUI();
+}
+function updateTtsRateUI() {
+    const rate = getTtsRate();
+    document.querySelectorAll('.tts-rate-btn').forEach(btn => {
+        btn.classList.toggle('active', parseFloat(btn.dataset.rate) === rate);
+    });
+}
+
 function speak(text, callback) {
     const cleanText = text ? text.split('(')[0].trim() : "";
     if(game.isMuted || !cleanText) {
-        if(callback) setTimeout(callback, 1500); 
+        if(callback) setTimeout(callback, 1500);
         return;
     }
     if('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
         if(voiceList.length === 0) voiceList = window.speechSynthesis.getVoices();
         const u = new SpeechSynthesisUtterance(cleanText);
-        u.lang = 'en-US'; u.rate = 1.0; 
+        u.lang = 'en-US'; u.rate = getTtsRate();
         const v = voiceList.find(v => v.name.includes('Google US English')) || voiceList.find(v => v.lang === 'en-US');
         if(v) u.voice = v;
         if(callback) { u.onend = callback; u.onerror = callback; }
@@ -2074,6 +2144,8 @@ const game = {
                 totalServedCount = data.stats.totalServed || 0;
                 totalVipCount = data.stats.totalVip || 0;
                 totalItemsBought = data.stats.totalItems || 0;
+                totalCorrectCount = data.stats.totalCorrect || 0; // [신규] 학습 통계
+                totalWrongCount = data.stats.totalWrong || 0;     // [신규] 학습 통계
                 if(data.stats.currentQuests) currentQuests = data.stats.currentQuests;
             }
         } else {
@@ -2102,6 +2174,7 @@ const game = {
         this.updateDecorations();
         this.updateSoundIcon();
         this.updateExploreBtn();
+        updateTtsRateUI(); // [신규] 저장된 TTS 속도 선택 상태 초기 반영
         BgMusic.init();
         BgMusic.isMuted = this.isMuted; if(this.isMuted) BgMusic.stop();
         this.checkDailyReward(); // 일일 출석 보상(새 날이면 보상 지급)
@@ -2147,8 +2220,8 @@ const game = {
             day: this.day, score: this.score, lifetimeScore: this.lifetimeScore || 0,
             bestDay: this.bestDay || 1, lastDaily: this.lastDaily || '', dailyStreak: this.dailyStreak || 0,
             affection: this.affection || {}, charActs: this.charActs || {}, mainSeenDay: this.mainSeenDay || {}, moodBoost: this.moodBoost || 0,
-            lives: this.lives,
-            stats: { totalServed: totalServedCount, totalVip: totalVipCount, totalItems: totalItemsBought, currentQuests: currentQuests },
+            lives: (this.gameMode === 'review' && this._livesBackup !== undefined) ? this._livesBackup : this.lives, // [버그수정] 복습 모드는 본편 라이프 백업값을 저장
+            stats: { totalServed: totalServedCount, totalVip: totalVipCount, totalItems: totalItemsBought, totalCorrect: totalCorrectCount, totalWrong: totalWrongCount, currentQuests: currentQuests },
             totalCustomers: this.totalCustomers, dailyCount: this.dailyCount, isMuted: this.isMuted,
             masteredCount: this.masteredCount, masteredList: this.mastered,
             maxCombo: this.maxCombo || 0, turnCount: this.turnCount || 0,
@@ -2285,12 +2358,15 @@ const game = {
             };
             const alpha = item => /^[a-zA-Z]+$/.test(item.w);
             const notMastered = item => !this.mastered.includes(item.w);
-            // 1순위: 명사 + 3~6글자
-            let pool = rawWords.filter(item => alpha(item) && item.w.length>=3 && item.w.length<=6 && notMastered(item) && isNoun(item));
-            // 2순위: 3~6글자 (명사 조건 없이)
-            if(!pool.length) pool = rawWords.filter(item => alpha(item) && item.w.length>=3 && item.w.length<=6 && notMastered(item));
-            // 3순위: 명사 + 최대 8글자 (마스터 포함 가능)
-            if(!pool.length) pool = rawWords.filter(item => alpha(item) && item.w.length<=8 && isNoun(item));
+            const base = item => !looksInflected(item.w); // [스펠링] 파생형(복수·과거·-ing 등) 제외 — base form만 타이핑 출제
+            // 1순위: base 명사 + 3~6글자
+            let pool = rawWords.filter(item => alpha(item) && base(item) && item.w.length>=3 && item.w.length<=6 && notMastered(item) && isNoun(item));
+            // 2순위: base + 3~6글자 (명사 조건 없이)
+            if(!pool.length) pool = rawWords.filter(item => alpha(item) && base(item) && item.w.length>=3 && item.w.length<=6 && notMastered(item));
+            // 3순위: base + 3~6글자 (마스터 포함 가능)
+            if(!pool.length) pool = rawWords.filter(item => alpha(item) && base(item) && item.w.length>=3 && item.w.length<=6);
+            // 4순위(최후): base + 최대 7글자
+            if(!pool.length) pool = rawWords.filter(item => alpha(item) && base(item) && item.w.length<=7);
             if(pool.length) wordObj = pool[Math.floor(Math.random()*pool.length)];
         }
 
@@ -2467,12 +2543,16 @@ const game = {
 
         // onDismiss 콜백 저장 (퀴즈 시작 트리거용)
         this._dlgOnDismiss = opts.onDismiss || null;
+        this._dlgShownAt = Date.now(); // [버그수정] 탭 디바운스 기준 시각
 
         if(this._dlgTimer) clearTimeout(this._dlgTimer);
         const dur = opts.duration || 3200;
         if(dur < 99999) this._dlgTimer = setTimeout(() => this.hideDialogue(), dur);
     },
-    hideDialogue: function() {
+    hideDialogue: function(byTap) {
+        // [버그수정] 대화가 막 뜬 직후(500ms 이내)의 '탭'은 무시 — 정답을 누른 그 탭/반사적 후속 탭이
+        // 화면 전체를 덮은 대화창 오버레이를 즉시 닫아 응대 대사가 순식간에 사라지던 문제 방지. (타이머·프로그램 호출은 항상 닫힘)
+        if(byTap && this._dlgShownAt && (Date.now() - this._dlgShownAt) < 500) return;
         const box = document.getElementById('dlg-box');
         if(box) box.classList.remove('dlg-active');
         document.getElementById('game-container').classList.remove('dlg-mode');
@@ -2529,6 +2609,7 @@ const game = {
         // [정답인 경우]
         if(val.toLowerCase() === this.currentCust.data.w.toLowerCase()) {
             clearInterval(this.timer); playSound('correct'); haptic('light');
+            totalCorrectCount++; // [신규] 학습 통계용 누적 정답 수
 
             // 콤보 로직
             if (!this.combo) this.combo = 0;
@@ -2569,12 +2650,11 @@ const game = {
                 if(cust && cust.char && cust.char.kind === 'main') {
                     const fw = this.mainFarewell(cust.char.id);
                     if(fw) {
-                        this.showDialogue(cust.char.id, fw, { duration: 99999 }); // 수동 닫기
-                        setTimeout(() => {
-                            this.hideDialogue();
-                            if(el) el.classList.add('leaving');
-                            setTimeout(() => this.nextTurn(), 420);
-                        }, 2200);
+                        // [버그수정] 예전엔 duration:99999 + 별도 setTimeout(2200) 이중 메커니즘이라 탭과 타이머가 경합하고,
+                        // 정답 탭이 대화를 즉시 닫아버렸음. 인사 대사처럼 duration(최대 노출)+onDismiss(넘김) 단일 방식으로 통일.
+                        // → 최대 3.5초 노출, 500ms 뒤 탭하면 즉시 넘김, 어느 쪽이든 nextTurn은 한 번만 실행.
+                        const advance = () => { if(el) el.classList.add('leaving'); setTimeout(() => this.nextTurn(), 420); };
+                        this.showDialogue(cust.char.id, fw, { duration: 3500, onDismiss: advance });
                         return;
                     }
                 }
@@ -2627,6 +2707,8 @@ const game = {
                 }
             } else {
                 if(!this.mastered.includes(_wkey)) this.mastered.push(_wkey);
+                // [버그수정] 복습 테스트 졸업 시 오답노트에서도 제거 — 데이터 모순·무한 파밍 방지
+                if(this.gameMode === 'review') this.myWords = this.myWords.filter(v => v.w !== _wkey);
             }
             this.masteredCount = this.mastered.length;
 
@@ -2693,11 +2775,8 @@ const game = {
         const c = this.currentCust; if(!c) return;
         if(c.type === 'vip') {
             const word = c.data.w;
-            c.hintLetters = Math.min((c.hintLetters || 1) + 1, word.length);
-            const shown = word.slice(0, c.hintLetters).toUpperCase().split('').join(' ');
-            const rest = Array(Math.max(0, word.length - c.hintLetters)).fill('_').join(' ');
-            const hintEl = document.getElementById('vip-hint-display');
-            if(hintEl) hintEl.innerText = (shown + ' ' + rest).trim();
+            c.hintLetters = Math.min((c.hintLetters || Math.min(2, word.length)) + 1, word.length); // [버그수정] 기본 공개 2글자 다음 글자부터 힌트
+            this.renderVipSlots(); // [스펠링] 힌트 구매 시 슬롯 즉시 갱신
         } else {
             const correct = c.data.w;
             const wrong = [...document.querySelectorAll('.cup-btn')].filter(b => b.innerText.trim() !== correct && !b.disabled);
@@ -2706,6 +2785,23 @@ const game = {
         }
     },
 
+    // [스펠링 실시간 슬롯] 문제에 글자칸을 그려, 입력글자는 진하게·제시글자는 금색·남은칸은 밑줄로 표시 → 몇 글자 더 쓸지 실시간 파악
+    renderVipSlots: function() {
+        const c = this.currentCust; if(!c || c.type !== 'vip') return;
+        const word = c.data.w;
+        const reveal = c.hintLetters || Math.min(2, word.length);
+        const inp = document.getElementById('vip-input');
+        const typed = (inp ? inp.value : '').toUpperCase();
+        const hintEl = document.getElementById('vip-hint-display');
+        if(!hintEl) return;
+        let html = '';
+        for(let i=0; i<word.length; i++){
+            if(i < typed.length)      html += `<span class="vs vs-typed">${typed[i]}</span>`;
+            else if(i < reveal)       html += `<span class="vs vs-hint">${word[i].toUpperCase()}</span>`;
+            else                      html += `<span class="vs vs-empty"></span>`;
+        }
+        hintEl.innerHTML = html;
+    },
     checkVipAnswer: function() {
         const val = document.getElementById('vip-input').value.trim();
         this.checkAnswer(val);
@@ -2714,6 +2810,7 @@ const game = {
     handleFail: function(isTimeout) {
         clearInterval(this.timer); playSound('wrong'); haptic('heavy');
         flashFX('bad'); // [이펙트] 오답 화면 플래시
+        totalWrongCount++; // [신규] 학습 통계용 누적 오답 수
         this.lives--; this.updateHUD();
         
         // 1. (기존 유지) 일반 손님일 때 버튼 정답 표시
@@ -2746,8 +2843,8 @@ const game = {
         this.masteredCount = this.mastered.length;
         if(this.gameMode==='normal') this.saveData();
         if(this.gameMode==='review') {
-            const failedItem = this.activePool.shift();
-            this.activePool.push(failedItem);
+            // [버그수정] 틀린 현재 단어를 pool 끝에 재삽입 (빈 pool에서 shift하면 undefined가 출제돼 크래시)
+            this.activePool.push(this.currentCust.data);
         }
         
         // 3. 화면 표시 (수정됨!)
@@ -2854,11 +2951,9 @@ const game = {
     // 2. 게임 재개 (원래 있던 코드)
 
         // 확인 버튼을 눌렀을 때 실행될 코드들
-        if(this.currentCust && this.currentCust.solved === false) {
-             this.startTimer();
-        } else {
-             this.nextTurn();
-        }
+        // [버그수정] 죽기 직전 손님(비활성 버튼·공개된 정답)을 버리고 항상 새 턴으로 재개
+        this.currentCust = null;
+        this.nextTurn();
     });
 }, 100);
     },
@@ -2942,7 +3037,8 @@ const game = {
     },
 
     openQuests: function() {
-        this.isActive=false; clearInterval(this.timer);
+        // 일시정지 화면에서 열면 게임 상태를 건드리지 않음(계속 하기로 정상 재개)
+        if(!this.isPaused){ this.isActive=false; clearInterval(this.timer); }
         document.getElementById('game-container').classList.remove('effect-rush-bg');
         
         const list = document.getElementById('quest-list-el'); list.innerHTML='';
@@ -2994,6 +3090,11 @@ const game = {
 
     closeOverlays: function() {
         document.querySelectorAll('.overlay').forEach(el => { if(el.id!=='game-container') el.classList.add('hidden'); });
+        // [버그수정] 일시정지 중에는 pause 화면을 유지하고 음악·isActive를 건드리지 않음
+        if(this.isPaused) {
+            document.getElementById('pause-screen').classList.remove('hidden');
+            return;
+        }
         BgMusic.playTrack('cafe');
         this.isActive = true;
         
@@ -3410,6 +3511,13 @@ equipItem: function(category, level) {
         document.getElementById('wallet').innerText = this.wallet;
         document.getElementById('lives').innerText = this.lives;
         document.getElementById('day-display').innerText = this.day;
+        // [신규] 하루 진행도(N/10) + 현재 난이도 라벨 — 순수 UI 표시
+        const dpEl = document.getElementById('day-progress');
+        if(dpEl) {
+            const diffLabel = { easy:'Easy', normal:'Normal', hard:'Hard' }[this.difficulty] || '';
+            const progressTxt = (this.gameMode === 'normal') ? `· ${this.dailyCount}/10` : '';
+            dpEl.innerText = [progressTxt, diffLabel].filter(Boolean).join(' · ');
+        }
         this.checkRank(); // 누적 점수 기준 랭크 명패 갱신(로드/게임오버 후에도 반영)
     },
     showFloatingText: function(text, targetEl) {
@@ -3468,13 +3576,15 @@ equipItem: function(category, level) {
             document.getElementById('result-msg').innerHTML =
                 (newRecord ? `🏆 <b>최고 기록 달성! Day ${this.day}</b><br>` : `최고 기록: Day ${this.bestDay}<br>`) +
                 `<span style="font-size:0.82rem;color:#aaa;">코인·단어·도감·랭크는 그대로 유지돼요</span>`;
-            this.day = 1; this.lives = 5; this.score = 0; this.dailyCount = 0; this.totalCustomers = 0; this.saveData();
+            // [버그수정] 진행 리셋은 부활 거절(타이틀 복귀) 시점으로 이동 — 결과 표시·랭킹 등록·부활 이어하기를 위해 메모리 값은 유지.
+            // 단, 저장본에는 리셋된 진행도를 기록해 강제 종료·새로고침으로 목숨 5개 무료 이어하기(부활 우회)를 막는다.
+            this._saveGameOver();
         } else {
             document.getElementById('result-msg').innerText = "다시 도전하세요.";
         }
 
         // 1. 결과 화면 켜기 (기존 유지)
-        this.showResultScreen();
+        this.showResultScreen(this.day, this.score);
 
         // 2. 버튼 로직 (기존 유지)
         const revBtn = document.getElementById('revive-btn');
@@ -3489,13 +3599,32 @@ equipItem: function(category, level) {
         }
     },
 
+    // [버그수정] 게임오버 시 저장본만 리셋된 진행도로 기록(메모리는 유지) — 강제 종료/새로고침 시 무료 이어하기 방지.
+    // wallet·단어·도감·lifetimeScore·totalCustomers 등 누적 자산은 그대로 저장되고, day/score/lives/dailyCount만 리셋값으로 남는다.
+    _saveGameOver: function() {
+        const bDay = this.day, bScore = this.score, bLives = this.lives, bCount = this.dailyCount;
+        this.day = 1; this.score = 0; this.lives = 5; this.dailyCount = 0;
+        this.saveData();
+        this.day = bDay; this.score = bScore; this.lives = bLives; this.dailyCount = bCount;
+    },
 
-    // 이제 이 함수는 '하트'나 '타입'을 받지 않습니다. 그냥 화면만 켜줍니다.
-    showResultScreen: function() {
-        document.getElementById('final-day').innerText = this.day;
-        document.getElementById('final-score').innerText = this.score;
-        
-        document.getElementById('input-area').classList.toggle('hidden', !(this.gameMode === 'normal' && this.score > 0));
+    // [버그수정] 부활 거절(타이틀 복귀) 시점에 진행 리셋 — totalCustomers는 누적 통계라 리셋하지 않음
+    exitToTitle: function() {
+        if(this.gameMode === 'normal' && this.lives <= 0) {
+            this.day = 1; this.lives = 5; this.score = 0; this.dailyCount = 0;
+            this.saveData();
+        }
+        location.reload();
+    },
+
+    // 이제 이 함수는 화면만 켜줍니다. (표시값을 인자로 받을 수 있음 — 생략 시 현재 상태 사용)
+    showResultScreen: function(finalDay, finalScore) {
+        const d = (finalDay !== undefined) ? finalDay : this.day;
+        const s = (finalScore !== undefined) ? finalScore : this.score;
+        document.getElementById('final-day').innerText = d;
+        document.getElementById('final-score').innerText = s;
+
+        document.getElementById('input-area').classList.toggle('hidden', !(this.gameMode === 'normal' && s > 0));
         
         document.getElementById('ranking-board').classList.add('hidden');
         document.getElementById('pause-screen').classList.add('hidden');
@@ -3517,7 +3646,7 @@ equipItem: function(category, level) {
         const board = document.getElementById('ranking-board'); board.innerHTML='';
         ranks.forEach((r,i) => {
             const item=document.createElement('div'); item.className='rank-item';
-            item.innerHTML=`<span>${i+1}. ${r.name}</span><span>${r.score} pts</span>`;
+            item.innerHTML=`<span>${i+1}. ${escapeHtml(r.name)}</span><span>${escapeHtml(r.score)} pts</span>`;
             board.appendChild(item);
         });
         document.getElementById('input-area').classList.add('hidden');
@@ -3575,6 +3704,7 @@ equipItem: function(category, level) {
         this.gameMode='review';
         this.activePool = JSON.parse(JSON.stringify(this.myWords));
         this.activePool.sort(()=>Math.random()-0.5);
+        this._livesBackup = this.lives; // [버그수정] 본편 라이프 백업 — 복습 중 saveData가 세이브를 덮어쓰지 않도록
         this.lives=3; this.isActive=true; this.isPaused=false;
         document.body.classList.add('mode-review');
         document.querySelectorAll('.overlay').forEach(el => el.classList.add('hidden'));
@@ -3606,13 +3736,14 @@ equipItem: function(category, level) {
                 document.getElementById('game-container').classList.add('effect-rush-bg');
             }
         }
-        else { 
-            this.isPaused=true; 
-            clearInterval(this.timer); 
-            document.getElementById('pause-screen').classList.remove('hidden'); 
-            document.getElementById('pause-screen').style.display='flex'; 
-            BgMusic.stop(); 
+        else {
+            this.isPaused=true;
+            clearInterval(this.timer);
+            document.getElementById('pause-screen').classList.remove('hidden');
+            document.getElementById('pause-screen').style.display='flex';
+            BgMusic.stop();
             document.getElementById('game-container').classList.remove('effect-rush-bg');
+            updateTtsRateUI(); // [신규] 저장된 TTS 속도 선택 상태 표시
         }
     },
 
@@ -3660,7 +3791,7 @@ equipItem: function(category, level) {
 
         document.getElementById('customer-area').innerHTML = `
             <div class="customer type-${c.type}" id="cust-el">
-                <div class="bubble" id="bubble-el"><div>${txt}</div>${srcTag}</div>
+                <div class="bubble" id="bubble-el"><div>${txt}</div>${srcTag}<button type="button" class="bubble-speak-btn" title="발음 듣기" onclick="event.stopPropagation(); speak(game.currentCust && game.currentCust.data && game.currentCust.data.w);">🔊</button></div>
                 ${nameTag}
                 ${c.timed ? `<div class="timer-bar-wrap"><div class="timer-fill" id="timer-bar"></div></div>`
                           : `<div class="no-timer-tag"><svg class="bic" viewBox="0 0 24 24" fill="currentColor"><path d="M5 9h12v4.5a4.5 4.5 0 0 1-4.5 4.5h-3A4.5 4.5 0 0 1 5 13.5z"/><path d="M17 10h1.6a2.4 2.4 0 0 1 0 4.8H17" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>천천히 골라요</div>`}
@@ -3675,17 +3806,11 @@ equipItem: function(category, level) {
             const inp = document.getElementById('vip-input');
             inp.value = ''; // 입력창을 깨끗하게 비웁니다!
             inp.maxLength = c.data.w.length; // 단어 길이만큼만 입력 가능
-            
-            // [힌트 표시] 앞 2글자 공개 — 예: A B _ _ _
-            const reveal = Math.min(2, c.data.w.length);
-            const shown = c.data.w.slice(0, reveal).toUpperCase().split('').join(' ');
-            const underScores = "_ ".repeat(Math.max(0, c.data.w.length - reveal));
 
-            // 힌트 영역이 있는지 확인 후 넣기 (오류 방지)
-            const hintEl = document.getElementById('vip-hint-display');
-            if(hintEl) {
-                hintEl.innerText = (shown + " " + underScores).trim();
-            }
+            // [스펠링 실시간 슬롯] 앞 2글자 제시 + 타이핑이 문제 글자칸에 즉시 반영
+            if(!c.hintLetters) c.hintLetters = Math.min(2, c.data.w.length);
+            inp.oninput = () => game.renderVipSlots();
+            this.renderVipSlots();
 
             document.getElementById('order-info').innerHTML = `VIP 주문: <b style="color:var(--gold)">직접 입력하세요!</b>`;
             // VIP 메인 캐릭터: 대화창이 먼저 뜨므로 focus는 대화창 닫힐 때 (serveCustomer onDismiss)
@@ -3783,7 +3908,8 @@ equipItem: function(category, level) {
     },
 
     openAchievements: function() {
-        this.isActive = false; clearInterval(this.timer);
+        // 일시정지 화면에서 열면 게임 상태를 건드리지 않음(계속 하기로 정상 재개)
+        if(!this.isPaused){ this.isActive = false; clearInterval(this.timer); }
         document.getElementById('game-container').classList.remove('effect-rush-bg');
         const screen = document.getElementById('ach-screen');
         const list = document.getElementById('ach-list-el');
@@ -3823,6 +3949,47 @@ equipItem: function(category, level) {
         });
         screen.classList.remove('hidden');
         screen.style.display = 'flex';
+    },
+
+    // [신규] 학습 통계 패널 — 이미 저장 중인 데이터(mastered/myWords/dailyStreak/turnCount/maxCombo/totalCustomers)와
+    // 최소 추가된 정답/오답 카운터만으로 구성. 난이도별 졸업 진행도 + 연속 출석 + 누적 응대 수를 보여줌.
+    openStats: function() {
+        if(!this.isPaused){ this.isActive = false; clearInterval(this.timer); }
+        document.getElementById('game-container').classList.remove('effect-rush-bg');
+        const screen = document.getElementById('stats-screen');
+        const body = document.getElementById('stats-body');
+        if(!screen || !body) return;
+
+        const mastered = this.mastered || [];
+        const diffLabels = { easy:'Easy (초급)', normal:'Normal (중급)', hard:'Hard (고급)' };
+        let diffHtml = '';
+        ['easy','normal','hard'].forEach(level => {
+            const pool = (typeof wordData !== 'undefined' && wordData[level]) ? wordData[level] : [];
+            const total = pool.length;
+            const done = pool.filter(w => mastered.includes(w.w)).length;
+            const pct = total ? Math.min(100, Math.floor(done / total * 100)) : 0;
+            diffHtml += '<div style="margin-bottom:10px;">' +
+                '<div style="display:flex; justify-content:space-between; font-size:0.85rem;"><span>' + diffLabels[level] + '</span><span>' + done + ' / ' + total + '</span></div>' +
+                '<div class="ach-prog-bar"><div class="ach-prog-fill" style="width:' + pct + '%"></div></div>' +
+                '</div>';
+        });
+
+        const totalAnswers = totalCorrectCount + totalWrongCount;
+        const acc = totalAnswers ? Math.round(totalCorrectCount / totalAnswers * 100) : 0;
+
+        body.innerHTML =
+            '<div class="quest-item" style="flex-direction:column; align-items:stretch;">' +
+                '<div style="font-weight:bold; margin-bottom:8px; color:#3b2810;">난이도별 졸업 진행도</div>' +
+                diffHtml +
+            '</div>' +
+            '<div class="quest-item" style="display:flex; justify-content:space-between;"><span>🔥 연속 출석</span><b>' + (this.dailyStreak || 0) + '일</b></div>' +
+            '<div class="quest-item" style="display:flex; justify-content:space-between;"><span>☕ 누적 응대 손님</span><b>' + (this.totalCustomers || 0) + '명</b></div>' +
+            '<div class="quest-item" style="display:flex; justify-content:space-between;"><span>🏆 최고 콤보</span><b>' + (this.maxCombo || 0) + '</b></div>' +
+            '<div class="quest-item" style="display:flex; justify-content:space-between;"><span>📖 졸업 단어 수</span><b>' + mastered.length + '개</b></div>' +
+            '<div class="quest-item" style="display:flex; justify-content:space-between;"><span>✅ 정답률</span><b>' + acc + '% (' + totalCorrectCount + '/' + totalAnswers + ')</b></div>';
+
+        screen.classList.remove('hidden');
+        screen.style.display = 'flex';
     }
 };
 
@@ -3847,7 +4014,9 @@ function updateComboUI(count) {
     if (!el) {
         el = document.createElement('div');
         el.id = 'combo-ui';
-        document.body.appendChild(el);
+        // [버그수정] body가 아닌 game-container 자식으로 붙여야 '대화 중 콤보 숨김' CSS(#game-container.dlg-mode #combo-ui)가 먹고,
+        // 넓은 화면에서도 game-container(최대 480px) 기준으로 위치가 잡힘.
+        document.getElementById('game-container').appendChild(el);
     }
 
     // 2. 콤보가 2 미만이면 숨기기
@@ -3909,6 +4078,8 @@ function flashFX(kind) {
 
 <script>
     window.addEventListener('load', () => {
+        // [버그수정] Capacitor 네이티브 앱에서는 PWA 설치 안내를 표시하지 않음
+        if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) return;
         // 이미 앱모드면 중단
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
         if (isStandalone) return;
@@ -3976,15 +4147,20 @@ function flashFX(kind) {
         }
     });
 
+    // [보안] 랭킹 렌더링용 HTML 이스케이프 — 저장형 XSS 방지
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
+    }
+
     // 구글 시트에서 랭킹 가져오기
     function showSheetRanking() {
         const board = document.getElementById('ranking-board');
         board.classList.remove('hidden');
         board.innerHTML = '<div style="text-align:center; padding:20px;">랭킹 로딩 중...⏳</div>';
         
-        // 입력창 숨기기
+        // 입력창 숨기기 — [버그수정] inline style 대신 classList 사용(showResultScreen이 classList로만 복구하므로)
         const inputArea = document.getElementById('input-area');
-        if(inputArea) inputArea.style.display = 'none';
+        if(inputArea) inputArea.classList.add('hidden');
 
         if(!window.vbDB) { board.innerHTML = '<div style="text-align:center;">인터넷 연결이 필요합니다.</div>'; return; }
         window.vbDB.collection('vb_ranking').orderBy('score','desc').limit(20).get()
@@ -4003,10 +4179,10 @@ function flashFX(kind) {
                     <div class="rank-item" style="padding:10px; border-bottom:1px solid #555; display:flex; justify-content:space-between; align-items:center;">
                         <span>
                             <span style="color:${rank===1?'gold':rank===2?'silver':rank===3?'#cd7f32':'#fff'}; font-weight:bold; margin-right:10px;">${rank}위</span>
-                            <span style="color:#fff;">${item.name}</span>
+                            <span style="color:#fff;">${escapeHtml(item.name)}</span>
                         </span>
                         <span>
-                            <span style="color:#ffca28; font-weight:bold;">${item.score}</span>
+                            <span style="color:#ffca28; font-weight:bold;">${escapeHtml(item.score)}</span>
                         </span>
                     </div>`;
                 });
