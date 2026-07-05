@@ -20,7 +20,9 @@
     padding:8px 12px; z-index:5; pointer-events:none; }
   .topbar > *{ pointer-events:auto; }
   .back-btn{ background:linear-gradient(180deg,#8d6e63,#5d4037); color:#fff8e1; border:none;
-    border-radius:11px; padding:7px 12px; font-family:inherit; font-size:.9rem; box-shadow:0 3px 0 rgba(0,0,0,.4); }
+    border-radius:11px; padding:7px 12px; font-family:inherit; font-size:.9rem; box-shadow:0 3px 0 rgba(0,0,0,.4);
+    display:inline-flex; align-items:center; gap:6px; }
+  .back-btn svg{ width:16px; height:16px; display:block; flex:none; }
   .back-btn:active{ transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.4); }
   .hud-stats{ display:flex; gap:6px; margin-left:auto; font-size:.85rem; flex-wrap:wrap; justify-content:flex-end; }
   .hud-stats .chip{ background:rgba(0,0,0,.42); padding:4px 9px; border-radius:20px; white-space:nowrap; }
@@ -49,7 +51,8 @@
     background:radial-gradient(circle at 35% 28%, #ffe28a, #ff9f1c 68%, #ef7d00);
     box-shadow:0 5px 0 #a85200, 0 8px 12px rgba(0,0,0,.45), inset 0 2px 3px rgba(255,255,255,.5);
     transition:transform .08s, box-shadow .15s, background .2s; }
-  .abtn .ab-ico{ font-size:1.7rem; line-height:1; filter:drop-shadow(0 1px 1px rgba(0,0,0,.3)); }
+  .abtn .ab-ico{ display:flex; line-height:0; filter:drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
+  .abtn .ab-ico svg{ width:33px; height:33px; display:block; }
   .abtn .ab-tx{ font-size:.82rem; letter-spacing:1px; text-shadow:0 1px 0 rgba(255,255,255,.4); }
   .abtn:active{ transform:translateY(3px); box-shadow:0 2px 0 #a85200, 0 4px 7px rgba(0,0,0,.4); }
   /* 채집 가능 범위 안 — 초록빛 강조 + 맥동으로 누르도록 유도 */
@@ -260,9 +263,9 @@
 
   <div class="topbar">
     <button class="back-btn" onclick="Explore.exitToCafe()">← 카페로</button>
-    <button class="back-btn" id="comp-chip" style="background:linear-gradient(180deg,#7e57c2,#5e35b1)" onclick="World.openCompanionSelect()">동행 🧑‍🍳</button>
-    <button class="back-btn" style="background:linear-gradient(180deg,#42a5f5,#1976d2)" onclick="World.openStats()">📊 스탯</button>
-    <button class="back-btn" style="background:linear-gradient(180deg,#66bb6a,#388e3c)" onclick="World.openCraft()">🧪 조합</button>
+    <button class="back-btn" id="comp-chip" style="background:linear-gradient(180deg,#7e57c2,#5e35b1)" onclick="World.openCompanionSelect()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.1"/><path d="M3.6 19a5.4 5.4 0 0 1 10.8 0"/><path d="M16 5.5a3 3 0 0 1 0 5.6"/><path d="M17.3 14a5.2 5.2 0 0 1 3.2 4.9"/></svg><span class="cc-lb">동행</span></button>
+    <button class="back-btn" style="background:linear-gradient(180deg,#42a5f5,#1976d2)" onclick="World.openStats()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="20" x2="6" y2="12"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="18" y1="20" x2="18" y2="9"/></svg>스탯</button>
+    <button class="back-btn" style="background:linear-gradient(180deg,#66bb6a,#388e3c)" onclick="World.openCraft()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6"/><path d="M10.2 3v5.6L5.6 16.6A2 2 0 0 0 7.3 19.6h9.4a2 2 0 0 0 1.7-3L13.8 8.6V3"/><path d="M7.5 14.5h9"/></svg>조합</button>
     <span class="zone-name" id="zone-name">🌲 원두 숲</span>
     <div class="hud-stats">
       <div class="chip">🪙 <span id="hud-gold">0</span></div>
@@ -278,7 +281,7 @@
     <div id="stick-base"></div>
     <div id="stick-knob"></div>
   </div>
-  <button id="act-btn" class="abtn" onpointerdown="World.interact(event)"><span class="ab-ico">🧺</span><span class="ab-tx">채집</span></button>
+  <button id="act-btn" class="abtn" onpointerdown="World.interact(event)"><span class="ab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 9h17l-1.3 9.1a2.2 2.2 0 0 1-2.2 1.9H7a2.2 2.2 0 0 1-2.2-1.9L3.5 9Z"/><path d="M8.3 9 11 3.2"/><path d="M15.7 9 13 3.2"/><path d="M9 12.6v4.2"/><path d="M12 12.6v4.2"/><path d="M15 12.6v4.2"/></svg></span><span class="ab-tx">채집</span></button>
 </div>
 
 
@@ -1016,8 +1019,8 @@ const World = {
   // 동행 순환 선택
   updateCompChip(){
     const c=COMPANIONS[Explore.state.companion||'none'];
-    const el=document.getElementById('comp-chip');
-    if(el) el.textContent='동행 '+(c.img? c.name : '🧑‍🍳');
+    const lb=document.querySelector('#comp-chip .cc-lb');
+    if(lb) lb.textContent='동행'+(c.img? ' '+c.name : '');
   },
   // ----- 동행 선택 화면 -----
   openCompanionSelect(){ this.renderCompCards(); document.getElementById('comp-select').classList.add('show'); },
