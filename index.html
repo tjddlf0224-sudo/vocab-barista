@@ -4138,12 +4138,19 @@ game.init();
   // ---- 로그인 함수 (native 플러그인 있으면 사용, 아니면 웹 popup) ----
   const nativeAuth = (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.FirebaseAuthentication) || null;
   window.vbSignInGoogle = async function(){ loginErr(''); try{
-      if(nativeAuth){ await nativeAuth.signInWithGoogle({scopes:['profile','email']}); }
-      else { await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
+      if(nativeAuth){ // 네이티브: 플러그인으로 로그인 후 credential을 JS SDK(compat)에 동기화
+        const r = await nativeAuth.signInWithGoogle({scopes:['profile','email']});
+        const c = (r&&r.credential)||{};
+        await auth.signInWithCredential(firebase.auth.GoogleAuthProvider.credential(c.idToken, c.accessToken));
+      } else { await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
     }catch(e){ loginErr('구글 로그인 실패: '+(e.message||e)); } };
   window.vbSignInApple = async function(){ loginErr(''); try{
-      if(nativeAuth){ await nativeAuth.signInWithApple({scopes:['name','email']}); }
-      else { await auth.signInWithPopup(new firebase.auth.OAuthProvider('apple.com')); }
+      if(nativeAuth){
+        const r = await nativeAuth.signInWithApple({scopes:['name','email']});
+        const c = (r&&r.credential)||{};
+        const p = new firebase.auth.OAuthProvider('apple.com');
+        await auth.signInWithCredential(p.credential({ idToken:c.idToken, rawNonce:c.nonce }));
+      } else { await auth.signInWithPopup(new firebase.auth.OAuthProvider('apple.com')); }
     }catch(e){ loginErr('Apple 로그인 실패: '+(e.message||e)); } };
   window.vbSignInEmail = async function(){ loginErr(''); const em=$('vbLoginEmail').value.trim(), pw=$('vbLoginPw').value;
     if(!em||!pw){ loginErr('이메일과 비밀번호를 입력하세요'); return; }
