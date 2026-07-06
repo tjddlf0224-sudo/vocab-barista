@@ -969,12 +969,12 @@ const World = {
 
   interact(e){ if(e&&e.preventDefault)e.preventDefault(); if(window.Battle&&Battle.active) return;
     const ptx=Math.round(this.px), pty=Math.round(this.py);
-    // 1) 퀘스트 NPC 우선
+    // 1) 퀘스트 NPC 우선  (Quest/DarkDuel은 최상위 const라 window에 안 붙음 → bare 참조로 호출)
     const npc=(this.npcs||[]).find(n=>Math.abs(n.x-ptx)+Math.abs(n.y-pty)<=1);
-    if(npc){ if(window.Quest) Quest.talk(npc.id); return; }
+    if(npc){ if(typeof Quest!=='undefined') Quest.talk(npc.id); return; }
     // 2) 숨겨진 어둠의 상인
     if(this.secret && (Explore.state.events||{}).darkMerchant!=='gone' && Math.abs(this.secret.x-ptx)+Math.abs(this.secret.y-pty)<=1){
-      if(window.DarkDuel) DarkDuel.meet(); return; }
+      if(typeof DarkDuel!=='undefined') DarkDuel.meet(); return; }
     // 3) 채집
     let best=null,bd=99;
     for(const n of this.nodes){ if(n.taken)continue; const d=Math.abs(n.x-ptx)+Math.abs(n.y-pty);
