@@ -697,8 +697,7 @@ const WALK_FRAMES = {};
 const MAP_TEX = {};
 ['grass','path','water'].forEach(n=>{ const im=new Image(); im.src='tiles/'+n+'.png'; MAP_TEX[n]=im; });
 const MAP_OBJ = {};
-['tree_green','tree_orange','tree_pine','bush','rock','stump','flowers','grass_tuft',
- 'gate_village','gate_portal','signpost','cafe_hut','fence','bridge']
+['tree_green','tree_orange','tree_pine','bush','rock','stump','flowers','grass_tuft']
   .forEach(n=>{ const im=new Image(); im.src='sprites/'+n+'.png'; MAP_OBJ[n]=im; });
 // 채집 노드는 SVG 아이콘 사용(사용자 선호) — 페인티드 노드 아트 미사용
 const NODE_ART = {};
@@ -893,18 +892,6 @@ const World = {
       for(let yy=sy+2; yy<=Math.floor(this.HT*0.40); yy++){ this.barrier.delete(key(sx,yy)); this.trees=this.trees.filter(t=>!(t.x===sx&&t.y===yy)); } // 진입로
       this.barrier.add(key(sx,sy)); this.secret={ x:sx, y:sy };
     } else { this.secret=null; }
-    // ----- 구조물(마을 입구 클러스터 / 포털 아치) -----
-    this.structs=[];
-    if(Explore.state.map.zone==='forest'){
-      const gx2=this.gate.x;
-      this.structs.push({ img:'gate_village', x:gx2, y:this.HT-1, h:3.4 });   // 출구 아치(통과 가능)
-      const hutX=Math.min(this.WT-3, gx2+4), hutY=this.HT-3;                   // 카페 오두막(랜드마크)
-      clearAround(hutX,hutY,1); this.barrier.add(key(hutX,hutY));
-      this.structs.push({ img:'cafe_hut', x:hutX, y:hutY, h:3.2 });
-      for(let k=0;k<2;k++){ const fx=gx2-4-k; if(fx>1){ this.trees=this.trees.filter(t=>!(t.x===fx&&t.y===this.HT-2)); this.structs.push({ img:'fence', x:fx, y:this.HT-2, h:1.5 }); } } // 울타리(장식)
-      this.structs.push({ img:'bridge', x:gx2-2, y:this.HT-2, h:1.3 });        // 나무 다리(장식)
-    }
-    if(this.portal) (this.structs=this.structs||[]).push({ img:'gate_portal', x:this.portal.x, y:2, h:2.6 }); // 포털 아치
     // 나무는 정적이므로 y정렬을 1회만(렌더 루프의 매 프레임 sort 제거 — 저사양 GC/CPU 절감)
     this.trees.sort((a,b)=>a.y-b.y);
   },
@@ -1110,12 +1097,6 @@ const World = {
       const gx=Math.round(t.x*TS-camX)+TS/2, gy=Math.round(t.y*TS-camY)+TS;
       const h=TS*2.9, w=h*(timg.naturalWidth/timg.naturalHeight);
       ctx.drawImage(timg, gx-w/2, gy-h, w, h); }
-    // ----- 구조물(마을 입구 아치·오두막·울타리·다리·포털) -----
-    for(const s of (this.structs||[])){ if(s.x<x0-3||s.x>x1+3||s.y<y0-4||s.y>y1+3) continue;
-      const simg=MAP_OBJ[s.img]; if(!(simg&&simg.complete&&simg.naturalWidth)) continue;
-      const gx=Math.round(s.x*TS-camX)+TS/2, gy=Math.round(s.y*TS-camY)+TS*1.05;
-      const h=TS*(s.h||2), w=h*(simg.naturalWidth/simg.naturalHeight);
-      ctx.drawImage(simg, gx-w/2, gy-h, w, h); }
     // ----- 퀘스트 NPC + 상태 마커(❗진행가능 / …진행중 / ✔완료) -----
     for(const np of (this.npcs||[])){ if(np.x<x0-1||np.x>x1+1||np.y<y0-2||np.y>y1+1) continue;
       const def=QUEST_NPCS.find(q=>q.id===np.id)||{}; const img=Assets.imgs[def.img];
@@ -1231,22 +1212,9 @@ const World = {
 
   // 팻말: "마을로 가는 길" 표지판 (게이트 옆)
   drawSign(dx, dy, TS, label, arrow){
-    label = label || '🏘️ 마을로 가는 길';
-    const ctx=this.ctx; const cx=dx+TS/2;
-    // [에셋] 페인티드 나무 간판 — 보드에 글자 오버레이(폭 자동 맞춤)
-    const simg=MAP_OBJ.signpost;
-    if(simg&&simg.complete&&simg.naturalWidth){
-      const h=TS*2.1, w=h*(simg.naturalWidth/simg.naturalHeight), gy=dy+TS*1.05;
-      ctx.save(); ctx.imageSmoothingEnabled=true; ctx.drawImage(simg, cx-w/2, gy-h, w, h);
-      const boardY=gy-h+h*0.30, maxW=w*0.74; let fs=Math.round(TS*0.26);
-      ctx.font='bold '+fs+'px "Jua","Nunito",sans-serif';
-      while(ctx.measureText(label).width>maxW && fs>TS*0.12){ fs--; ctx.font='bold '+fs+'px "Jua","Nunito",sans-serif'; }
-      ctx.fillStyle='#5b3b1a'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(label, cx, boardY);
-      ctx.restore(); return;
-    }
-    // ===== 절차적 폴백(간판 에셋 로드 전) =====
-    arrow = arrow || '▼';
-    ctx.save();
+    label = label || '🏘️ 마을로 가는 길'; arrow = arrow || '▼';
+    const ctx=this.ctx; ctx.save();
+    const cx=dx+TS/2;
     // 기둥
     ctx.fillStyle='#6b4423';
     ctx.fillRect(cx-TS*0.07, dy+TS*0.30, TS*0.14, TS*0.78);
