@@ -313,11 +313,12 @@
     box-shadow:0 5px 0 #1c5c9e, 0 0 0 4px rgba(74,163,240,.35), 0 8px 18px rgba(40,120,200,.5), inset 0 2px 3px rgba(255,255,255,.5);
     animation:abReady 1.0s ease-in-out infinite; }
   /* ===== 퀘스트 대화 박스 ===== */
-  .q-box{ width:min(88%,420px); background:linear-gradient(180deg,#fffdf7,#fff2d8); border:3px solid #caa26a; border-radius:20px; padding:16px; box-shadow:0 12px 30px rgba(0,0,0,.4); text-align:center; font-family:'Jua','Nunito',sans-serif; }
-  .q-top{ display:flex; align-items:center; gap:12px; margin-bottom:10px; }
-  .q-portrait{ width:64px; height:64px; border-radius:50%; object-fit:cover; object-position:top center; border:3px solid #e0b877; background:#fff; flex:none; }
-  .q-name{ font-size:1.1rem; font-weight:bold; color:#5b3b1a; text-align:left; }
-  .q-text{ font-size:1rem; color:#4a3418; line-height:1.5; margin-bottom:14px; min-height:44px; }
+  /* 퀘스트 대화 — 비주얼노벨식(캐릭터 크게 + 하단 이름/대사 패널) */
+  #quest-dlg{ background:rgba(18,12,10,.45); }
+  .q-portrait{ position:absolute; left:50%; bottom:104px; transform:translateX(-50%); height:min(62%,320px); width:auto; max-width:72%; object-fit:contain; object-position:bottom center; filter:drop-shadow(0 8px 14px rgba(0,0,0,.45)); z-index:1; pointer-events:none; }
+  .q-panel{ position:absolute; left:50%; bottom:16px; transform:translateX(-50%); width:min(94%,600px); z-index:2; background:linear-gradient(180deg,#fffdf7,#fff2d8); border:3px solid #caa26a; border-radius:18px; padding:12px 18px 14px; box-shadow:0 8px 24px rgba(0,0,0,.45); text-align:center; font-family:'Jua','Nunito',sans-serif; }
+  .q-name{ display:inline-block; background:linear-gradient(180deg,#c79a5a,#a6763a); color:#fff8ea; font-size:1rem; font-weight:bold; padding:3px 16px; border-radius:14px; margin-bottom:8px; box-shadow:0 2px 0 rgba(0,0,0,.2); }
+  .q-text{ font-size:1.02rem; color:#4a3418; line-height:1.5; margin-bottom:12px; min-height:28px; }
   .q-actions{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
   .q-btn{ border:none; border-radius:14px; padding:10px 18px; font-family:inherit; font-size:.95rem; font-weight:bold; cursor:pointer; box-shadow:0 3px 0 rgba(0,0,0,.25); }
   .q-btn.ok{ background:linear-gradient(180deg,#ffcf6b,#f2a63d); color:#5b3b1a; }
@@ -327,7 +328,7 @@
   /* ===== 어둠의 상인 대결 ===== */
   .dm-box{ width:min(90%,460px); background:linear-gradient(180deg,#2a2340,#191428); border:3px solid #6a4fb0; border-radius:20px; padding:16px; box-shadow:0 12px 34px rgba(0,0,0,.6), 0 0 24px rgba(120,80,220,.4); text-align:center; font-family:'Jua','Nunito',sans-serif; color:#efe8ff; }
   .dm-top{ display:flex; align-items:center; gap:12px; margin-bottom:12px; }
-  .dm-portrait{ width:60px; height:60px; border-radius:50%; object-fit:cover; object-position:top center; border:3px solid #8b6fd0; filter:brightness(.82) contrast(1.05); flex:none; }
+  .dm-portrait{ width:78px; height:108px; border-radius:12px; object-fit:contain; object-position:bottom center; filter:brightness(.92) contrast(1.05) drop-shadow(0 3px 5px rgba(0,0,0,.45)); flex:none; }
   .dm-title{ font-size:1.15rem; font-weight:bold; color:#c9b4ff; text-shadow:0 0 8px rgba(150,110,255,.6); }
   .dm-say{ font-size:1rem; line-height:1.55; margin-bottom:14px; }
   .dm-say.win{ color:#ffe08a; }
@@ -424,8 +425,9 @@
 
 <!-- 퀘스트 대화 -->
 <div id="quest-dlg" class="ex-overlay">
-  <div class="q-box">
-    <div class="q-top"><img id="q-portrait" class="q-portrait" src="" alt=""><div class="q-name" id="q-name"></div></div>
+  <img id="q-portrait" class="q-portrait" src="" alt="">
+  <div class="q-panel">
+    <div class="q-name" id="q-name"></div>
     <div class="q-text" id="q-text"></div>
     <div class="q-actions" id="q-actions"></div>
   </div>
@@ -764,21 +766,21 @@ const CRAFT_DB = [
 ];
 // ---------- 퀘스트 NPC (재료 배달 의뢰) ----------
 const QUEST_NPCS = [
-  { id:'q_granny', name:'플로라 할머니', img:'chars/grandma.png',
+  { id:'q_granny', name:'플로라 할머니', img:'chars/npc_granny.png', portrait:'chars/npc_granny_talk.png',
     ask:'허리가 아파서 원두를 못 줍겠구나…<br><b>커피 원두 5개</b>만 가져다주면 고맙겠는데.',
     need:{mat:'bean', count:5}, reward:{gold:140, exp:22, item:'cr_heal'},
     done:'네 덕분에 향긋한 커피를 볶았단다. 또 놀러오렴~' },
-  { id:'q_rico', name:'바리스타 리코', img:'chars/hipster.png',
+  { id:'q_rico', name:'바리스타 리코', img:'chars/npc_rico.png', portrait:'chars/npc_rico_talk.png',
     ask:'시그니처 라떼를 만들 <b>우유 4개</b>가 필요해.<br>구해다 주면 팁을 두둑이 줄게!',
     need:{mat:'milk', count:4}, reward:{gold:120, exp:18, item:'cr_atk'},
     done:'그때 그 우유로 인생 라떼를 뽑았지. 고마워!' },
-  { id:'q_navi', name:'숲요정 나비', img:'chars/navi.png',
+  { id:'q_navi', name:'숲요정 나비', img:'chars/npc_navi.png', portrait:'chars/npc_navi_talk.png',
     ask:'반짝이는 <b>시럽 3개</b>를 모아오면<br>요정의 축복을 나눠줄게! ✨',
     need:{mat:'syrup', count:3}, reward:{gold:90, exp:34, item:'cr_def'},
     done:'네 시럽으로 좋은 마법을 부렸어. 반짝반짝!' },
 ];
 // ---------- 숨겨진 이벤트: 어둠의 상인 (영어 대결) ----------
-const DARK_MERCHANT = { name:'어둠의 상인', img:'chars/vip.png' };
+const DARK_MERCHANT = { name:'어둠의 상인', img:'chars/npc_merchant.png' };
 // ---------- 이미지 프리로더 ----------
 const Assets = {
   imgs:{},
@@ -788,7 +790,7 @@ const Assets = {
     Object.values(MATERIALS).forEach(m=>this.load(m.img));
     Object.values(COMPANIONS).forEach(c=>{ this.load(c.img); this.load(c.battleImg); });
     Object.values(MONSTERS).forEach(m=>this.load(m.art));
-    QUEST_NPCS.forEach(q=>this.load(q.img)); this.load(DARK_MERCHANT.img);
+    QUEST_NPCS.forEach(q=>{ this.load(q.img); if(q.portrait)this.load(q.portrait); }); this.load(DARK_MERCHANT.img); if(DARK_MERCHANT.portrait)this.load(DARK_MERCHANT.portrait);
   },
 };
 
@@ -1178,7 +1180,8 @@ const World = {
       ctx.drawImage(timg, gx-w/2, gy-h, w, h); }
     // ----- 퀘스트 NPC + 상태 마커(❗진행가능 / …진행중 / ✔완료) -----
     for(const np of (this.npcs||[])){ if(np.x<x0-1||np.x>x1+1||np.y<y0-2||np.y>y1+1) continue;
-      const def=QUEST_NPCS.find(q=>q.id===np.id)||{}; const img=Assets.imgs[def.img];
+      const def=QUEST_NPCS.find(q=>q.id===np.id)||{};
+      let img=Assets.imgs[def.img]; if(!(img&&img.complete&&img.naturalWidth)) img=Assets.imgs[def.portrait]; // 치비 스프라이트 없으면 대화용 전신으로 임시
       const gx=Math.round(np.x*TS-camX)+TS/2, gy=Math.round(np.y*TS-camY)+TS*1.04;
       if(!(img&&img.complete&&img.naturalWidth)) continue;
       const h=TS*1.7, w=h*(img.naturalWidth/img.naturalHeight);
@@ -1657,7 +1660,7 @@ const Quest = {
   talk(id){ const def=QUEST_NPCS.find(q=>q.id===id); if(!def)return; this.cur=def;
     if(!Explore.state.quests) Explore.state.quests={};
     const st=Explore.state.quests[id], need=def.need, have=(Explore.state.materials[need.mat]||0), m=MATERIALS[need.mat];
-    document.getElementById('q-portrait').src=def.img;
+    document.getElementById('q-portrait').src=def.portrait||def.img;
     document.getElementById('q-name').textContent=def.name;
     const tx=document.getElementById('q-text'), ac=document.getElementById('q-actions');
     if(st==='done'){ tx.innerHTML=def.done; ac.innerHTML=`<button class="q-btn ghost" onclick="Quest.close()">닫기</button>`; }
@@ -1698,7 +1701,7 @@ const DarkDuel = {
     for(let i=0;i<this.total && i<p.length;i++){ const ans=p[i]; const opts=[ans.m]; let g=0;
       while(opts.length<4 && g<300){ g++; const c=p[Math.floor(this._rand()*p.length)]; if(c.m!==ans.m && !opts.includes(c.m)) opts.push(c.m); }
       this._shuffle(opts); this.rounds.push({ w:ans.w, m:ans.m, opts }); } },
-  meet(){ document.getElementById('dm-portrait').src=DARK_MERCHANT.img; this.buildRounds(); this.q=0; this.score=0;
+  meet(){ document.getElementById('dm-portrait').src=DARK_MERCHANT.portrait||DARK_MERCHANT.img; this.buildRounds(); this.q=0; this.score=0;
     document.getElementById('dark-duel').classList.add('show'); this.intro();
     if(window.ExploreBgm) try{ExploreBgm.play('boss');}catch(e){} },
   intro(){ document.getElementById('dm-body').innerHTML=
