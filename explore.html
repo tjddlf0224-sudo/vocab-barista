@@ -566,6 +566,23 @@ const WALK_FRAMES = {};
 ['chef','roa','luna','sera'].forEach(name=>{
   WALK_FRAMES[name] = [0,1,2,3].map(i=>{ const im=new Image(); im.src='chars/walk_'+name+'_'+i+'.png'; return im; });
 });
+// [에셋] 페인티드 맵 (픽셀 타일셋 대체) — 바닥 텍스처 + 서 있는 오브젝트(투명)
+const MAP_TEX = {};
+['grass','path','water'].forEach(n=>{ const im=new Image(); im.src='tiles/'+n+'.png'; MAP_TEX[n]=im; });
+const MAP_OBJ = {};
+['tree_green','tree_orange','tree_pine','bush','rock','stump','flowers','grass_tuft','node_bean']
+  .forEach(n=>{ const im=new Image(); im.src='sprites/'+n+'.png'; MAP_OBJ[n]=im; });
+// 채집 노드 아트: 페인티드 있으면 MAP_OBJ 키, 없으면 기존 SVG 폴백
+const NODE_ART = { bean:'node_bean' };
+// 잔디 반복용 사전 축소 캔버스(반복 크기 GR마다 1회 생성)
+let _grassCv=null;
+function grassCanvas(GR){
+  if(_grassCv && _grassCv._gr===GR) return _grassCv;
+  const g=MAP_TEX.grass; if(!g||!g.complete||!g.naturalWidth) return null;
+  const cv=document.createElement('canvas'); cv.width=GR; cv.height=GR;
+  const c=cv.getContext('2d'); c.imageSmoothingEnabled=true; c.drawImage(g,0,0,GR,GR);
+  cv._gr=GR; _grassCv=cv; return cv;
+}
 // ---------- 동행 패시브 ----------
 const COMP_PASSIVE = {
   none: null,
@@ -871,9 +888,8 @@ const World = {
 
   render(){
     const ctx=this.ctx, TS=this.TS, dpr=this.dpr; if(!TS) return;
-    ctx.setTransform(dpr,0,0,dpr,0,0); ctx.imageSmoothingEnabled=false;
-    ctx.fillStyle='#5fae49'; ctx.fillRect(0,0,this.viewW,this.viewH);
-    if(!this.ready) return;
+    ctx.setTransform(dpr,0,0,dpr,0,0); ctx.imageSmoothingEnabled=true;
+    ctx.fillStyle='#8fc36a'; ctx.fillRect(0,0,this.viewW,this.viewH);   // 잔디빛 폴백
     // 카메라(월드픽셀=타일*TS), 플레이어 화면중앙 고정 + 월드 경계 클램프
     const halfW=this.viewW/2, halfH=this.viewH/2;
     let camX=this.px*TS - halfW + TS/2, camY=this.py*TS - halfH + TS/2;
@@ -881,21 +897,33 @@ const World = {
     camY=Math.max(0,Math.min(camY, this.HT*TS - this.viewH));
     const x0=Math.max(0,Math.floor(camX/TS)-1), x1=Math.min(this.WT-1,Math.ceil((camX+this.viewW)/TS)+1);
     const y0=Math.max(0,Math.floor(camY/TS)-1), y1=Math.min(this.HT-1,Math.ceil((camY+this.viewH)/TS)+2);
-    // 바닥 + 장식
-    for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){ const dx=Math.round(x*TS-camX), dy=Math.round(y*TS-camY);
-      this.drawTile(this.base[y][x],dx,dy,TS); if(this.deco[y][x]>=0) this.drawTile(this.deco[y][x],dx,dy,TS); }
-    // 채집 노드(빛나는 링 + 스프라이트)
+    // ----- 바닥: 페인티드 잔디 반복 타일 -----
+    const GR=Math.round(TS*5);
+    const gcv=grassCanvas(GR);
+    if(gcv){ const ox=((camX%GR)+GR)%GR, oy=((camY%GR)+GR)%GR;
+      for(let yy=-oy; yy<this.viewH; yy+=GR) for(let xx=-ox; xx<this.viewW; xx+=GR) ctx.drawImage(gcv, Math.round(xx), Math.round(yy)); }
+    // ----- 바닥 장식(풀다발/꽃) -----
+    for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){ if(this.deco[y][x]<0) continue;
+      const dimg=(this.deco[y][x]===42)?MAP_OBJ.flowers:MAP_OBJ.grass_tuft;
+      if(dimg&&dimg.complete&&dimg.naturalWidth){ const cx=x*TS-camX+TS/2, cy=y*TS-camY+TS/2;
+        const w=TS*1.15, h=w*(dimg.naturalHeight/dimg.naturalWidth);
+        ctx.drawImage(dimg, cx-w/2, cy-h*0.6, w, h); } }
+    // ----- 채집 노드(빛나는 링 + 아트) -----
     for(const n of this.nodes){ if(n.taken)continue; if(n.x<x0||n.x>x1||n.y<y0||n.y>y1)continue;
       const dx=Math.round(n.x*TS-camX), dy=Math.round(n.y*TS-camY);
       ctx.save(); ctx.globalAlpha=0.35+0.25*Math.sin(this.bob*2); ctx.fillStyle='#fff59d';
-      ctx.beginPath(); ctx.ellipse(dx+TS/2,dy+TS*0.78,TS*0.42,TS*0.2,0,0,7); ctx.fill(); ctx.restore();
-      const mimg=MATERIALS[n.mat].img;
-      if(Assets.ready(mimg)){ const s=TS*0.92; ctx.drawImage(Assets.imgs[mimg], dx+(TS-s)/2, dy+(TS-s)/2, s, s); } }
-    // 나무(2칸: 본체+상단), y정렬
-    const vis=this.trees.filter(t=>t.x>=x0-1&&t.x<=x1+1&&t.y>=y0-1&&t.y<=y1+1); // 이미 y정렬됨
-    for(const t of vis){ const dx=Math.round(t.x*TS-camX), dy=Math.round(t.y*TS-camY);
-      const top=t.type==='green'?4:3, bot=t.type==='green'?16:15;
-      this.drawTile(bot,dx,dy,TS); this.drawTile(top,dx,dy-TS,TS); }
+      ctx.beginPath(); ctx.ellipse(dx+TS/2,dy+TS*0.82,TS*0.42,TS*0.2,0,0,7); ctx.fill(); ctx.restore();
+      const artKey=NODE_ART[n.mat]; const pimg=artKey?MAP_OBJ[artKey]:null;
+      if(pimg&&pimg.complete&&pimg.naturalWidth){ const h=TS*1.3, w=h*(pimg.naturalWidth/pimg.naturalHeight);
+        ctx.drawImage(pimg, dx+TS/2-w/2, dy+TS*0.92-h, w, h); }
+      else { const mimg=MATERIALS[n.mat].img; if(Assets.ready(mimg)){ const s=TS*0.92; ctx.drawImage(Assets.imgs[mimg], dx+(TS-s)/2, dy+(TS-s)/2, s, s); } } }
+    // ----- 나무(페인티드, y정렬, 발끝 접지) -----
+    const vis=this.trees.filter(t=>t.x>=x0-2&&t.x<=x1+2&&t.y>=y0-3&&t.y<=y1+2); // 이미 y정렬됨
+    for(const t of vis){ const timg=(t.type==='green')?MAP_OBJ.tree_green:MAP_OBJ.tree_orange;
+      if(!(timg&&timg.complete&&timg.naturalWidth)) continue;
+      const gx=Math.round(t.x*TS-camX)+TS/2, gy=Math.round(t.y*TS-camY)+TS;
+      const h=TS*2.9, w=h*(timg.naturalWidth/timg.naturalHeight);
+      ctx.drawImage(timg, gx-w/2, gy-h, w, h); }
     // 팻말(마을로 가는 길)
     if(this.sign && this.sign.x>=x0-1 && this.sign.x<=x1+1 && this.sign.y>=y0-1 && this.sign.y<=y1+2){
       this.drawSign(Math.round(this.sign.x*TS-camX), Math.round(this.sign.y*TS-camY), TS); }
