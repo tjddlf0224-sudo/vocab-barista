@@ -1058,6 +1058,17 @@
         </div>
     </div>
 
+    <div id="category-screen" class="overlay hidden">
+        <div class="panel">
+            <h2>영어 종류 선택</h2>
+            <p>어떤 시험 어휘로 공부할까요?<br><span style="font-size:.82rem;color:#8d7a66;">같은 게임, 데이터만 달라요</span></p>
+            <div style="display:flex; flex-direction:column; gap:15px; margin:20px 0;">
+                <button class="buy-btn" onclick="selectCategory('csat')" style="background:linear-gradient(180deg,#9575cd,#673ab7); padding:16px; font-size:1.2rem;">📕 수능 영어</button>
+                <button class="buy-btn" onclick="selectCategory('regional')" style="background:linear-gradient(180deg,#42a5f5,#1976d2); padding:16px; font-size:1.2rem;">🏛️ 지역인재·공무원 영어</button>
+            </div>
+            <button class="btn-mini" onclick="closeCategory()" style="background:linear-gradient(180deg,#cdbfb0,#a89684); color:#fff; box-shadow:0 3px 0 #8a7560; padding:8px 20px;">취소</button>
+        </div>
+    </div>
     <div id="difficulty-screen" class="overlay hidden">
         <div class="panel">
             <h2>난이도 선택</h2>
@@ -1229,6 +1240,7 @@
     </div>
 
 <script src="shared/worddata.js"></script>
+<script src="shared/worddata_csat.js"></script>
 <script>
 // ==========================================
 // [0] 카페 BGM 엔진 (MP3 파일 버전)
@@ -1496,10 +1508,22 @@ function closeCustomAlert() {
 
 let rawWords = [];
 
-// 단어 조회용 맵 (도감/복습에서 뜻·예문·출처 표시용)
+// [카테고리] 활성 단어셋: 지역인재(wordData) / 수능(window.wordDataCsat). 기본=지역인재.
+let ACTIVE_WORDDATA = wordData;
+
+// 단어 조회용 맵 (도감/복습에서 뜻·예문·출처 표시용) — 카테고리 전환 시 재빌드
 const WORD_MAP = {};
-['easy','normal','hard'].forEach(t => (wordData[t]||[]).forEach(o => { WORD_MAP[o.w] = o; }));
-const TOTAL_WORDS = Object.keys(WORD_MAP).length;
+function rebuildWordMap(){ for(const k in WORD_MAP) delete WORD_MAP[k]; ['easy','normal','hard'].forEach(t => (ACTIVE_WORDDATA[t]||[]).forEach(o => { WORD_MAP[o.w] = o; })); }
+rebuildWordMap();
+let TOTAL_WORDS = Object.keys(WORD_MAP).length;
+// 카테고리 설정: 'csat'(수능) / 'regional'(지역인재). 수능 데이터 없으면 지역인재로 폴백.
+function setGameCategory(cat){
+    window.GAME_CATEGORY = cat;
+    ACTIVE_WORDDATA = (cat==='csat' && window.wordDataCsat) ? window.wordDataCsat : wordData;
+    rebuildWordMap();
+    TOTAL_WORDS = Object.keys(WORD_MAP).length;
+    try{ localStorage.setItem('vb_category', cat); }catch(e){}
+}
 
 // [스펠링 필터] VIP(직접 타이핑) 단어에서 파생형·굴절형을 제외해 'base form'만 출제.
 // 복수(-s)·과거(-ed)·-ing·부사(-ly)·추상명사(-tion/-ness/-ment/-ity) 등을 배제. 예: humans/shaped/items → 제외, shape/carbon → 허용.
@@ -1527,23 +1551,36 @@ function looksInflected(w) {
 
 // 3. 헬퍼 함수
 function showDifficulty() {
-    // 첫 실행이면 프롤로그(조작 설명)를 한 번 보여준 뒤 난이도 선택으로 — 프롤로그 끝에서 다시 showDifficulty 호출됨
+    // 첫 실행이면 프롤로그(조작 설명)를 한 번 보여준 뒤 카테고리→난이도로 — 프롤로그 끝에서 다시 showDifficulty 호출됨
     if(!localStorage.getItem('vb_seen_intro')) {
         localStorage.setItem('vb_seen_intro','1');
         game.startStory();
         return;
     }
+    // [카테고리] 난이도 앞에 '수능/지역인재' 선택 먼저
     document.getElementById('start-screen').classList.add('hidden');
+    document.getElementById('category-screen').classList.remove('hidden');
+    document.getElementById('category-screen').style.display = 'flex';
+}
+function selectCategory(cat) {
+    setGameCategory(cat);
+    document.getElementById('category-screen').classList.add('hidden');
     document.getElementById('difficulty-screen').classList.remove('hidden');
     document.getElementById('difficulty-screen').style.display = 'flex';
 }
-function closeDifficulty() {
-    document.getElementById('difficulty-screen').classList.add('hidden');
+function closeCategory() {
+    document.getElementById('category-screen').classList.add('hidden');
     document.getElementById('start-screen').classList.remove('hidden');
 }
+function closeDifficulty() {
+    // 뒤로: 난이도 → 카테고리 선택으로
+    document.getElementById('difficulty-screen').classList.add('hidden');
+    document.getElementById('category-screen').classList.remove('hidden');
+    document.getElementById('category-screen').style.display = 'flex';
+}
 function selectDifficulty(mode) {
-    if(!wordData[mode]) { rawWords = wordData.easy; mode = 'easy'; }
-    else rawWords = wordData[mode];
+    if(!ACTIVE_WORDDATA[mode]) { rawWords = ACTIVE_WORDDATA.easy; mode = 'easy'; }
+    else rawWords = ACTIVE_WORDDATA[mode];
     game.difficulty = mode; // [버그수정] 난이도 저장 → 점수 계산(Easy100/Normal150/Hard200)에 반영
     document.getElementById('difficulty-screen').classList.add('hidden');
     game.start(false);
@@ -2304,7 +2341,7 @@ const game = {
             wordObj = this.activePool[rIdx];
             this.activePool.splice(rIdx, 1);
         } else {
-            if(!rawWords || rawWords.length===0) rawWords = wordData.easy;
+            if(!rawWords || rawWords.length===0) rawWords = ACTIVE_WORDDATA.easy;
 
             // [SRS] 만기된 복습 단어가 있으면 우선 출제 (45% 확률)
             let reviewObj = null;
@@ -3700,7 +3737,7 @@ equipItem: function(category, level) {
     },
     startReviewMode: function() {
         if(this.myWords.length<1) return showGameAlert("오답 노트가 비어있습니다.");
-        if(!rawWords || rawWords.length===0) rawWords = wordData.easy;
+        if(!rawWords || rawWords.length===0) rawWords = ACTIVE_WORDDATA.easy;
         BgMusic.playTrack('cafe');
         this.gameMode='review';
         this.activePool = JSON.parse(JSON.stringify(this.myWords));
@@ -3965,7 +4002,7 @@ equipItem: function(category, level) {
         const diffLabels = { easy:'Easy (초급)', normal:'Normal (중급)', hard:'Hard (고급)' };
         let diffHtml = '';
         ['easy','normal','hard'].forEach(level => {
-            const pool = (typeof wordData !== 'undefined' && wordData[level]) ? wordData[level] : [];
+            const pool = (typeof ACTIVE_WORDDATA !== 'undefined' && ACTIVE_WORDDATA[level]) ? ACTIVE_WORDDATA[level] : [];
             const total = pool.length;
             const done = pool.filter(w => mastered.includes(w.w)).length;
             const pct = total ? Math.min(100, Math.floor(done / total * 100)) : 0;
