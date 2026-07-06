@@ -27,6 +27,17 @@
   .hud-stats{ display:flex; gap:6px; margin-left:auto; font-size:.85rem; flex-wrap:wrap; justify-content:flex-end; }
   .hud-stats .chip{ background:rgba(0,0,0,.42); padding:4px 9px; border-radius:20px; white-space:nowrap; }
   .zone-name{ background:rgba(0,0,0,.42); padding:4px 10px; border-radius:20px; font-size:.82rem; color:var(--gold); }
+  /* ===== 미니맵 ===== */
+  #minimap-wrap{ position:absolute; top:54px; right:12px; z-index:4; text-align:center; cursor:pointer; }
+  #minimap{ width:120px; height:85px; image-rendering:pixelated; image-rendering:crisp-edges; border:2px solid rgba(255,255,255,.55); border-radius:8px; background:#10121a; box-shadow:0 3px 8px rgba(0,0,0,.45); display:block; }
+  .mm-badge{ margin-top:3px; font-size:.66rem; color:#fff; background:rgba(0,0,0,.55); border-radius:8px; padding:1px 8px; display:inline-block; font-family:'Jua',sans-serif; }
+  .mm-badge.done{ background:#e0761f; }
+  /* ===== 전체 지도 뷰 ===== */
+  .mv-box{ background:linear-gradient(180deg,#fffdf7,#fff2d8); border:3px solid #caa26a; border-radius:20px; padding:16px; text-align:center; font-family:'Jua','Nunito',sans-serif; box-shadow:0 12px 30px rgba(0,0,0,.4); max-width:92vw; }
+  .mv-title{ font-size:1.1rem; font-weight:bold; color:#5b3b1a; margin-bottom:10px; }
+  .mv-done{ color:#e0761f; }
+  .mv-canvas{ image-rendering:pixelated; border:2px solid #8a6a3a; border-radius:8px; background:#10121a; max-width:82vw; height:auto; }
+  .mv-legend{ font-size:.72rem; color:#6b5334; margin:10px 0; }
 
   /* 토스트 */
   #toast{ position:absolute; top:48px; left:50%; transform:translateX(-50%); background:rgba(20,12,10,.92);
@@ -354,6 +365,8 @@
 
   <div id="toast"></div>
 
+  <div id="minimap-wrap" title="탭하면 전체 지도" onclick="World.openMap()"><canvas id="minimap"></canvas><div id="mm-badge" class="mm-badge">0%</div></div>
+
   <div id="stick-zone">
     <div id="stick-base"></div>
     <div id="stick-knob"></div>
@@ -422,6 +435,16 @@
   <div class="dm-box">
     <div class="dm-top"><img id="dm-portrait" class="dm-portrait" src="" alt=""><div class="dm-title">🌑 어둠의 상인</div></div>
     <div class="dm-body" id="dm-body"></div>
+  </div>
+</div>
+
+<!-- 전체 지도 뷰 -->
+<div id="map-view" class="ex-overlay">
+  <div class="mv-box">
+    <div class="mv-title" id="mapview-title">지도</div>
+    <canvas id="mapview-canvas" class="mv-canvas"></canvas>
+    <div class="mv-legend">🟡 재료 · 🔴 NPC · 🟣 비밀 · 🟨 마을 · 🟪 포털 · ⬜ 나</div>
+    <button class="q-btn ghost" onclick="World.closeMap()">닫기</button>
   </div>
 </div>
 
@@ -528,7 +551,7 @@ const SaveBridge = {
       equip:Object.assign({weapon:null,armor:null},ex.equip||{}),
       materials:ex.materials||{}, items:ex.items||[], companion:ex.companion||'none',
       map:ex.map||{zone:'forest'}, pos:ex.pos||null, steps:ex.steps||0,
-      quests:ex.quests||{}, events:ex.events||{} }; },
+      quests:ex.quests||{}, events:ex.events||{}, explored:ex.explored||{}, maps:ex.maps||{} }; },
   saveExplore(s){ localStorage.setItem(EXPLORE_KEY,JSON.stringify(s)); },
 };
 
@@ -803,6 +826,7 @@ const World = {
     window.addEventListener('keydown', e=>this.onKey(e));
     window.addEventListener('keyup',   e=>this.onKeyUp(e));
     this.bindStick();
+    this.initMinimap(); this.reveal();
     applyOrientation();
     if(this.raf) cancelAnimationFrame(this.raf);
     this.loop();
@@ -894,6 +918,7 @@ const World = {
     } else { this.secret=null; }
     // 나무는 정적이므로 y정렬을 1회만(렌더 루프의 매 프레임 sort 제거 — 저사양 GC/CPU 절감)
     this.trees.sort((a,b)=>a.y-b.y);
+    this.buildExplored();
   },
   addTree(x,y){ const k=x+','+y; if(this.barrier.has(k))return; this.barrier.add(k);
     this.trees.push({x,y,type:this.rnd()<(1-(this._orangeRatio||0.3))?'green':'orange'}); },
@@ -1025,7 +1050,7 @@ const World = {
     this.generate();
     this.px=this.start.x; this.py=this.start.y; // 도착은 해당 존 하단 시작점
     Explore.state.pos={x:this.px,y:this.py};
-    this._portalArmed=true; this.updateZoneName(); this.updateActionBtn(); Explore.persist();
+    this._portalArmed=true; this.updateZoneName(); this.updateActionBtn(); this.reveal(); this.drawMinimap(); Explore.persist();
     const z=ZONES[zoneId]; this.toast(`${z.name}에 도착했어요!`);
   },
   updateZoneName(){ const el=document.getElementById('zone-name'); if(el){ const z=ZONES[Explore.state.map.zone]||ZONES.forest; el.textContent=z.name; } },
@@ -1039,8 +1064,9 @@ const World = {
       if(window.Battle) Battle.maybeEncounter();
     }
     this.updateActionBtn(); // 채집 버튼 강조 갱신
+    this.reveal();          // 안개 걷힘(미니맵)
     // 주기적 위치 저장
-    if((++this._saveT)%30===0){ Explore.state.pos={x:this.px,y:this.py}; Explore.persist(); }
+    if((++this._saveT)%30===0){ Explore.state.pos={x:this.px,y:this.py}; this.serializeExplored(); Explore.persist(); }
   },
   // 채집 사거리(맨해튼 1칸) 안에 캘 노드가 있으면 버튼을 초록으로 강조
   updateActionBtn(){ const b=document.getElementById('act-btn'); if(!b)return;
@@ -1055,7 +1081,60 @@ const World = {
   release(){ this.stick.active=false; this.stick.dx=0; this.stick.dy=0; this.keys={}; },
 
   // ----- 렌더 -----
-  loop(){ this.raf=requestAnimationFrame(()=>this.loop()); this.update(); this.bob+=0.1; this.render(); },
+  loop(){ this.raf=requestAnimationFrame(()=>this.loop()); this.update(); this.bob+=0.1; this.render(); if(this._miniDirty) this.drawMinimap(); },
+  // ===== 미니맵(안개 걷힘) + 지도 완성 =====
+  initMinimap(){ const cv=document.getElementById('minimap'); if(!cv)return; cv.width=this.WT; cv.height=this.HT; this._mmctx=cv.getContext('2d'); this._miniDirty=true; },
+  buildExplored(){ const zone=Explore.state.map.zone; const saved=(Explore.state.explored||{})[zone];
+    this.explored=[]; this.exploredCount=0;
+    for(let y=0;y<this.HT;y++){ this.explored[y]=new Uint8Array(this.WT);
+      if(saved&&saved[y]){ const row=saved[y]; for(let x=0;x<this.WT && x<row.length;x++){ if(row[x]==='1'){ this.explored[y][x]=1; this.exploredCount++; } } } }
+    this._miniDirty=true; },
+  reveal(){ if(!this.explored)return; const px=Math.round(this.px), py=Math.round(this.py); const R=3.4, R2=R*R; let added=0;
+    const x0=Math.max(0,Math.floor(px-R)), x1=Math.min(this.WT-1,Math.ceil(px+R));
+    const y0=Math.max(0,Math.floor(py-R)), y1=Math.min(this.HT-1,Math.ceil(py+R));
+    for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){ const dx=x-px,dy=y-py; if(dx*dx+dy*dy<=R2 && !this.explored[y][x]){ this.explored[y][x]=1; this.exploredCount++; added++; } }
+    if(added){ this._miniDirty=true; this.checkMapComplete(); } },
+  checkMapComplete(){ const zone=Explore.state.map.zone; if((Explore.state.maps||{})[zone]) return;
+    if(this.exploredCount/(this.WT*this.HT) < 0.90) return;
+    if(!Explore.state.maps)Explore.state.maps={}; Explore.state.maps[zone]=true;
+    if(!Explore.state.items)Explore.state.items=[]; if(!Explore.state.items.includes('map_'+zone)) Explore.state.items.push('map_'+zone);
+    this.serializeExplored(); Explore.persist();
+    const zn=(ZONES[zone]||{}).name||'지도';
+    this.toast(`🗺️ <b>${zn} 지도 완성!</b><br><span class="ko">아이템에 지도가 추가됐어요</span>`);
+    if(window.Sfx)Sfx.play('levelup'); if(window.exHaptic)exHaptic('success'); },
+  _mmColor(x,y){ return this.barrier.has(x+','+y) ? '#4a6b3a' : '#84bd63'; },
+  drawMinimap(){ const ctx=this._mmctx; if(!ctx||!this.explored)return; const WT=this.WT,HT=this.HT;
+    ctx.fillStyle='#10121a'; ctx.fillRect(0,0,WT,HT);
+    for(let y=0;y<HT;y++)for(let x=0;x<WT;x++){ if(!this.explored[y][x])continue; ctx.fillStyle=this._mmColor(x,y); ctx.fillRect(x,y,1,1); }
+    const dot=(x,y,c)=>{ if(x<0||y<0||x>=WT||y>=HT||!this.explored[y][x])return; ctx.fillStyle=c; ctx.fillRect(x,y,1,1); };
+    if(this.gate) dot(this.gate.x,HT-1,'#ffcf4d');
+    if(this.portal) dot(this.portal.x,0,'#b46bff');
+    for(const n of (this.nodes||[])) if(!n.taken) dot(n.x,n.y,'#ffe066');
+    for(const np of (this.npcs||[])) dot(np.x,np.y,'#ff6b6b');
+    if(this.secret) dot(this.secret.x,this.secret.y,'#c9a6ff');
+    const px=Math.round(this.px), py=Math.round(this.py); if(px>=0&&py>=0&&px<WT&&py<HT){ ctx.fillStyle='#fff'; ctx.fillRect(px,py,1,1); }
+    this._miniDirty=false;
+    const badge=document.getElementById('mm-badge'); if(badge){ const done=(Explore.state.maps||{})[Explore.state.map.zone];
+      badge.textContent = done?'🗺️ 완성':(Math.round(this.exploredCount/(WT*HT)*100)+'%'); badge.classList.toggle('done', !!done); } },
+  serializeExplored(){ if(!this.explored)return; const zone=Explore.state.map.zone; if(!Explore.state.explored)Explore.state.explored={};
+    const rows=[]; for(let y=0;y<this.HT;y++){ let s=''; for(let x=0;x<this.WT;x++) s+=this.explored[y][x]?'1':'0'; rows.push(s); }
+    Explore.state.explored[zone]=rows; },
+  openMap(){ this.drawFullMap(); document.getElementById('map-view').classList.add('show'); },
+  closeMap(){ document.getElementById('map-view').classList.remove('show'); },
+  drawFullMap(){ const cv=document.getElementById('mapview-canvas'); if(!cv)return;
+    const S=Math.max(4, Math.floor(Math.min(360/this.WT, 300/this.HT))); cv.width=this.WT*S; cv.height=this.HT*S;
+    const ctx=cv.getContext('2d'); ctx.imageSmoothingEnabled=false;
+    ctx.fillStyle='#10121a'; ctx.fillRect(0,0,cv.width,cv.height);
+    for(let y=0;y<this.HT;y++)for(let x=0;x<this.WT;x++){ if(!this.explored||!this.explored[y][x])continue; ctx.fillStyle=this._mmColor(x,y); ctx.fillRect(x*S,y*S,S,S); }
+    const mark=(x,y,c,big)=>{ if(!this.explored||!this.explored[y]||!this.explored[y][x])return; ctx.fillStyle=c; const b=big?Math.round(S*1.8):S; ctx.fillRect(Math.round(x*S-(b-S)/2),Math.round(y*S-(b-S)/2),b,b); };
+    if(this.gate) mark(this.gate.x,this.HT-1,'#ffcf4d',true);
+    if(this.portal) mark(this.portal.x,0,'#b46bff',true);
+    for(const n of (this.nodes||[])) if(!n.taken) mark(n.x,n.y,'#ffe066');
+    for(const np of (this.npcs||[])) mark(np.x,np.y,'#ff6b6b',true);
+    if(this.secret) mark(this.secret.x,this.secret.y,'#c9a6ff',true);
+    const px=Math.round(this.px),py=Math.round(this.py); ctx.fillStyle='#fff'; ctx.fillRect(px*S-1,py*S-1,S+2,S+2);
+    const t=document.getElementById('mapview-title'); if(t){ const zn=(ZONES[Explore.state.map.zone]||{}).name||''; const done=(Explore.state.maps||{})[Explore.state.map.zone];
+      t.innerHTML = zn+' 지도 '+(done?'<span class="mv-done">완성 🗺️</span>':'· '+Math.round(this.exploredCount/(this.WT*this.HT)*100)+'%'); } },
   drawTile(idx,dx,dy,size){ if(idx<0)return; const sx=(idx%TT_COLS)*TT_SIZE, sy=Math.floor(idx/TT_COLS)*TT_SIZE;
     this.ctx.drawImage(this.sheet,sx,sy,TT_SIZE,TT_SIZE,dx,dy,size,size); },
 
