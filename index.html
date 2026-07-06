@@ -11,6 +11,7 @@
     <!-- 랭킹: Firebase Firestore (온라인 전용, 오프라인이면 graceful) -->
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
     <script>
       try {
         firebase.initializeApp({
@@ -22,6 +23,7 @@
           appId: "1:137589982797:web:26c21fd4d42d10d6f9be04"
         });
         window.vbDB = firebase.firestore();
+        try { window.vbAuth = firebase.auth(); } catch(e2){ console.warn('Auth 초기화 실패:', e2); }
       } catch(e) { console.warn('Firebase 초기화 실패(오프라인?):', e); }
     </script>
     <meta name="theme-color" content="#3e2723">
@@ -1037,6 +1039,53 @@
     <div id="dlg-tap">탭하여 계속 ▼</div>
 </div>
 
+    <style>
+      #login-screen{ position:fixed; inset:0; z-index:200; background:#f3d9bf url('scenes/title.png') center/cover no-repeat; display:flex; align-items:center; justify-content:center; padding:20px; }
+      #login-screen::before{ content:''; position:absolute; inset:0; background:rgba(30,18,10,.55); }
+      #login-screen.hidden{ display:none; }
+      .login-inner{ position:relative; z-index:1; width:100%; max-width:360px; background:rgba(255,250,242,.97); border-radius:22px; padding:26px 22px 18px; box-shadow:0 16px 40px rgba(0,0,0,.4); text-align:center; font-family:'Jua','Nunito',sans-serif; max-height:92vh; overflow-y:auto; }
+      .login-logo{ font-size:2.6rem; }
+      .login-title{ font-size:1.5rem; color:#5b3b1a; margin:4px 0 2px; }
+      .login-sub{ font-size:.86rem; color:#8d7a66; line-height:1.5; margin-bottom:18px; }
+      .login-btn{ width:100%; display:flex; align-items:center; justify-content:center; gap:10px; padding:12px; border-radius:13px; border:none; font-family:inherit; font-size:1rem; font-weight:bold; cursor:pointer; margin-bottom:10px; box-shadow:0 3px 0 rgba(0,0,0,.18); }
+      .login-btn svg{ width:20px; height:20px; }
+      .login-btn.google{ background:#fff; color:#3c4043; border:1.5px solid #dadce0; }
+      .login-btn.apple{ background:#111; color:#fff; }
+      .login-divider{ display:flex; align-items:center; gap:10px; color:#b0a08c; font-size:.8rem; margin:14px 0 12px; }
+      .login-divider::before,.login-divider::after{ content:''; flex:1; height:1px; background:#e2d6c4; }
+      #login-screen input{ width:100%; padding:11px 14px; border:1.5px solid #d8c6ac; border-radius:11px; font-family:inherit; font-size:.95rem; margin-bottom:9px; box-sizing:border-box; background:#fffdf8; }
+      .login-error{ color:#c62828; font-size:.8rem; min-height:16px; margin-bottom:4px; }
+      .login-email-btns{ display:flex; gap:8px; }
+      .login-email-btn{ flex:1; padding:11px; border:none; border-radius:11px; font-family:inherit; font-size:.95rem; font-weight:bold; cursor:pointer; background:#e7dcc6; color:#6b5334; box-shadow:0 3px 0 rgba(0,0,0,.15); }
+      .login-email-btn.primary{ background:linear-gradient(180deg,#ffcf6b,#f2a63d); color:#5b3b1a; }
+      .login-reset{ background:none; border:none; color:#a08a70; font-size:.78rem; text-decoration:underline; cursor:pointer; margin-top:10px; font-family:inherit; }
+      .login-guest{ display:block; width:100%; background:none; border:none; color:#b0a08c; font-size:.82rem; cursor:pointer; margin-top:12px; font-family:inherit; }
+    </style>
+    <div id="login-screen">
+      <div class="login-inner">
+        <div class="login-logo">☕</div>
+        <h1 class="login-title">보카바리스타</h1>
+        <p class="login-sub">로그인하면 모든 기기에서<br>학습 기록이 동기화됩니다</p>
+        <button class="login-btn google" onclick="vbSignInGoogle()">
+          <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          구글 계정으로 로그인
+        </button>
+        <button class="login-btn apple" onclick="vbSignInApple()">
+          <svg viewBox="0 0 24 24"><path fill="currentColor" d="M17.05 12.04c-.03-3.02 2.47-4.47 2.58-4.54-1.41-2.06-3.6-2.34-4.38-2.37-1.86-.19-3.64 1.1-4.58 1.1-.95 0-2.4-1.08-3.95-1.05-2.03.03-3.91 1.18-4.95 3-2.12 3.67-.54 9.1 1.51 12.08 1.01 1.46 2.21 3.1 3.78 3.04 1.52-.06 2.09-.98 3.93-.98 1.83 0 2.35.98 3.95.95 1.63-.03 2.66-1.49 3.66-2.96 1.15-1.7 1.62-3.34 1.65-3.43-.04-.02-3.17-1.22-3.2-4.83zM14.13 3.25c.84-1.02 1.41-2.43 1.25-3.84-1.21.05-2.68.81-3.55 1.82-.78.9-1.46 2.34-1.28 3.72 1.35.1 2.73-.69 3.58-1.7z"/></svg>
+          Apple로 로그인
+        </button>
+        <div class="login-divider"><span>또는 이메일로</span></div>
+        <input type="email" id="vbLoginEmail" placeholder="이메일 주소" autocomplete="email">
+        <input type="password" id="vbLoginPw" placeholder="비밀번호(6자 이상)" autocomplete="current-password">
+        <div class="login-error" id="vbLoginError"></div>
+        <div class="login-email-btns">
+          <button class="login-email-btn primary" onclick="vbSignInEmail()">로그인</button>
+          <button class="login-email-btn" onclick="vbSignUpEmail()">회원가입</button>
+        </div>
+        <button class="login-reset" onclick="vbResetPw()">비밀번호를 잊으셨나요?</button>
+        <button class="login-guest" onclick="vbGuest()">로그인 없이 둘러보기</button>
+      </div>
+    </div>
     <div class="overlay premium" id="start-screen">
         <div class="ss-wrap">
             <div class="ss-titlegroup">
@@ -4033,6 +4082,78 @@ equipItem: function(category, level) {
 
 // Start Game
 game.init();
+
+// ==================== 로그인 + 클라우드 동기화 (Firebase Auth) ====================
+(function(){
+  const SYNC_KEYS = ['vb_save_v7','vb_mastered_v7','vb_ranks_v4','vb_category'];
+  const $ = id => document.getElementById(id);
+  const loginErr = m => { const e=$('vbLoginError'); if(e) e.textContent=m||''; };
+  const hideLogin = () => { const l=$('login-screen'); if(l) l.classList.add('hidden'); };
+  const showLogin = () => { const l=$('login-screen'); if(l) l.classList.remove('hidden'); };
+  // Firebase Auth 없으면(오프라인/차단) 로그인 건너뛰고 로컬로 진행
+  if(typeof firebase==='undefined' || !window.vbAuth){ hideLogin(); return; }
+  const auth = window.vbAuth;
+  // ---- 클라우드 저장/복원: vb_users/{uid} ----
+  async function loadCloud(uid){
+    if(!window.vbDB) return false;
+    try{
+      const doc = await window.vbDB.collection('vb_users').doc(uid).get();
+      if(!doc.exists) return false;
+      const d = doc.data()||{}; const cloudTs = d.ts||0, localTs = +(localStorage.getItem('vb_cloud_ts')||0);
+      if(cloudTs <= localTs) return false;   // 로컬이 최신이면 유지
+      const data = d.data||{}; SYNC_KEYS.forEach(k=>{ if(data[k]!=null) localStorage.setItem(k, data[k]); });
+      localStorage.setItem('vb_cloud_ts', String(cloudTs)); return true;
+    }catch(e){ console.warn('cloud load 실패', e); return false; }
+  }
+  async function saveCloud(){
+    const u = auth.currentUser; if(!u || !window.vbDB) return;
+    try{ const ts = Date.now(), data={}; SYNC_KEYS.forEach(k=>{ const v=localStorage.getItem(k); if(v!=null) data[k]=v; });
+      await window.vbDB.collection('vb_users').doc(u.uid).set({ data, ts, email:u.email||'', updatedAt: ts }, {merge:true});
+      localStorage.setItem('vb_cloud_ts', String(ts));
+    }catch(e){ console.warn('cloud save 실패', e); }
+  }
+  let _saveT=null; window.vbSaveCloudDebounced = () => { clearTimeout(_saveT); _saveT=setTimeout(saveCloud, 1500); };
+  if(typeof game!=='undefined' && typeof game.saveData==='function'){ const _o=game.saveData.bind(game); game.saveData=function(){ _o(); window.vbSaveCloudDebounced(); }; }
+  // ---- 로그인 함수 (native 플러그인 있으면 사용, 아니면 웹 popup) ----
+  const nativeAuth = (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.FirebaseAuthentication) || null;
+  window.vbSignInGoogle = async function(){ loginErr(''); try{
+      if(nativeAuth){ await nativeAuth.signInWithGoogle({scopes:['profile','email']}); }
+      else { await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
+    }catch(e){ loginErr('구글 로그인 실패: '+(e.message||e)); } };
+  window.vbSignInApple = async function(){ loginErr(''); try{
+      if(nativeAuth){ await nativeAuth.signInWithApple({scopes:['name','email']}); }
+      else { await auth.signInWithPopup(new firebase.auth.OAuthProvider('apple.com')); }
+    }catch(e){ loginErr('Apple 로그인 실패: '+(e.message||e)); } };
+  window.vbSignInEmail = async function(){ loginErr(''); const em=$('vbLoginEmail').value.trim(), pw=$('vbLoginPw').value;
+    if(!em||!pw){ loginErr('이메일과 비밀번호를 입력하세요'); return; }
+    try{ await auth.signInWithEmailAndPassword(em,pw); }catch(e){ loginErr(mapErr(e)); } };
+  window.vbSignUpEmail = async function(){ loginErr(''); const em=$('vbLoginEmail').value.trim(), pw=$('vbLoginPw').value;
+    if(!em||pw.length<6){ loginErr('비밀번호는 6자 이상이어야 해요'); return; }
+    try{ await auth.createUserWithEmailAndPassword(em,pw); }catch(e){ loginErr(mapErr(e)); } };
+  window.vbResetPw = async function(){ loginErr(''); const em=$('vbLoginEmail').value.trim();
+    if(!em){ loginErr('이메일을 먼저 입력하세요'); return; }
+    try{ await auth.sendPasswordResetEmail(em); loginErr('재설정 메일을 보냈어요 ✉️'); }catch(e){ loginErr(mapErr(e)); } };
+  window.vbSignOut = async function(){ try{ if(nativeAuth) await nativeAuth.signOut(); await auth.signOut(); }catch(e){} sessionStorage.removeItem('vb_synced'); sessionStorage.removeItem('vb_guest'); location.reload(); };
+  window.vbGuest = function(){ sessionStorage.setItem('vb_guest','1'); hideLogin(); };
+  function mapErr(e){ const c=(e&&e.code)||''; const M={
+    'auth/invalid-email':'올바른 이메일 형식이 아니에요','auth/user-not-found':'가입되지 않은 이메일이에요','auth/wrong-password':'비밀번호가 틀렸어요',
+    'auth/email-already-in-use':'이미 가입된 이메일이에요','auth/weak-password':'비밀번호는 6자 이상이어야 해요','auth/too-many-requests':'잠시 후 다시 시도해주세요',
+    'auth/invalid-credential':'이메일 또는 비밀번호가 올바르지 않아요','auth/operation-not-allowed':'이 로그인 방식이 아직 활성화되지 않았어요(콘솔 설정 필요)',
+    'auth/configuration-not-found':'로그인이 아직 설정되지 않았어요 (Firebase 콘솔에서 인증 활성화 필요)','auth/popup-blocked':'팝업이 차단됐어요. 팝업 허용 후 다시 시도하세요','auth/popup-closed-by-user':'로그인 창이 닫혔어요','auth/network-request-failed':'네트워크 오류. 연결을 확인하세요','auth/unauthorized-domain':'허용되지 않은 도메인이에요(콘솔 승인 도메인 추가 필요)'}; return M[c]||('오류: '+(e.message||c)); }
+  // ---- 게이트 ----
+  if(sessionStorage.getItem('vb_guest')==='1'){ hideLogin(); }
+  auth.onAuthStateChanged(async (user)=>{
+    if(user){
+      if(sessionStorage.getItem('vb_synced')==='1'){ hideLogin(); return; }
+      const changed = await loadCloud(user.uid); sessionStorage.setItem('vb_synced','1');
+      if(changed){ location.reload(); return; }
+      hideLogin(); saveCloud();
+    } else {
+      if(sessionStorage.getItem('vb_guest')==='1') return;
+      sessionStorage.removeItem('vb_synced'); showLogin();
+    }
+  });
+})();
 BgMusic.playTrack('title');
 
 // [성능] 모든 이미지 미리 로드(손님 PNG·씬·장식) — 첫 등장 시 딜레이 방지(특히 웹 배포)
