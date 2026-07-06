@@ -263,6 +263,72 @@
   #b-flash{ position:absolute; inset:0; z-index:4; pointer-events:none; opacity:0; }
   #b-flash.go{ animation:bflash .55s ease-out; }
   @keyframes bflash{ 0%{opacity:0} 22%{opacity:.75} 100%{opacity:0} }
+  /* ===== 캐릭터별 스킬 이펙트 ===== */
+  .b-skillfx{ position:absolute; inset:0; z-index:5; pointer-events:none; overflow:hidden; }
+  .b-skillfx > *{ position:absolute; }
+  /* 커피(기본): 에스프레소 폭발 */
+  .sc-ring{ left:68%; top:33%; width:20px; height:20px; margin:-10px; border-radius:50%; border:6px solid #6f4a2f; box-shadow:0 0 16px #b9793e; transform:scale(0); animation:scRing .5s ease-out forwards; }
+  @keyframes scRing{ 0%{transform:scale(0);opacity:1} 100%{transform:scale(9);opacity:0;border-width:1px} }
+  .sc-drop{ left:68%; top:33%; width:11px; height:14px; margin:-7px; border-radius:50% 50% 50% 0; background:radial-gradient(circle at 35% 30%, #a86a3c, #4a2c15); animation:scDrop .6s ease-out forwards; animation-delay:var(--dl,0s); opacity:0; }
+  @keyframes scDrop{ 0%{transform:translate(0,0) rotate(45deg) scale(.4);opacity:1} 100%{transform:translate(var(--dx),var(--dy)) rotate(200deg) scale(1);opacity:0} }
+  .sc-steam{ left:66%; top:31%; width:60px; height:60px; margin:-30px; border-radius:50%; background:radial-gradient(circle, rgba(255,240,220,.55), transparent 65%); transform:scale(.3); animation:scSteam .9s ease-out forwards; }
+  @keyframes scSteam{ 0%{transform:scale(.3) translateY(0);opacity:.8} 100%{transform:scale(2.4) translateY(-40px);opacity:0} }
+  /* 로아: 골든 슬래시 */
+  .ss-flash{ inset:0; background:radial-gradient(circle at 66% 34%, rgba(255,236,150,.7), transparent 60%); animation:ssFlash .42s ease-out forwards; }
+  @keyframes ssFlash{ 0%{opacity:0} 25%{opacity:1} 100%{opacity:0} }
+  .ss-arc{ left:66%; top:34%; width:220px; height:220px; margin:-110px; border-top:8px solid #fff3b0; border-right:8px solid transparent; border-radius:50%; filter:drop-shadow(0 0 8px #ffd54f); transform:rotate(var(--rot,-30deg)) scale(0); animation:ssArc .5s cubic-bezier(.3,.7,.3,1) forwards; animation-delay:var(--dl,0s); opacity:0; }
+  @keyframes ssArc{ 0%{transform:rotate(var(--rot)) scale(0);opacity:0} 30%{opacity:1} 100%{transform:rotate(calc(var(--rot) + 65deg)) scale(1.5);opacity:0} }
+  .ss-spark{ left:66%; top:34%; width:6px; height:6px; margin:-3px; border-radius:50%; background:#fff6c2; box-shadow:0 0 8px #ffd54f; animation:ssSpark .5s ease-out forwards; animation-delay:var(--dl,0s); opacity:0; }
+  @keyframes ssSpark{ 0%{transform:translate(0,0) scale(1);opacity:1} 100%{transform:translate(var(--dx),var(--dy)) scale(0);opacity:0} }
+  /* 루나: 달빛 세례 */
+  .sm-glow{ inset:0; background:radial-gradient(ellipse 60% 55% at 50% 30%, rgba(150,110,255,.5), transparent 70%); animation:smGlow 1s ease-out forwards; }
+  @keyframes smGlow{ 0%{opacity:0} 30%{opacity:1} 100%{opacity:0} }
+  .sm-moon{ left:50%; top:27%; width:80px; height:80px; margin:-40px; border-radius:50%; background:radial-gradient(circle at 38% 34%, #f2ecff, #b79cff 70%, #7d5be0); box-shadow:0 0 34px #b98cff, 0 0 60px rgba(150,110,255,.6); transform:scale(0); animation:smMoon .95s cubic-bezier(.2,1.4,.4,1) forwards; }
+  @keyframes smMoon{ 0%{transform:scale(0) rotate(-40deg);opacity:0} 40%{opacity:1} 82%{transform:scale(1) rotate(0);opacity:1} 100%{transform:scale(1.06);opacity:0} }
+  .sm-ring{ left:50%; top:27%; width:150px; height:150px; margin:-75px; border-radius:50%; border:3px dashed rgba(205,185,255,.85); transform:scale(.4); animation:smRing 1s linear forwards; opacity:0; }
+  @keyframes smRing{ 0%{transform:rotate(0) scale(.4);opacity:0} 30%{opacity:1} 100%{transform:rotate(180deg) scale(1.4);opacity:0} }
+  .sm-spark{ top:-4%; left:var(--lx,50%); width:var(--sz,7px); height:var(--sz,7px); border-radius:50%; background:#dcccff; box-shadow:0 0 8px #b98cff; animation:smFall 1s ease-in forwards; animation-delay:var(--dl,0s); opacity:0; }
+  @keyframes smFall{ 0%{transform:translateY(0);opacity:0} 15%{opacity:1} 100%{transform:translateY(240px);opacity:0} }
+  /* 세라: 스타라이트 쇼 */
+  .st-flash{ inset:0; background:radial-gradient(circle at 50% 42%, rgba(255,190,220,.5), transparent 65%); animation:ssFlash .5s ease-out forwards; }
+  .st-burst{ left:50%; top:42%; width:74px; height:74px; margin:-37px; background:radial-gradient(circle,#fff3b0,#ffb84d); box-shadow:0 0 24px #ffd36b; clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%); transform:scale(0); animation:stBurst .8s ease-out forwards; }
+  @keyframes stBurst{ 0%{transform:scale(0) rotate(0);opacity:1} 60%{transform:scale(1.3) rotate(40deg);opacity:1} 100%{transform:scale(1.75) rotate(72deg);opacity:0} }
+  .st-fall{ top:-6%; left:var(--lx,50%); width:var(--sz,12px); height:var(--sz,12px); background:var(--hue,#ffd36b); box-shadow:0 0 8px var(--hue,#ffd36b); clip-path:polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%); animation:stFall 1.05s ease-in forwards; animation-delay:var(--dl,0s); opacity:0; }
+  @keyframes stFall{ 0%{transform:translateY(0) rotate(0);opacity:0} 15%{opacity:1} 100%{transform:translateY(260px) rotate(220deg);opacity:0} }
+  .st-heal{ left:18%; top:60%; width:26px; height:26px; margin:-13px; background:#8ef0a0; box-shadow:0 0 12px #8ef0a0; clip-path:polygon(40% 0,60% 0,60% 40%,100% 40%,100% 60%,60% 60%,60% 100%,40% 100%,40% 60%,0 60%,0 40%,40% 40%); animation:stHeal 1s ease-out forwards; opacity:0; }
+  @keyframes stHeal{ 0%{transform:translateY(10px) scale(.4);opacity:0} 30%{opacity:1} 100%{transform:translateY(-40px) scale(1);opacity:0} }
+  /* ===== 대화(NPC) 버튼 상태 ===== */
+  .abtn.talk{ color:#0a2a4a; background:radial-gradient(circle at 35% 28%, #bfe4ff, #4aa3f0 68%, #2b7fd0);
+    box-shadow:0 5px 0 #1c5c9e, 0 0 0 4px rgba(74,163,240,.35), 0 8px 18px rgba(40,120,200,.5), inset 0 2px 3px rgba(255,255,255,.5);
+    animation:abReady 1.0s ease-in-out infinite; }
+  /* ===== 퀘스트 대화 박스 ===== */
+  .q-box{ width:min(88%,420px); background:linear-gradient(180deg,#fffdf7,#fff2d8); border:3px solid #caa26a; border-radius:20px; padding:16px; box-shadow:0 12px 30px rgba(0,0,0,.4); text-align:center; font-family:'Jua','Nunito',sans-serif; }
+  .q-top{ display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+  .q-portrait{ width:64px; height:64px; border-radius:50%; object-fit:cover; object-position:top center; border:3px solid #e0b877; background:#fff; flex:none; }
+  .q-name{ font-size:1.1rem; font-weight:bold; color:#5b3b1a; text-align:left; }
+  .q-text{ font-size:1rem; color:#4a3418; line-height:1.5; margin-bottom:14px; min-height:44px; }
+  .q-actions{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+  .q-btn{ border:none; border-radius:14px; padding:10px 18px; font-family:inherit; font-size:.95rem; font-weight:bold; cursor:pointer; box-shadow:0 3px 0 rgba(0,0,0,.25); }
+  .q-btn.ok{ background:linear-gradient(180deg,#ffcf6b,#f2a63d); color:#5b3b1a; }
+  .q-btn.ghost{ background:#e7dcc6; color:#6b5334; }
+  .q-btn:active{ transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.25); }
+  .lvlup{ color:#e0761f; font-weight:bold; }
+  /* ===== 어둠의 상인 대결 ===== */
+  .dm-box{ width:min(90%,460px); background:linear-gradient(180deg,#2a2340,#191428); border:3px solid #6a4fb0; border-radius:20px; padding:16px; box-shadow:0 12px 34px rgba(0,0,0,.6), 0 0 24px rgba(120,80,220,.4); text-align:center; font-family:'Jua','Nunito',sans-serif; color:#efe8ff; }
+  .dm-top{ display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+  .dm-portrait{ width:60px; height:60px; border-radius:50%; object-fit:cover; object-position:top center; border:3px solid #8b6fd0; filter:brightness(.82) contrast(1.05); flex:none; }
+  .dm-title{ font-size:1.15rem; font-weight:bold; color:#c9b4ff; text-shadow:0 0 8px rgba(150,110,255,.6); }
+  .dm-say{ font-size:1rem; line-height:1.55; margin-bottom:14px; }
+  .dm-say.win{ color:#ffe08a; }
+  .dm-acts{ display:flex; gap:8px; justify-content:center; }
+  .dm-prog{ font-size:.85rem; color:#b6a6e0; margin-bottom:8px; }
+  .dm-word{ font-size:2rem; font-weight:bold; letter-spacing:1px; color:#fff; margin:6px 0; text-shadow:0 2px 10px rgba(150,110,255,.7); }
+  .dm-hint{ font-size:.85rem; color:#a99bd0; margin-bottom:12px; }
+  .dm-opts{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+  .dm-opt{ background:#3a2f58; border:2px solid #5a4a86; color:#efe8ff; border-radius:13px; padding:12px 8px; font-family:inherit; font-size:.95rem; font-weight:bold; cursor:pointer; transition:transform .08s; }
+  .dm-opt:active{ transform:scale(.96); }
+  .dm-opt.correct{ background:#2e7d46; border-color:#54c877; color:#fff; }
+  .dm-opt.wrong{ background:#8d2f38; border-color:#d85b66; color:#fff; }
   #battle.intro .binfo, #battle.intro .b-cmds{ opacity:0; pointer-events:none; }
   .lvlup{ color:#ffd54f; }
 </style>
@@ -343,6 +409,22 @@
   </div>
 </div>
 
+<!-- 퀘스트 대화 -->
+<div id="quest-dlg" class="ex-overlay">
+  <div class="q-box">
+    <div class="q-top"><img id="q-portrait" class="q-portrait" src="" alt=""><div class="q-name" id="q-name"></div></div>
+    <div class="q-text" id="q-text"></div>
+    <div class="q-actions" id="q-actions"></div>
+  </div>
+</div>
+<!-- 어둠의 상인 영어 대결 -->
+<div id="dark-duel" class="ex-overlay">
+  <div class="dm-box">
+    <div class="dm-top"><img id="dm-portrait" class="dm-portrait" src="" alt=""><div class="dm-title">🌑 어둠의 상인</div></div>
+    <div class="dm-body" id="dm-body"></div>
+  </div>
+</div>
+
 <!-- ===== 전투 화면 ===== -->
 <div id="battle">
   <div class="b-arena" id="b-arena" onpointerdown="Battle.skipTap()">
@@ -367,6 +449,7 @@
     <div id="e-pop" style="position:absolute; top:24%; right:24%;"></div>
     <div id="p-pop" style="position:absolute; bottom:20%; left:18%;"></div>
     <div id="b-flash"></div>
+    <div id="b-skillfx" class="b-skillfx"></div>
   </div>
   <div class="b-bottom" style="position:relative;">
     <div id="b-itemmenu"></div>
@@ -444,7 +527,8 @@ const SaveBridge = {
       stats:Object.assign({maxHp:30,hp:30,atk:8,def:4},ex.stats||{}),
       equip:Object.assign({weapon:null,armor:null},ex.equip||{}),
       materials:ex.materials||{}, items:ex.items||[], companion:ex.companion||'none',
-      map:ex.map||{zone:'forest'}, pos:ex.pos||null, steps:ex.steps||0 }; },
+      map:ex.map||{zone:'forest'}, pos:ex.pos||null, steps:ex.steps||0,
+      quests:ex.quests||{}, events:ex.events||{} }; },
   saveExplore(s){ localStorage.setItem(EXPLORE_KEY,JSON.stringify(s)); },
 };
 
@@ -536,6 +620,19 @@ const Explore = {
     if(window.World) World.toast(`🧪 <b>회복 물약</b> — 체력 <b>${g}</b> 회복`);
     if(window.Sfx) Sfx.play('gather'); if(window.exHaptic) exHaptic('success');
   },
+  // 경험치 획득 + 레벨업(전투 win 로직과 동일 규칙) — 퀘스트·이벤트 보상용
+  gainExp(n){ this.state.exp=(this.state.exp||0)+n; let ups=0;
+    while(this.state.exp>=expNeed(this.state.level)){ this.state.exp-=expNeed(this.state.level); this.state.level++;
+      const st=this.state.stats; st.maxHp+=8; st.atk+=3; st.def+=2; st.hp=st.maxHp; ups++; }
+    return ups; },
+  // 보상 지급(골드/경험치/아이템) 공용 — 퀘스트·어둠의상인
+  grantReward(rw){ let parts=[];
+    if(rw.gold){ this.cafe.wallet=(this.cafe.wallet||0)+rw.gold; parts.push(`🪙+${rw.gold}`); }
+    if(rw.exp){ const up=this.gainExp(rw.exp); parts.push(`⭐EXP+${rw.exp}`); if(up) parts.push(`🎉Lv ${this.state.level}!`); }
+    if(rw.item){ if(!this.cafe.craftedItems) this.cafe.craftedItems={}; this.cafe.craftedItems[rw.item]=(this.cafe.craftedItems[rw.item]||0)+1;
+      const ci=(CRAFT_DB.find(x=>x.id===rw.item)||{}); parts.push(`${ci.icon||'🎁'}${ci.name||'아이템'}+1`); }
+    if(rw.mat){ this.state.materials[rw.mat]=(this.state.materials[rw.mat]||0)+(rw.matCount||1); const m=MATERIALS[rw.mat]||{}; parts.push(`${m.icon||''}${m.name||rw.mat}+${rw.matCount||1}`); }
+    this.refreshHUD(); this.persist(); return parts.join(' · '); },
 };
 
 // ---------- 화면 방향 ----------
@@ -642,6 +739,23 @@ const CRAFT_DB = [
   { id:'cr_def',   name:'크림 실드',    icon:'🛡️', cost:{milk:2,berry:2},    effect:'defup',  where:'battle', edesc:'탐험: 이번 전투 받는 피해 −50%' },
   { id:'cr_heal',  name:'회복 물약',    icon:'🧪', cost:{milk:1,berry:2},    effect:'heal',   where:'battle', edesc:'탐험: 체력 40% 회복 (전투·이동 중 사용)', healPct:0.4 },
 ];
+// ---------- 퀘스트 NPC (재료 배달 의뢰) ----------
+const QUEST_NPCS = [
+  { id:'q_granny', name:'플로라 할머니', img:'chars/grandma.png',
+    ask:'허리가 아파서 원두를 못 줍겠구나…<br><b>커피 원두 5개</b>만 가져다주면 고맙겠는데.',
+    need:{mat:'bean', count:5}, reward:{gold:140, exp:22, item:'cr_heal'},
+    done:'네 덕분에 향긋한 커피를 볶았단다. 또 놀러오렴~' },
+  { id:'q_rico', name:'바리스타 리코', img:'chars/hipster.png',
+    ask:'시그니처 라떼를 만들 <b>우유 4개</b>가 필요해.<br>구해다 주면 팁을 두둑이 줄게!',
+    need:{mat:'milk', count:4}, reward:{gold:120, exp:18, item:'cr_atk'},
+    done:'그때 그 우유로 인생 라떼를 뽑았지. 고마워!' },
+  { id:'q_navi', name:'숲요정 나비', img:'chars/navi.png',
+    ask:'반짝이는 <b>시럽 3개</b>를 모아오면<br>요정의 축복을 나눠줄게! ✨',
+    need:{mat:'syrup', count:3}, reward:{gold:90, exp:34, item:'cr_def'},
+    done:'네 시럽으로 좋은 마법을 부렸어. 반짝반짝!' },
+];
+// ---------- 숨겨진 이벤트: 어둠의 상인 (영어 대결) ----------
+const DARK_MERCHANT = { name:'어둠의 상인', img:'chars/vip.png' };
 // ---------- 이미지 프리로더 ----------
 const Assets = {
   imgs:{},
@@ -651,6 +765,7 @@ const Assets = {
     Object.values(MATERIALS).forEach(m=>this.load(m.img));
     Object.values(COMPANIONS).forEach(c=>{ this.load(c.img); this.load(c.battleImg); });
     Object.values(MONSTERS).forEach(m=>this.load(m.art));
+    QUEST_NPCS.forEach(q=>this.load(q.img)); this.load(DARK_MERCHANT.img);
   },
 };
 
@@ -761,6 +876,22 @@ const World = {
       this.portalSign={ x:portalX-2, y:3 };
       this.barrier.add(key(this.portalSign.x,this.portalSign.y));
     } else { this.portal=null; this.portalSign=null; }
+    // ----- 퀘스트 NPC 배치(걷기 가능 지점, 주변 정리) -----
+    this.npcs=[];
+    const clearAround=(x,y,r)=>{ for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){ const xx=x+dx,yy=y+dy;
+      if(xx<1||xx>=this.WT-1||yy<2||yy>=this.HT-1)continue; this.barrier.delete(key(xx,yy)); this.trees=this.trees.filter(t=>!(t.x===xx&&t.y===yy)); }
+      this.nodes=this.nodes.filter(n=>!(Math.abs(n.x-x)<=r&&Math.abs(n.y-y)<=r)); };
+    if(Explore.state.map.zone==='forest'){
+      const spots=[ {x:Math.floor(this.WT*0.26), y:Math.floor(this.HT*0.34)},
+                    {x:Math.floor(this.WT*0.72), y:Math.floor(this.HT*0.30)},
+                    {x:Math.floor(this.WT*0.52), y:Math.floor(this.HT*0.60)} ];
+      QUEST_NPCS.forEach((q,i)=>{ const sp=spots[i%spots.length]; clearAround(sp.x,sp.y,1);
+        this.barrier.add(key(sp.x,sp.y)); this.npcs.push({ id:q.id, x:sp.x, y:sp.y }); });
+      // ----- 숨겨진 어둠의 상인(좌상단 비밀 공간) -----
+      const sx=3, sy=3; clearAround(sx,sy,1);
+      for(let yy=sy+2; yy<=Math.floor(this.HT*0.40); yy++){ this.barrier.delete(key(sx,yy)); this.trees=this.trees.filter(t=>!(t.x===sx&&t.y===yy)); } // 진입로
+      this.barrier.add(key(sx,sy)); this.secret={ x:sx, y:sy };
+    } else { this.secret=null; }
     // 나무는 정적이므로 y정렬을 1회만(렌더 루프의 매 프레임 sort 제거 — 저사양 GC/CPU 절감)
     this.trees.sort((a,b)=>a.y-b.y);
   },
@@ -811,6 +942,13 @@ const World = {
 
   interact(e){ if(e&&e.preventDefault)e.preventDefault(); if(window.Battle&&Battle.active) return;
     const ptx=Math.round(this.px), pty=Math.round(this.py);
+    // 1) 퀘스트 NPC 우선
+    const npc=(this.npcs||[]).find(n=>Math.abs(n.x-ptx)+Math.abs(n.y-pty)<=1);
+    if(npc){ if(window.Quest) Quest.talk(npc.id); return; }
+    // 2) 숨겨진 어둠의 상인
+    if(this.secret && (Explore.state.events||{}).darkMerchant!=='gone' && Math.abs(this.secret.x-ptx)+Math.abs(this.secret.y-pty)<=1){
+      if(window.DarkDuel) DarkDuel.meet(); return; }
+    // 3) 채집
     let best=null,bd=99;
     for(const n of this.nodes){ if(n.taken)continue; const d=Math.abs(n.x-ptx)+Math.abs(n.y-pty);
       if(d<=1 && d<bd){bd=d;best=n;} }
@@ -907,9 +1045,13 @@ const World = {
   // 채집 사거리(맨해튼 1칸) 안에 캘 노드가 있으면 버튼을 초록으로 강조
   updateActionBtn(){ const b=document.getElementById('act-btn'); if(!b)return;
     const ptx=Math.round(this.px), pty=Math.round(this.py);
-    const near=(window.Battle&&Battle.active) ? false :
-      this.nodes.some(n=>!n.taken && (Math.abs(n.x-ptx)+Math.abs(n.y-pty))<=1);
-    b.classList.toggle('ready', near); },
+    const battle=(window.Battle&&Battle.active);
+    const npc = !battle && (this.npcs||[]).some(n=>Math.abs(n.x-ptx)+Math.abs(n.y-pty)<=1);
+    const secret = !battle && this.secret && (Explore.state.events||{}).darkMerchant!=='gone' && Math.abs(this.secret.x-ptx)+Math.abs(this.secret.y-pty)<=1;
+    const talk = !!(npc||secret);
+    const near = !battle && !talk && this.nodes.some(n=>!n.taken && (Math.abs(n.x-ptx)+Math.abs(n.y-pty))<=1);
+    b.classList.toggle('ready', near); b.classList.toggle('talk', talk);
+    const tx=b.querySelector('.ab-tx'); if(tx) tx.textContent = talk ? '대화' : '채집'; },
   release(){ this.stick.active=false; this.stick.dx=0; this.stick.dy=0; this.keys={}; },
 
   // ----- 렌더 -----
@@ -955,6 +1097,28 @@ const World = {
       const gx=Math.round(t.x*TS-camX)+TS/2, gy=Math.round(t.y*TS-camY)+TS;
       const h=TS*2.9, w=h*(timg.naturalWidth/timg.naturalHeight);
       ctx.drawImage(timg, gx-w/2, gy-h, w, h); }
+    // ----- 퀘스트 NPC + 상태 마커(❗진행가능 / …진행중 / ✔완료) -----
+    for(const np of (this.npcs||[])){ if(np.x<x0-1||np.x>x1+1||np.y<y0-2||np.y>y1+1) continue;
+      const def=QUEST_NPCS.find(q=>q.id===np.id)||{}; const img=Assets.imgs[def.img];
+      const gx=Math.round(np.x*TS-camX)+TS/2, gy=Math.round(np.y*TS-camY)+TS*1.04;
+      if(!(img&&img.complete&&img.naturalWidth)) continue;
+      const h=TS*1.7, w=h*(img.naturalWidth/img.naturalHeight);
+      ctx.fillStyle='rgba(0,0,0,.18)'; ctx.beginPath(); ctx.ellipse(gx,gy,w*0.30,TS*0.11,0,0,7); ctx.fill();
+      ctx.drawImage(img, gx-w/2, gy-h, w, h);
+      const st=(Explore.state.quests||{})[np.id]; const mk= st==='done'?'✔': st==='active'?'…':'!';
+      const col= st==='done'?'#7CFC98': st==='active'?'#ffd54f':'#ff5d5d';
+      const my=gy-h-TS*0.24+Math.sin(this.bob*1.5)*TS*0.06;
+      ctx.font='bold '+Math.round(TS*0.64)+'px "Jua",sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.lineWidth=Math.max(3,TS*0.06); ctx.strokeStyle='rgba(0,0,0,.55)'; ctx.strokeText(mk,gx,my);
+      ctx.fillStyle=col; ctx.fillText(mk,gx,my); }
+    // ----- 숨겨진 어둠의 상인: 신비한 보라 표식 -----
+    if(this.secret && !((Explore.state.events||{}).darkMerchant==='gone') && !(this.secret.x<x0-1||this.secret.x>x1+1||this.secret.y<y0-1||this.secret.y>y1+1)){
+      const s=this.secret, dx=Math.round(s.x*TS-camX)+TS/2, dy=Math.round(s.y*TS-camY)+TS*0.5, pulse=0.5+0.5*Math.sin(this.bob*2);
+      ctx.save(); ctx.globalAlpha=0.3+0.4*pulse; ctx.fillStyle='#7a4fd0';
+      ctx.beginPath(); ctx.ellipse(dx,dy+TS*0.32,TS*0.4,TS*0.18,0,0,7); ctx.fill();
+      ctx.globalAlpha=0.85; ctx.fillStyle='#caa6ff'; ctx.font='bold '+Math.round(TS*0.72)+'px serif';
+      ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('✦', dx, dy - TS*0.1 + Math.sin(this.bob*2)*TS*0.08);
+      ctx.restore(); }
     // 팻말(마을로 가는 길)
     if(this.sign && this.sign.x>=x0-1 && this.sign.x<=x1+1 && this.sign.y>=y0-1 && this.sign.y<=y1+2){
       this.drawSign(Math.round(this.sign.x*TS-camX), Math.round(this.sign.y*TS-camY), TS); }
@@ -1198,10 +1362,10 @@ const ZONES = {
 };
 // 동행별 고유 스킬 (게이지 가득 차면 사용)
 const SKILLS = {
-  none: { name:'에스프레소 샷', icon:'☕', mult:2.2, color:'#ff8a3d' },
-  roa:  { name:'시그니처 일격', icon:'⚔️', mult:2.6, noMiss:true, alwaysCrit:true, color:'#ffd54f' },
-  luna: { name:'달빛 세례',     icon:'🌙', mult:2.0, ignoreDef:true, color:'#b46bff' },
-  sera: { name:'스타라이트 쇼', icon:'⭐', mult:1.8, heal:0.3, color:'#ff8fc4' },
+  none: { name:'에스프레소 샷', icon:'☕', mult:2.2, color:'#ff8a3d', fx:'coffee' },
+  roa:  { name:'시그니처 일격', icon:'⚔️', mult:2.6, noMiss:true, alwaysCrit:true, color:'#ffd54f', fx:'slash' },
+  luna: { name:'달빛 세례',     icon:'🌙', mult:2.0, ignoreDef:true, color:'#b46bff', fx:'moon' },
+  sera: { name:'스타라이트 쇼', icon:'⭐', mult:1.8, heal:0.3, color:'#ff8fc4', fx:'star' },
 };
 function expNeed(level){ return Math.floor(40*Math.pow(level,1.6)); }
 
@@ -1301,10 +1465,33 @@ const Battle = {
   addGauge(n){ this.gauge=Math.min(this.GMAX,(this.gauge||0)+n); this.refreshSkill(); },
   setSkillLabel(){ const sk=SKILLS[Explore.state.companion||'none']||SKILLS.none; document.getElementById('skill-lb').textContent=sk.name; },  /* [버튼] 스킬 아이콘은 고정 별 SVG 유지, 이름만 동적 갱신 */
   skillFlash(sk){ const f=document.getElementById('b-flash'); if(!f)return; f.style.background='radial-gradient(circle, '+(sk.color||'#fff')+'cc, transparent 72%)'; f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); },
+  // [스킬 연출] 캐릭터별 고유 이펙트 — b-skillfx 레이어에 테마별 파티클/애니 주입
+  playSkillFx(key){
+    const host=document.getElementById('b-skillfx'); if(!host) return;
+    host.className='b-skillfx sfx-'+key; host.innerHTML='';
+    const R=(a,b)=>a+this._rand()*(b-a);
+    const mk=(cls,vars)=>{ const d=document.createElement('div'); d.className=cls;
+      if(vars) for(const k in vars) d.style.setProperty(k, vars[k]); host.appendChild(d); return d; };
+    if(key==='coffee'){
+      mk('sc-ring'); mk('sc-steam');
+      for(let i=0;i<11;i++){ const a=R(0,6.28), s=R(45,165); mk('sc-drop',{'--dx':(Math.cos(a)*s).toFixed(0)+'px','--dy':(Math.sin(a)*s-18).toFixed(0)+'px','--dl':R(0,0.12).toFixed(2)+'s'}); }
+    } else if(key==='slash'){
+      mk('ss-flash');
+      for(let i=0;i<3;i++) mk('ss-arc',{'--dl':(i*0.11).toFixed(2)+'s','--rot':(-42+i*20)+'deg'});
+      for(let i=0;i<15;i++){ const a=R(0,6.28), s=R(30,120); mk('ss-spark',{'--dx':(Math.cos(a)*s).toFixed(0)+'px','--dy':(Math.sin(a)*s).toFixed(0)+'px','--dl':R(0,0.28).toFixed(2)+'s'}); }
+    } else if(key==='moon'){
+      mk('sm-glow'); mk('sm-ring'); mk('sm-moon');
+      for(let i=0;i<16;i++){ mk('sm-spark',{'--lx':R(6,94).toFixed(0)+'%','--dl':R(0,0.5).toFixed(2)+'s','--sz':R(4,10).toFixed(0)+'px'}); }
+    } else if(key==='star'){
+      mk('st-flash'); mk('st-burst'); mk('st-heal');
+      for(let i=0;i<18;i++){ mk('st-fall',{'--lx':R(4,96).toFixed(0)+'%','--dl':R(0,0.55).toFixed(2)+'s','--sz':R(9,18).toFixed(0)+'px','--hue':(this._rand()<0.5?'#ffd36b':'#ff8fc4')}); }
+    }
+    clearTimeout(this._sfxT); this._sfxT=setTimeout(()=>{ host.className='b-skillfx'; host.innerHTML=''; }, 1250);
+  },
   async useSkill(){ if(this.busy||!this.active||this.gauge<this.GMAX)return; this.busy=true; this.setButtons(false);
     const sk=SKILLS[Explore.state.companion||'none']||SKILLS.none; const p=this.pStat();
     const ps=document.getElementById('p-self'), es=document.getElementById('e-sprite');
-    this.msg(`${sk.icon} <b>${sk.name}</b>!`); this.skillFlash(sk); ps.classList.add('lunge'); await this.wait(230);
+    this.msg(`${sk.icon} <b>${sk.name}</b>!`); this.skillFlash(sk); this.playSkillFx(sk.fx||'coffee'); ps.classList.add('lunge'); await this.wait(230);
     const def=sk.ignoreDef?0:this.enemy.def; let b=p.atk*sk.mult-def*0.5; b*=0.95+this._rand()*0.2;
     const crit=sk.alwaysCrit||this._rand()<0.2; if(crit)b*=1.6; const dmg=Math.max(1,Math.round(b));
     this.eHp-=dmg; es.classList.add('hit'); this.shake(); this.hitFx('e-sprite', false);
@@ -1382,6 +1569,84 @@ const Battle = {
     document.getElementById('p-self').classList.remove('hit','lunge');
     // [버그수정] 예전 f.textContent='🏃 도망' 리셋 제거 — cmd-ic/cmd-lb span을 파괴해 2번째 전투부터 도망 버튼 레이아웃이 깨졌음(라벨을 바꾸는 곳도 없어 불필요). 인라인 onclick 유지.
     Explore.refreshHUD(); Explore.persist(); },
+};
+// ============================================================
+//  퀘스트 NPC (재료 배달)
+// ============================================================
+const Quest = {
+  cur:null,
+  talk(id){ const def=QUEST_NPCS.find(q=>q.id===id); if(!def)return; this.cur=def;
+    if(!Explore.state.quests) Explore.state.quests={};
+    const st=Explore.state.quests[id], need=def.need, have=(Explore.state.materials[need.mat]||0), m=MATERIALS[need.mat];
+    document.getElementById('q-portrait').src=def.img;
+    document.getElementById('q-name').textContent=def.name;
+    const tx=document.getElementById('q-text'), ac=document.getElementById('q-actions');
+    if(st==='done'){ tx.innerHTML=def.done; ac.innerHTML=`<button class="q-btn ghost" onclick="Quest.close()">닫기</button>`; }
+    else if(st==='active'){
+      if(have>=need.count){ tx.innerHTML=`부탁한 <b>${m.icon} ${m.name} ${need.count}개</b>를 다 모았구나!<br>건네줄까요?`;
+        ac.innerHTML=`<button class="q-btn ok" onclick="Quest.turnIn()">완료 (${m.icon}${need.count} 전달)</button><button class="q-btn ghost" onclick="Quest.close()">닫기</button>`; }
+      else { tx.innerHTML=`${def.ask}<br><br><span style="color:#c9871f">진행: ${m.icon} ${have} / ${need.count}</span>`;
+        ac.innerHTML=`<button class="q-btn ghost" onclick="Quest.close()">더 모아올게요</button>`; } }
+    else { tx.innerHTML=def.ask;
+      ac.innerHTML=`<button class="q-btn ok" onclick="Quest.accept()">수락</button><button class="q-btn ghost" onclick="Quest.close()">다음에</button>`; }
+    document.getElementById('quest-dlg').classList.add('show');
+  },
+  accept(){ if(!this.cur)return; Explore.state.quests[this.cur.id]='active'; Explore.persist();
+    if(window.Sfx)Sfx.play('correct'); this.talk(this.cur.id); },
+  turnIn(){ const def=this.cur; if(!def)return; const need=def.need, have=Explore.state.materials[need.mat]||0;
+    if(have<need.count){ this.talk(def.id); return; }
+    Explore.state.materials[need.mat]=have-need.count; Explore.state.quests[def.id]='done';
+    const rwtxt=Explore.grantReward(def.reward);
+    if(window.Sfx)Sfx.play('levelup'); if(window.exHaptic)exHaptic('success');
+    document.getElementById('q-text').innerHTML=`고마워! 이건 답례야.<br><span class="lvlup">${rwtxt}</span>`;
+    document.getElementById('q-actions').innerHTML=`<button class="q-btn ok" onclick="Quest.close()">좋아!</button>`;
+    if(window.World)World.updateActionBtn();
+  },
+  close(){ document.getElementById('quest-dlg').classList.remove('show'); this.cur=null; if(window.World)World.updateActionBtn(); },
+};
+// ============================================================
+//  숨겨진 이벤트: 어둠의 상인 영어 대결
+// ============================================================
+const DarkDuel = {
+  q:0, score:0, total:5, rounds:[], answered:false,
+  _rand(){ return window.World?World.rnd():Math.random(); },
+  pool(){ let p=[]; if(window.wordData) p=[].concat(wordData.easy||[],wordData.normal||[],wordData.hard||[]);
+    p=p.filter(w=>w&&w.w&&w.m);
+    if(p.length<8) p=[{w:'coffee',m:'커피'},{w:'water',m:'물'},{w:'book',m:'책'},{w:'friend',m:'친구'},{w:'light',m:'빛'},{w:'music',m:'음악'},{w:'river',m:'강'},{w:'stone',m:'돌'}];
+    return p; },
+  _shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(this._rand()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; },
+  buildRounds(){ const p=this._shuffle(this.pool().slice()); this.rounds=[];
+    for(let i=0;i<this.total && i<p.length;i++){ const ans=p[i]; const opts=[ans.m]; let g=0;
+      while(opts.length<4 && g<300){ g++; const c=p[Math.floor(this._rand()*p.length)]; if(c.m!==ans.m && !opts.includes(c.m)) opts.push(c.m); }
+      this._shuffle(opts); this.rounds.push({ w:ans.w, m:ans.m, opts }); } },
+  meet(){ document.getElementById('dm-portrait').src=DARK_MERCHANT.img; this.buildRounds(); this.q=0; this.score=0;
+    document.getElementById('dark-duel').classList.add('show'); this.intro();
+    if(window.ExploreBgm) try{ExploreBgm.play('boss');}catch(e){} },
+  intro(){ document.getElementById('dm-body').innerHTML=
+    `<div class="dm-say">"흐흐… 영어 실력을 시험해볼까?<br>${this.total}문제 중 <b>4개 이상</b> 맞히면 큰 보상을 주지.<br>도전하겠나?"</div>
+     <div class="dm-acts"><button class="q-btn ok" onclick="DarkDuel.begin()">⚔️ 대결한다</button><button class="q-btn ghost" onclick="DarkDuel.close()">도망친다</button></div>`; },
+  begin(){ this.q=0; this.score=0; this.render(); },
+  render(){ const body=document.getElementById('dm-body'); if(this.q>=this.rounds.length) return this.finish();
+    const r=this.rounds[this.q]; this.answered=false;
+    body.innerHTML=`<div class="dm-prog">${this.q+1} / ${this.total} · 점수 ${this.score}</div>
+      <div class="dm-word">${r.w}</div><div class="dm-hint">이 단어의 뜻은?</div>
+      <div class="dm-opts">${r.opts.map((o,idx)=>`<button class="dm-opt" onclick="DarkDuel.pick(this,${idx})">${o}</button>`).join('')}</div>`; },
+  pick(btn,idx){ if(this.answered)return; this.answered=true; const r=this.rounds[this.q]; const ok=r.opts[idx]===r.m;
+    [...document.querySelectorAll('.dm-opt')].forEach(b=>{ b.disabled=true; if(b.textContent===r.m) b.classList.add('correct'); });
+    if(ok){ this.score++; if(window.Sfx)Sfx.play('correct'); } else { btn.classList.add('wrong'); if(window.Sfx)Sfx.play('wrong'); if(window.exHaptic)exHaptic('heavy'); }
+    setTimeout(()=>{ this.q++; this.render(); }, 850); },
+  finish(){ const body=document.getElementById('dm-body'); const win=this.score>=4;
+    if(win){ const first=!((Explore.state.events||{}).darkMerchant);
+      const reward=first? {gold:600, exp:60, mat:'goldbean', matCount:2, item:'cr_heal'} : {gold:200, exp:20};
+      if(!Explore.state.events)Explore.state.events={}; Explore.state.events.darkMerchant='beaten';
+      const rwtxt=Explore.grantReward(reward);
+      if(window.Sfx)Sfx.play('levelup'); if(window.exHaptic)exHaptic('success');
+      body.innerHTML=`<div class="dm-say win">"크윽… 졌다, 인정하지."<br>${this.score}/${this.total} 정답!<br><span class="lvlup">${rwtxt}</span>${first?'<br><small>(첫 승리 특별 보상!)</small>':''}</div>
+        <div class="dm-acts"><button class="q-btn ok" onclick="DarkDuel.close()">보상 받기</button></div>`; }
+    else { body.innerHTML=`<div class="dm-say">"흐흐, 아직 멀었군. (${this.score}/${this.total})<br>실력을 갈고닦아 다시 오게."</div>
+        <div class="dm-acts"><button class="q-btn ghost" onclick="DarkDuel.retry()">다시 도전</button><button class="q-btn ghost" onclick="DarkDuel.close()">물러간다</button></div>`; } },
+  retry(){ this.buildRounds(); this.q=0; this.score=0; this.render(); },
+  close(){ document.getElementById('dark-duel').classList.remove('show'); if(window.ExploreBgm)try{ExploreBgm.play('map');}catch(e){} if(window.World)World.updateActionBtn(); },
 };
 // ============================================================
 //  스펠링 조합 퀴즈 (조합 완성 관문 · SRS 오답노트 우선) — 단어 학습 핵심
