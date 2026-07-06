@@ -61,6 +61,17 @@
     box-shadow:0 5px 0 #1f7a2a, 0 0 0 4px rgba(76,200,80,.35), 0 8px 18px rgba(40,170,60,.55), inset 0 2px 3px rgba(255,255,255,.5);
     animation:abReady 1.0s ease-in-out infinite; }
   @keyframes abReady{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.08); } }
+  /* 회복 물약 버튼 (채집 버튼 위) */
+  .hbtn{ position:absolute; right:40px; bottom:134px; width:60px; height:60px; border-radius:50%; border:none; z-index:4;
+    font-family:inherit; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:radial-gradient(circle at 35% 28%, #ffb3b8, #f2545b 68%, #d8384a);
+    box-shadow:0 4px 0 #a6202e, 0 6px 10px rgba(0,0,0,.4), inset 0 2px 3px rgba(255,255,255,.45);
+    transition:transform .08s, box-shadow .15s, filter .2s, opacity .2s; }
+  .hbtn .hb-ico{ display:flex; line-height:0; filter:drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
+  .hbtn .hb-ico svg{ width:26px; height:26px; display:block; }
+  .hbtn .hb-ct{ font-size:.7rem; font-weight:bold; line-height:1; margin-top:1px; text-shadow:0 1px 0 rgba(0,0,0,.35); }
+  .hbtn:active{ transform:translateY(3px); box-shadow:0 1px 0 #a6202e, 0 3px 6px rgba(0,0,0,.4); }
+  .hbtn.empty{ filter:grayscale(.65); opacity:.5; }
 
   /* 가로 회전 안내 (세로일 때) */
   #rotate{ position:fixed; inset:0; z-index:50; display:none; flex-direction:column; gap:14px;
@@ -282,6 +293,7 @@
     <div id="stick-knob"></div>
   </div>
   <button id="act-btn" class="abtn" onpointerdown="World.interact(event)"><span class="ab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 9h17l-1.3 9.1a2.2 2.2 0 0 1-2.2 1.9H7a2.2 2.2 0 0 1-2.2-1.9L3.5 9Z"/><path d="M8.3 9 11 3.2"/><path d="M15.7 9 13 3.2"/><path d="M9 12.6v4.2"/><path d="M12 12.6v4.2"/><path d="M15 12.6v4.2"/></svg></span><span class="ab-tx">채집</span></button>
+  <button id="heal-btn" class="hbtn empty" onclick="Explore.useHealItem()" title="회복 물약 사용"><span class="hb-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3h4M12 3v4"/><path d="M8.5 8.5h7l1.4 8.2a3 3 0 0 1-3 3.3H10.1a3 3 0 0 1-3-3.3z"/><path d="M12 12v4M10 14h4"/></svg></span><span class="hb-ct" id="heal-ct">0</span></button>
 </div>
 
 
@@ -505,6 +517,24 @@ const Explore = {
     document.getElementById('hud-level').textContent=s.level;
     const e=this.effStats(); document.getElementById('hud-hp').textContent=e.hp+'/'+e.maxHp;
     document.getElementById('hud-mats').textContent='🎒 '+Object.values(s.materials).reduce((n,v)=>n+(v||0),0);
+    // 맵 회복 버튼: 보유 개수 / 비활성 상태 갱신
+    const hr=CRAFT_DB.find(x=>x.effect==='heal'); const hn=hr?((c.craftedItems||{})[hr.id]||0):0;
+    const hc=document.getElementById('heal-ct'), hb=document.getElementById('heal-btn');
+    if(hc) hc.textContent=hn; if(hb) hb.classList.toggle('empty', hn<=0);
+  },
+  // 회복 물약 사용(맵 이동 중) — 전투 밖에서 체력 회복
+  useHealItem(){
+    const owned=this.cafe.craftedItems||{}; const r=CRAFT_DB.find(x=>x.effect==='heal');
+    const e=this.effStats();
+    if(e.hp>=e.maxHp){ if(window.World) World.toast('이미 체력이 가득해요 ❤️'); return; }
+    if(!r || !((owned[r.id]||0)>0)){ if(window.World) World.toast('회복 물약이 없어요 🧪<br><span class="ko">조합소에서 만들 수 있어요</span>'); return; }
+    owned[r.id]--; if(owned[r.id]<=0) delete owned[r.id]; this.cafe.craftedItems=owned;
+    const before=this.state.stats.hp;
+    this.state.stats.hp=Math.min(e.maxHp, before+Math.round(e.maxHp*(r.healPct||0.4)));
+    const g=this.state.stats.hp-before;
+    this.persist(); this.refreshHUD();
+    if(window.World) World.toast(`🧪 <b>회복 물약</b> — 체력 <b>${g}</b> 회복`);
+    if(window.Sfx) Sfx.play('gather'); if(window.exHaptic) exHaptic('success');
   },
 };
 
@@ -570,10 +600,10 @@ const WALK_FRAMES = {};
 const MAP_TEX = {};
 ['grass','path','water'].forEach(n=>{ const im=new Image(); im.src='tiles/'+n+'.png'; MAP_TEX[n]=im; });
 const MAP_OBJ = {};
-['tree_green','tree_orange','tree_pine','bush','rock','stump','flowers','grass_tuft','node_bean']
+['tree_green','tree_orange','tree_pine','bush','rock','stump','flowers','grass_tuft']
   .forEach(n=>{ const im=new Image(); im.src='sprites/'+n+'.png'; MAP_OBJ[n]=im; });
-// 채집 노드 아트: 페인티드 있으면 MAP_OBJ 키, 없으면 기존 SVG 폴백
-const NODE_ART = { bean:'node_bean' };
+// 채집 노드는 SVG 아이콘 사용(사용자 선호) — 페인티드 노드 아트 미사용
+const NODE_ART = {};
 // 잔디 반복용 사전 축소 캔버스(반복 크기 GR마다 1회 생성)
 let _grassCv=null;
 function grassCanvas(GR){
@@ -610,6 +640,7 @@ const CRAFT_DB = [
   { id:'cr_heart', name:'하트 마카롱',  icon:'💖', cost:{cacao:2,milk:1},    effect:'affection', where:'cafe', edesc:'카페: 메인 손님 호감 +10' },
   { id:'cr_atk',   name:'더블 샷',      icon:'⚔️', cost:{bean:3},            effect:'atkup',  where:'battle', edesc:'탐험: 이번 전투 공격력 +50%' },
   { id:'cr_def',   name:'크림 실드',    icon:'🛡️', cost:{milk:2,berry:2},    effect:'defup',  where:'battle', edesc:'탐험: 이번 전투 받는 피해 −50%' },
+  { id:'cr_heal',  name:'회복 물약',    icon:'🧪', cost:{milk:1,berry:2},    effect:'heal',   where:'battle', edesc:'탐험: 체력 40% 회복 (전투·이동 중 사용)', healPct:0.4 },
 ];
 // ---------- 이미지 프리로더 ----------
 const Assets = {
@@ -1259,6 +1290,10 @@ const Battle = {
     owned[id]--; if(owned[id]<=0) delete owned[id]; Explore.cafe.craftedItems=owned; Explore.persist();
     if(r.effect==='atkup'){ this.atkBuff=1.5; this.msg(`⚔️ <b>${r.name}</b> 사용! 이번 전투 공격력 +50%`); }
     else if(r.effect==='defup'){ this.dmgReduce=0.5; this.msg(`🛡️ <b>${r.name}</b> 사용! 이번 전투 받는 피해 −50%`); }
+    else if(r.effect==='heal'){ const p=this.pStat(); const before=Explore.state.stats.hp;
+      Explore.state.stats.hp=Math.min(p.maxHp, before+Math.round(p.maxHp*(r.healPct||0.4)));
+      const g=Explore.state.stats.hp-before; this.msg(`🧪 <b>${r.name}</b> 사용! 체력 <b>${g}</b> 회복`);
+      this.renderBars(); Explore.refreshHUD(); }
     Sfx.play('correct'); exHaptic('success'); this.hideItems(); },
   refreshSkill(){ const sb=document.getElementById('cmd-skill'); if(!sb)return; const ready=this.gauge>=this.GMAX;
     const fill=document.getElementById('skill-fill'); if(fill) fill.style.height=Math.min(100,this.gauge/this.GMAX*100)+'%';
