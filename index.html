@@ -206,7 +206,7 @@
 .cdex-card.locked { background:#2a2018; border-color:#3e2f22; cursor:default; }
 .cdex-art { width:100%; height:88px; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:9px; background:rgba(93,64,55,.04); }
 .cdex-art svg { width:auto; height:82px; max-width:100%; }
-.cdex-art img.cust-png { width:100%; height:100%; object-fit:cover; object-position:top center; display:block; }
+.cdex-art img.cust-png { width:100%; height:100%; object-fit:contain; object-position:center; display:block; }
 .cdex-art .locked-q { font-size:2.4rem; color:#5a4836; }
 .cdex-name { font-family:'Jua',sans-serif; font-size:0.72rem; color:#3e2723; margin-top:3px; }
 .cdex-rarity { font-size:0.58rem; color:#fff; background:var(--rc,#9e9e9e); border-radius:8px; padding:1px 7px; display:inline-block; margin-top:2px; }
@@ -1131,11 +1131,20 @@
         </div>
     </div>
 
+    <style>
+      #story-screen{ background:rgba(18,12,10,.5) !important; }
+      .story-char{ position:absolute; left:50%; bottom:150px; transform:translateX(-50%); height:min(56%,300px); width:auto; max-width:76%; object-fit:contain; object-position:bottom center; filter:drop-shadow(0 8px 14px rgba(0,0,0,.45)); z-index:1; pointer-events:none; }
+      .story-emoji{ position:absolute; left:50%; bottom:168px; transform:translateX(-50%); font-size:5rem; z-index:1; }
+      .story-panel{ position:absolute; left:50%; bottom:18px; transform:translateX(-50%); width:min(94%,520px); z-index:2; background:linear-gradient(180deg,#fffdf7,#fff2d8); border:3px solid #caa26a; border-radius:18px; padding:14px 18px 16px; box-shadow:0 8px 24px rgba(0,0,0,.45); text-align:center; font-family:'Jua','Nunito',sans-serif; }
+      .story-speaker2{ display:inline-block; background:linear-gradient(180deg,#c79a5a,#a6763a); color:#fff8ea; font-weight:bold; padding:3px 16px; border-radius:14px; margin-bottom:8px; font-size:1rem; }
+      .story-text2{ font-size:1.05rem; line-height:1.55; color:#4a3418; min-height:52px; margin:0 0 12px; }
+    </style>
     <div class="overlay hidden" id="story-screen">
-        <div class="story-box">
-            <div class="story-avatar" id="story-avatar"></div>
-            <h3 id="story-speaker" style="margin:0 0 15px 0; color:var(--brown-dark); border-bottom:2px dashed #ddd; padding-bottom:5px; display:inline-block;">부동산 사장님</h3>
-            <p id="story-text" style="font-size:1.1rem; line-height:1.6; min-height:80px;">이야기는 여기서 진행됩니다.</p>
+        <img id="story-char" class="story-char" src="" alt="" style="display:none">
+        <div class="story-emoji" id="story-avatar"></div>
+        <div class="story-panel">
+            <div class="story-speaker2" id="story-speaker">부동산 사장님</div>
+            <p class="story-text2" id="story-text">이야기는 여기서 진행됩니다.</p>
             <button class="story-btn" onclick="game.nextStory()">다음 ▶</button>
         </div>
     </div>
@@ -2064,10 +2073,11 @@ function updateTtsRateUI() {
 
 function speak(text, callback) {
     const cleanText = text ? text.split('(')[0].trim() : "";
-    if(game.isMuted || !cleanText) {
-        if(callback) setTimeout(callback, 1500);
-        return;
-    }
+    // [버그수정] 콜백은 반드시 '정확히 한 번' 실행 — 피버 등으로 TTS가 끊겨 onend/onerror가 안 와도
+    // 안전 타임아웃으로 다음 손님으로 넘어가게 함(피버 발동 시 안 넘어가던 문제).
+    let done = false;
+    const fire = () => { if(done) return; done = true; if(callback) callback(); };
+    if(game.isMuted || !cleanText) { setTimeout(fire, 1200); return; }
     if('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
         if(voiceList.length === 0) voiceList = window.speechSynthesis.getVoices();
@@ -2075,22 +2085,23 @@ function speak(text, callback) {
         u.lang = 'en-US'; u.rate = getTtsRate();
         const v = voiceList.find(v => v.name.includes('Google US English')) || voiceList.find(v => v.lang === 'en-US');
         if(v) u.voice = v;
-        if(callback) { u.onend = callback; u.onerror = callback; }
+        u.onend = fire; u.onerror = fire;
         window.speechSynthesis.speak(u);
+        setTimeout(fire, Math.max(2600, cleanText.length * 110)); // 폴백: TTS 이벤트 유실 대비
     } else {
-        if(callback) setTimeout(callback, 1500);
+        setTimeout(fire, 1200);
     }
 }
 
 /* --- Story Data --- */
 const storyLines = [
-    { s: "🥸", name: "부동산 사장님", text: "자, 계약은 끝났네. 영어 마을이라 월세가 좀 비싸지만 목은 좋아." },
-    { s: "👩‍🍳", name: "나(사장)", text: "감사합니다! 그런데 손님들이 다 영어로 주문한다면서요?" },
-    { s: "🥸", name: "부동산 사장님", text: "그렇지. 여긴 손님들이 <b style='color:var(--red)'>단어 뜻</b>을 말하면, 자네가 알맞은 <b style='color:var(--blue)'>영단어 컵</b>을 줘야 해." },
-    { s: "👿", name: "진상 손님", text: "(갑자기 등장) 어이! 빨리빨리 안 줘? 난 성격 급해서 3초밖에 못 기다려!" },
-    { s: "🥸", name: "부동산 사장님", text: "저런 빨간 녀석들은 <b style='color:var(--red)'>진상 손님</b>이야. 시간 제한이 짧으니 서둘러야 해." },
-    { s: "🎩", name: "VIP", text: "흠... 저는 품격 있게 직접 스펠링을 적어서 주문하겠습니다." },
-    { s: "🥸", name: "부동산 사장님", text: "저런 <b style='color:var(--gold)'>VIP</b>는 팁을 많이 주지. 타자를 쳐서 입력해야 해. 그럼 행운을 비네!" }
+    { img:'chars/npc_realtor.png', s:"🥸", name:"부동산 사장님", text:"자, 계약은 끝났네. 영어 마을이라 월세가 좀 비싸지만 목은 좋아." },
+    { s:"👩‍🍳", name:"나(사장)", text:"감사합니다! 그런데 손님들이 다 영어로 주문한다면서요?" },
+    { img:'chars/npc_realtor.png', s:"🥸", name:"부동산 사장님", text:"그렇지. 여긴 손님들이 <b style='color:var(--red)'>단어 뜻</b>을 말하면, 자네가 알맞은 <b style='color:var(--blue)'>영단어 컵</b>을 줘야 해." },
+    { img:'chars/rush.png', s:"👿", name:"진상 손님", text:"(갑자기 등장) 어이! 빨리빨리 안 줘? 난 성격 급해서 3초밖에 못 기다려!" },
+    { img:'chars/npc_realtor.png', s:"🥸", name:"부동산 사장님", text:"저런 빨간 녀석들은 <b style='color:var(--red)'>진상 손님</b>이야. 시간 제한이 짧으니 서둘러야 해." },
+    { img:'chars/vip.png', s:"🎩", name:"VIP", text:"흠... 저는 품격 있게 직접 스펠링을 적어서 주문하겠습니다." },
+    { img:'chars/npc_realtor.png', s:"🥸", name:"부동산 사장님", text:"저런 <b style='color:var(--gold)'>VIP</b>는 팁을 많이 주지. 타자를 쳐서 입력해야 해. 그럼 행운을 비네!" }
 ];
 
 // ==========================================
@@ -3770,7 +3781,17 @@ equipItem: function(category, level) {
         }
         
         const line = storyLines[this.storyIndex];
-        document.getElementById('story-avatar').innerText = line.s; 
+        const charEl = document.getElementById('story-char');
+        const emojiEl = document.getElementById('story-avatar');
+        if(line.img){
+            charEl.onload = function(){ charEl.style.display=''; emojiEl.style.display='none'; };
+            charEl.onerror = function(){ charEl.style.display='none'; emojiEl.style.display=''; emojiEl.textContent = line.s || '💬'; };
+            charEl.src = line.img;
+            if(charEl.complete && charEl.naturalWidth>0){ charEl.style.display=''; emojiEl.style.display='none'; }
+        } else {
+            charEl.style.display='none'; charEl.removeAttribute('src');
+            emojiEl.style.display=''; emojiEl.textContent = line.s || '💬';
+        }
         document.getElementById('story-speaker').innerText = line.name;
         document.getElementById('story-text').innerHTML = line.text;
     },
