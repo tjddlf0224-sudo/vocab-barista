@@ -1349,7 +1349,7 @@
         </div>
         <div id="ranking-board" class="quest-list hidden"></div>
 
-        <button id="revive-ad-btn" class="buy-btn" onclick="game.reviveByAd()" style="background:linear-gradient(180deg,#7cc6f0,#4a9fd8); box-shadow:0 4px 0 #3a7fb0; width:90%; margin-top:16px; font-size:1rem;">
+        <button id="revive-ad-btn" class="buy-btn" onclick="game.reviveByAd()" style="display:none; background:linear-gradient(180deg,#7cc6f0,#4a9fd8); box-shadow:0 4px 0 #3a7fb0; width:90%; margin-top:16px; font-size:1rem;">
             🎬 광고 보고 무료 부활
         </button>
         <div style="display:flex; gap:10px; justify-content:center; margin-top:10px; width:90%;">
@@ -3713,12 +3713,11 @@ equipItem: function(category, level) {
         // 1. 먼저 결과 화면을 켭니다.
         this.showResultScreen(); 
 
-        // 2. 버튼 숨김 로직 (기존 유지)
-        const revBtn = document.getElementById('revive-btn');
-        if(revBtn) {
-            revBtn.style.display = 'none'; 
-            revBtn.classList.add('hidden'); 
-        }
+        // 2. 버튼 숨김 로직 — 부활 버튼들은 사망(gameOver) 시에만 노출, 중단 시 모두 숨김
+        ['revive-btn','revive-ad-btn'].forEach(id=>{
+            const b = document.getElementById(id); if(!b) return;
+            b.style.display = 'none'; b.classList.add('hidden');
+        });
     },
 
     gameOver: function() {
