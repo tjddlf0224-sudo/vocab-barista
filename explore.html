@@ -612,7 +612,9 @@ const Explore = {
   srsCorrect(word){ const arr=this.cafe.myWords||[]; const v=arr.find(x=>x.w&&x.w.toLowerCase()===word);
     if(v){ v.box=(v.box||1)+1; v.due=(this.cafe.turnCount||0)+(v.box*2); if(v.box>=5){ this.cafe.myWords=arr.filter(x=>x!==v); } this.persist(); } },
   // 채용 여부: 카페 손님 도감에 해당 메인 캐릭터가 등록(=만난 적 있음)되면 동행 가능
-  isRecruited(key){ if(!key||key==='none') return true; const c=COMPANIONS[key]; return !!(c&&c.charId&&(this.cafe&&this.cafe.collectedChars||[]).includes(c.charId)); },
+  // 동행 채용: 카페에서 그 메인 캐릭터 호감도를 MAX(100)까지 올려야 가능
+  isRecruited(key){ if(!key||key==='none') return true; const c=COMPANIONS[key]; if(!(c&&c.charId)) return false;
+    const aff=(this.cafe&&this.cafe.affection&&this.cafe.affection[c.charId])||0; return aff>=100; },
   // 장비+동행 패시브 보너스 합산
   effBonus(){ const b={maxHp:0,atk:0,def:0,goldPct:0}; const eq=this.state.equip||{};
     ['weapon','armor'].forEach(slot=>{ const it=(EQUIP_DB[slot]||[]).find(x=>x.id===eq[slot]); if(it){ b.atk+=it.atk||0; b.def+=it.def||0; b.maxHp+=it.hp||0; } });
@@ -1178,12 +1180,17 @@ const World = {
     ctx.fillStyle='#10121a'; ctx.fillRect(0,0,WT,HT);
     for(let y=0;y<HT;y++)for(let x=0;x<WT;x++){ if(!this.explored[y][x])continue; ctx.fillStyle=this._mmColor(x,y); ctx.fillRect(x,y,1,1); }
     const dot=(x,y,c)=>{ if(x<0||y<0||x>=WT||y>=HT||!this.explored[y][x])return; ctx.fillStyle=c; ctx.fillRect(x,y,1,1); };
+    const seen=(x,y)=>x>=0&&y>=0&&x<WT&&y<HT&&this.explored[y][x];
+    const blk=(x,y,c,r)=>{ ctx.fillStyle=c; for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){ const xx=x+dx,yy=y+dy; if(xx>=0&&yy>=0&&xx<WT&&yy<HT) ctx.fillRect(xx,yy,1,1); } };
     if(this.gate) dot(this.gate.x,HT-1,'#ffcf4d');
     if(this.portal) dot(this.portal.x,0,'#b46bff');
     for(const n of (this.nodes||[])) if(!n.taken) dot(n.x,n.y,'#ffe066');
-    for(const np of (this.npcs||[])) dot(np.x,np.y,'#ff6b6b');
-    if(this.secret) dot(this.secret.x,this.secret.y,'#c9a6ff');
-    const px=Math.round(this.px), py=Math.round(this.py); if(px>=0&&py>=0&&px<WT&&py<HT){ ctx.fillStyle='#fff'; ctx.fillRect(px,py,1,1); }
+    if(this.secret) dot(this.secret.x,this.secret.y,'#c9a6ff');   // 어둠의 상인은 숨김 유지(작은 점)
+    // 퀘스트 NPC — 발견 시 크고 선명하게(어두운 테두리+빨강 코어)
+    for(const np of (this.npcs||[])){ if(!seen(np.x,np.y))continue; blk(np.x,np.y,'#20060a',2); blk(np.x,np.y,'#ff4d4d',1); }
+    // 내 캐릭터 — 항상 가장 눈에 띄게(어두운 테두리 + 밝은 청록 코어)
+    const px=Math.round(this.px), py=Math.round(this.py);
+    blk(px,py,'#00131c',2); blk(px,py,'#39e6ff',1);
     this._miniDirty=false;
     const badge=document.getElementById('mm-badge'); if(badge){ const done=(Explore.state.maps||{})[Explore.state.map.zone];
       badge.textContent = done?'🗺️ 완성':(Math.round(this.exploredCount/(WT*HT)*100)+'%'); badge.classList.toggle('done', !!done); } },
@@ -1415,7 +1422,7 @@ const World = {
         if(key===cur) html += `<div class="cs-selbadge">선택중</div>`;
       } else {
         html = `<div class="cs-art"><span class="emoji">❓</span></div><div class="cs-name">???</div><div class="cs-skill"></div>`
-             + `<div class="cs-lockov"><span class="lk">🔒</span>카페에서 ${c.name} 손님을<br>만나면 해제</div>`;
+             + `<div class="cs-lockov"><span class="lk">🔒</span>카페에서 ${c.name}<br>호감도 MAX 달성 시 해제</div>`;
       }
       const card=document.createElement('div');
       card.className='cs-card'+(key===cur&&recruited?' selected':'')+(recruited?'':' locked');
