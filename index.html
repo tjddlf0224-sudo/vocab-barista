@@ -9,9 +9,9 @@
     <link rel="apple-touch-icon" href="icon-192.png">
 
     <!-- 랭킹: Firebase Firestore (온라인 전용, 오프라인이면 graceful) -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+    <script src="vendor/firebase/firebase-app-compat.js"></script>
+    <script src="vendor/firebase/firebase-firestore-compat.js"></script>
+    <script src="vendor/firebase/firebase-auth-compat.js"></script>
     <script>
       try {
         firebase.initializeApp({
@@ -25,6 +25,24 @@
         window.vbDB = firebase.firestore();
         try { window.vbAuth = firebase.auth(); } catch(e2){ console.warn('Auth 초기화 실패:', e2); }
       } catch(e) { console.warn('Firebase 초기화 실패(오프라인?):', e); }
+    </script>
+    <script>
+      // [진단] 잡히지 않은 JS 오류를 화면에 표시 (네이티브에서 콘솔을 못 볼 때 원인 파악용)
+      window.addEventListener('error', function(ev){
+        try{
+          var box=document.getElementById('vb-errbox');
+          if(!box){ box=document.createElement('div'); box.id='vb-errbox';
+            box.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:99999;background:rgba(170,20,20,.96);color:#fff;font:12px/1.45 monospace;padding:10px 12px;max-height:45%;overflow:auto;white-space:pre-wrap;';
+            box.onclick=function(){ box.remove(); };
+            (document.body||document.documentElement).appendChild(box); }
+          box.textContent='⚠️ JS 오류 (탭하면 닫힘):\n'+((ev&&(ev.message||ev.error))||'')+'\n'+((ev&&ev.filename)||'')+' :'+((ev&&ev.lineno)||'');
+        }catch(_){}
+      });
+      // [폴백] 인증 IIFE가 못 떠도 버튼이 무반응이 되지 않도록 임시 핸들러(아래 IIFE가 실제 구현으로 덮어씀)
+      window.vbGuest = window.vbGuest || function(){ try{ sessionStorage.setItem('vb_guest','1'); }catch(e){} var l=document.getElementById('login-screen'); if(l){ l.classList.add('hidden'); l.style.display='none'; } };
+      ['vbSignInGoogle','vbSignInApple','vbSignInEmail','vbSignUpEmail','vbResetPw'].forEach(function(n){
+        window[n]=window[n]||function(){ var e=document.getElementById('vbLoginError'); if(e) e.textContent='로그인 준비 중이에요. 잠시 후 다시 시도하거나 "로그인 없이 둘러보기"를 눌러주세요.'; };
+      });
     </script>
     <meta name="theme-color" content="#3e2723">
 
