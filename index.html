@@ -1046,7 +1046,7 @@
       .login-inner{ position:relative; z-index:1; width:100%; max-width:360px; background:rgba(255,250,242,.97); border-radius:22px; padding:26px 22px 18px; box-shadow:0 16px 40px rgba(0,0,0,.4); text-align:center; font-family:'Jua','Nunito',sans-serif; max-height:92vh; overflow-y:auto; }
       .login-logo{ font-size:2.6rem; }
       .login-title{ font-size:1.5rem; color:#5b3b1a; margin:4px 0 2px; }
-      .login-sub{ font-size:.86rem; color:#8d7a66; line-height:1.5; margin-bottom:18px; }
+      .login-sub{ font-size:.86rem; color:#6f5d48; line-height:1.5; margin-bottom:18px; }
       .login-btn{ width:100%; display:flex; align-items:center; justify-content:center; gap:10px; padding:12px; border-radius:13px; border:none; font-family:inherit; font-size:1rem; font-weight:bold; cursor:pointer; margin-bottom:10px; box-shadow:0 3px 0 rgba(0,0,0,.18); }
       .login-btn svg{ width:20px; height:20px; }
       .login-btn.google{ background:#fff; color:#3c4043; border:1.5px solid #dadce0; }
@@ -1138,7 +1138,7 @@
       .story-emoji{ position:absolute; left:50%; bottom:168px; transform:translateX(-50%); font-size:5rem; z-index:1; }
       .story-panel{ position:absolute; left:50%; bottom:18px; transform:translateX(-50%); width:min(94%,520px); z-index:2; background:linear-gradient(180deg,#fffdf7,#fff2d8); border:3px solid #caa26a; border-radius:18px; padding:14px 18px 16px; box-shadow:0 8px 24px rgba(0,0,0,.45); text-align:center; font-family:'Jua','Nunito',sans-serif; }
       .story-speaker2{ display:inline-block; background:linear-gradient(180deg,#c79a5a,#a6763a); color:#fff8ea; font-weight:bold; padding:3px 16px; border-radius:14px; margin-bottom:8px; font-size:1rem; }
-      .story-text2{ font-size:1.05rem; line-height:1.55; color:#4a3418; min-height:52px; margin:0 0 12px; }
+      .story-panel .story-text2{ font-size:1.06rem; line-height:1.55; color:#3a2510; min-height:52px; margin:0 0 12px; font-weight:bold; }
     </style>
     <div class="overlay hidden" id="story-screen">
         <img id="story-char" class="story-char" src="" alt="" style="display:none">
@@ -1181,11 +1181,13 @@
       .settings-panel h2{ text-align:center; margin-bottom:6px; }
       .set-sec{ margin:14px 0; padding:14px; background:#fff8ee; border:2px solid #ecd9bd; border-radius:14px; }
       #set-danger-sec{ background:#fdefe9; border-color:#f0c4b4; }
-      .set-label{ font-size:.78rem; font-weight:bold; color:#a6763a; letter-spacing:.5px; margin-bottom:8px; }
-      #set-danger-sec .set-label{ color:#c0392b; }
-      .set-account{ font-size:1rem; color:#5b3b1a; line-height:1.5; margin-bottom:12px; word-break:break-all; }
-      .set-sub{ font-size:.8rem; color:#9d8a72; }
-      .set-desc{ font-size:.82rem; color:#8d6e5a; line-height:1.5; margin-bottom:10px; }
+      .set-label{ font-size:.8rem; font-weight:bold; color:#8a5a24; letter-spacing:.5px; margin-bottom:8px; }
+      #set-danger-sec .set-label{ color:#b3341f; }
+      .set-account{ font-size:1rem; color:#3f2914; line-height:1.5; margin-bottom:12px; word-break:break-all; }
+      .set-sub{ font-size:.82rem; color:#786450; }
+      .settings-panel .set-desc{ font-size:.85rem; color:#5f4630; line-height:1.55; margin-bottom:10px; }
+      /* [가독성] 밝은 패널 안 문단이 .overlay p(연한 탄색)로 뭉개지지 않도록 */
+      .overlay .panel p{ color:#5a4128; }
       .set-btn{ width:100%; padding:11px; border:none; border-radius:12px; font-family:'Jua','Nunito',sans-serif; font-size:.95rem; cursor:pointer; margin-top:6px; }
       .set-btn-primary{ background:linear-gradient(180deg,#f4c04e,#e0a52e); color:#5b3b1a; box-shadow:0 3px 0 #bd8a24; }
       .set-btn-neutral{ background:#e8ddcc; color:#6f5544; }
@@ -2162,7 +2164,7 @@ function speak(text, callback) {
 /* --- Story Data --- */
 const storyLines = [
     { img:'chars/npc_realtor.png', s:"🥸", name:"부동산 사장님", text:"자, 계약은 끝났네. 영어 마을이라 월세가 좀 비싸지만 목은 좋아." },
-    { s:"👩‍🍳", name:"나(사장)", text:"감사합니다! 그런데 손님들이 다 영어로 주문한다면서요?" },
+    { noChar:true, name:"나(사장)", text:"감사합니다! 그런데 손님들이 다 영어로 주문한다면서요?" },
     { img:'chars/npc_realtor.png', s:"🥸", name:"부동산 사장님", text:"그렇지. 여긴 손님들이 <b style='color:var(--red)'>단어 뜻</b>을 말하면, 자네가 알맞은 <b style='color:var(--blue)'>영단어 컵</b>을 줘야 해." },
     { img:'chars/rush.png', s:"👿", name:"진상 손님", text:"(갑자기 등장) 어이! 빨리빨리 안 줘? 난 성격 급해서 3초밖에 못 기다려!" },
     { img:'chars/npc_realtor.png', s:"🥸", name:"부동산 사장님", text:"저런 빨간 녀석들은 <b style='color:var(--red)'>진상 손님</b>이야. 시간 제한이 짧으니 서둘러야 해." },
@@ -3849,9 +3851,13 @@ equipItem: function(category, level) {
             charEl.onerror = function(){ charEl.style.display='none'; emojiEl.style.display=''; emojiEl.textContent = line.s || '💬'; };
             charEl.src = line.img;
             if(charEl.complete && charEl.naturalWidth>0){ charEl.style.display=''; emojiEl.style.display='none'; }
-        } else {
+        } else if(line.s && !line.noChar){
             charEl.style.display='none'; charEl.removeAttribute('src');
-            emojiEl.style.display=''; emojiEl.textContent = line.s || '💬';
+            emojiEl.style.display=''; emojiEl.textContent = line.s;
+        } else {
+            // 플레이어(나 사장) 등 — 캐릭터/이모지 없이 대화창만 (성별 미지정)
+            charEl.style.display='none'; charEl.removeAttribute('src');
+            emojiEl.style.display='none'; emojiEl.textContent='';
         }
         document.getElementById('story-speaker').innerText = line.name;
         document.getElementById('story-text').innerHTML = line.text;
