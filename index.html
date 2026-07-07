@@ -1103,6 +1103,7 @@
                     <button class="ss-ghost" onclick="game.startStory()"><svg class="bic" viewBox="0 0 24 24"><rect x="3" y="10" width="18" height="10" rx="1.5" fill="currentColor"/><path d="M3 10l1.4-3.3 17.2 0L20.2 10z" fill="currentColor"/><path d="M7.5 6.9 6.1 10M12.2 6.9 10.8 10M16.9 6.9 15.5 10" stroke="#fff8ee" stroke-width="1.2"/></svg>프롤로그</button>
                     <button class="ss-ghost" onclick="game.openWordbook()"><svg class="bic" viewBox="0 0 24 24" fill="currentColor"><path d="M12 6.6C9.8 5.1 6.4 4.7 4 5.3v12.5c2.4-.6 5.8-.2 8 1.3 2.2-1.5 5.6-1.9 8-1.3V5.3c-2.4-.6-5.8-.2-8 1.3z"/><path d="M12 6.6v12.5" fill="none" stroke="#fff8ee" stroke-width="1"/></svg>오답 노트</button>
                 </div>
+                <button class="ss-settings-link" onclick="vbOpenSettings()">⚙️ 설정 · 계정 관리</button>
             </div>
         </div>
     </div>
@@ -1165,9 +1166,70 @@
                 <button type="button" class="tts-rate-btn" data-rate="1.0" onclick="setTtsRate(1.0)">1.0x</button>
                 <button type="button" class="tts-rate-btn" data-rate="1.2" onclick="setTtsRate(1.2)">1.2x</button>
             </div>
+            <button class="btn-mini" style="background:linear-gradient(180deg,#b9a9d6,#9a86c4); color:#fff; box-shadow:0 3px 0 #7a68a8;" onclick="vbOpenSettings()">⚙️ 설정 · 계정</button>
             <button class="btn-mini" style="background:linear-gradient(180deg,#cdbfb0,#a89684); color:#fff; box-shadow:0 3px 0 #8a7560;" onclick="game.manualQuit()">저장하고 타이틀로</button>
             <button class="reset-btn pause-reset" onclick="game.resetData()">데이터 초기화</button>
         </div>
+    </div>
+
+    <!-- ⚙️ 설정 · 계정 -->
+    <style>
+      .ss-settings-link{ width:100%; margin-top:12px; background:rgba(255,253,248,.14); color:#fff3df; border:1.5px solid rgba(255,243,223,.5);
+        padding:11px 8px; border-radius:16px; font-family:'Jua','Nunito',sans-serif; font-size:.95rem; cursor:pointer; letter-spacing:.3px; }
+      .ss-settings-link:active{ transform:translateY(2px); background:rgba(255,253,248,.22); }
+      .settings-panel{ max-height:88vh; overflow-y:auto; text-align:left; }
+      .settings-panel h2{ text-align:center; margin-bottom:6px; }
+      .set-sec{ margin:14px 0; padding:14px; background:#fff8ee; border:2px solid #ecd9bd; border-radius:14px; }
+      #set-danger-sec{ background:#fdefe9; border-color:#f0c4b4; }
+      .set-label{ font-size:.78rem; font-weight:bold; color:#a6763a; letter-spacing:.5px; margin-bottom:8px; }
+      #set-danger-sec .set-label{ color:#c0392b; }
+      .set-account{ font-size:1rem; color:#5b3b1a; line-height:1.5; margin-bottom:12px; word-break:break-all; }
+      .set-sub{ font-size:.8rem; color:#9d8a72; }
+      .set-desc{ font-size:.82rem; color:#8d6e5a; line-height:1.5; margin-bottom:10px; }
+      .set-btn{ width:100%; padding:11px; border:none; border-radius:12px; font-family:'Jua','Nunito',sans-serif; font-size:.95rem; cursor:pointer; margin-top:6px; }
+      .set-btn-primary{ background:linear-gradient(180deg,#f4c04e,#e0a52e); color:#5b3b1a; box-shadow:0 3px 0 #bd8a24; }
+      .set-btn-neutral{ background:#e8ddcc; color:#6f5544; }
+      .set-btn-danger{ background:linear-gradient(180deg,#e8705c,#d64f3a); color:#fff; box-shadow:0 3px 0 #b23a28; }
+      .set-btn-danger[disabled]{ opacity:.55; cursor:default; }
+      .set-del-confirm{ margin-top:12px; padding-top:12px; border-top:1.5px dashed #e0b3a3; }
+      .set-warn{ font-size:.86rem; color:#c0392b; line-height:1.55; margin-bottom:10px; font-weight:bold; }
+      #set-del-pw-row input{ width:100%; padding:11px; border:2px solid #e0b3a3; border-radius:10px; font-size:16px; margin-bottom:8px; box-sizing:border-box; font-family:inherit; }
+      .set-del-status{ font-size:.82rem; color:#c0392b; min-height:18px; margin-bottom:6px; text-align:center; }
+      .set-del-actions{ display:flex; gap:8px; }
+      .set-del-actions .set-btn{ margin-top:0; }
+      .set-link{ color:#494fec; font-size:.92rem; text-decoration:none; word-break:break-all; }
+    </style>
+    <div id="settings-screen" class="overlay hidden">
+      <div class="panel settings-panel">
+        <h2>⚙️ 설정</h2>
+        <div class="set-sec">
+          <div class="set-label">계정</div>
+          <div class="set-account" id="set-account-status">게스트로 플레이 중</div>
+          <button id="set-login-btn" class="set-btn set-btn-primary" onclick="sessionStorage.removeItem('vb_guest'); location.reload();">로그인 하기</button>
+          <button id="set-logout-btn" class="set-btn set-btn-neutral hidden" onclick="vbSignOut()">로그아웃</button>
+        </div>
+        <div class="set-sec hidden" id="set-danger-sec">
+          <div class="set-label">계정 삭제</div>
+          <p class="set-desc">계정과 클라우드에 저장된 모든 학습 기록(단어·캐릭터 도감, 통계, 재화)이 영구적으로 삭제되며 복구할 수 없어요.</p>
+          <button id="set-del-open" class="set-btn set-btn-danger" onclick="vbShowDeleteConfirm()">계정 삭제</button>
+          <div id="set-del-confirm" class="set-del-confirm hidden">
+            <p class="set-warn">⚠️ 정말 삭제할까요?<br>이 작업은 되돌릴 수 없어요.</p>
+            <div id="set-del-pw-row" class="hidden">
+              <input type="password" id="set-del-pw" placeholder="비밀번호 확인" autocomplete="current-password" spellcheck="false">
+            </div>
+            <div id="set-del-status" class="set-del-status"></div>
+            <div class="set-del-actions">
+              <button class="set-btn set-btn-neutral" onclick="vbHideDeleteConfirm()">취소</button>
+              <button id="set-del-go" class="set-btn set-btn-danger" onclick="vbDeleteAccount()">영구 삭제</button>
+            </div>
+          </div>
+        </div>
+        <div class="set-sec">
+          <div class="set-label">문의 · 지원</div>
+          <a class="set-link" href="mailto:tjddlf0224@gmail.com">tjddlf0224@gmail.com</a>
+        </div>
+        <button class="btn-mini" onclick="vbCloseSettings()" style="background:linear-gradient(180deg,#cdbfb0,#a89684); color:#fff; box-shadow:0 3px 0 #8a7560; padding:10px; width:100%; margin-top:6px;">닫기</button>
+      </div>
     </div>
 
     <div id="inventory-screen" class="overlay hidden">
@@ -4104,6 +4166,49 @@ equipItem: function(category, level) {
 // Start Game
 game.init();
 
+// ==================== ⚙️ 설정 화면 (계정 상태 · 삭제 확인 UI) ====================
+window.vbCloseSettings = function(){ const s=document.getElementById('settings-screen'); if(s){ s.classList.add('hidden'); s.style.display=''; } };
+window.vbHideDeleteConfirm = function(){
+  const c=document.getElementById('set-del-confirm'); if(c) c.classList.add('hidden');
+  const pw=document.getElementById('set-del-pw'); if(pw) pw.value='';
+  const st=document.getElementById('set-del-status'); if(st) st.textContent='';
+  const openBtn=document.getElementById('set-del-open'); if(openBtn) openBtn.classList.remove('hidden');
+  const go=document.getElementById('set-del-go'); if(go) go.disabled=false;
+};
+window.vbShowDeleteConfirm = function(){
+  const u=(window.vbAuth && window.vbAuth.currentUser)||null;
+  const pid=u?(((u.providerData[0]||{}).providerId)||''):'';
+  const c=document.getElementById('set-del-confirm'); if(c) c.classList.remove('hidden');
+  const pwRow=document.getElementById('set-del-pw-row'); if(pwRow) pwRow.classList.toggle('hidden', pid!=='password');
+  const st=document.getElementById('set-del-status'); if(st) st.textContent='';
+  const openBtn=document.getElementById('set-del-open'); if(openBtn) openBtn.classList.add('hidden');
+};
+window.vbOpenSettings = function(){
+  const u=(window.vbAuth && window.vbAuth.currentUser)||null;
+  const isGuest=sessionStorage.getItem('vb_guest')==='1';
+  const statusEl=document.getElementById('set-account-status');
+  const logoutBtn=document.getElementById('set-logout-btn');
+  const loginBtn=document.getElementById('set-login-btn');
+  const dangerSec=document.getElementById('set-danger-sec');
+  if(typeof vbHideDeleteConfirm==='function') vbHideDeleteConfirm();
+  if(u){
+    const pid=((u.providerData[0]||{}).providerId)||'';
+    const provName=pid==='google.com'?'Google':pid==='apple.com'?'Apple':'이메일';
+    if(statusEl) statusEl.innerHTML='<b>'+(u.email||'로그인됨')+'</b><br><span class="set-sub">'+provName+' 계정으로 로그인됨</span>';
+    if(logoutBtn) logoutBtn.classList.remove('hidden');
+    if(loginBtn) loginBtn.classList.add('hidden');
+    if(dangerSec) dangerSec.classList.remove('hidden');
+  } else {
+    if(statusEl) statusEl.innerHTML=isGuest ? '게스트로 플레이 중<br><span class="set-sub">로그인하면 모든 기기에서 기록이 동기화돼요</span>' : '로그인되지 않음';
+    if(logoutBtn) logoutBtn.classList.add('hidden');
+    if(loginBtn) loginBtn.classList.remove('hidden');
+    if(dangerSec) dangerSec.classList.add('hidden');
+  }
+  const s=document.getElementById('settings-screen'); if(s){ s.classList.remove('hidden'); s.style.display='flex'; }
+};
+// firebase 미가용(오프라인/차단) 시 폴백 — 실제 삭제는 아래 인증 IIFE에서 덮어씀
+if(typeof window.vbDeleteAccount!=='function'){ window.vbDeleteAccount=function(){ const st=document.getElementById('set-del-status'); if(st) st.textContent='지금은 계정 삭제를 처리할 수 없어요. 네트워크 확인 후 다시 시도하세요.'; }; }
+
 // ==================== 로그인 + 클라우드 동기화 (Firebase Auth) ====================
 (function(){
   const SYNC_KEYS = ['vb_save_v7','vb_mastered_v7','vb_ranks_v4','vb_category'];
@@ -4167,7 +4272,7 @@ game.init();
     'auth/invalid-email':'올바른 이메일 형식이 아니에요','auth/user-not-found':'가입되지 않은 이메일이에요','auth/wrong-password':'비밀번호가 틀렸어요',
     'auth/email-already-in-use':'이미 가입된 이메일이에요','auth/weak-password':'비밀번호는 6자 이상이어야 해요','auth/too-many-requests':'잠시 후 다시 시도해주세요',
     'auth/invalid-credential':'이메일 또는 비밀번호가 올바르지 않아요','auth/operation-not-allowed':'이 로그인 방식이 아직 활성화되지 않았어요(콘솔 설정 필요)',
-    'auth/configuration-not-found':'로그인이 아직 설정되지 않았어요 (Firebase 콘솔에서 인증 활성화 필요)','auth/popup-blocked':'팝업이 차단됐어요. 팝업 허용 후 다시 시도하세요','auth/popup-closed-by-user':'로그인 창이 닫혔어요','auth/network-request-failed':'네트워크 오류. 연결을 확인하세요','auth/unauthorized-domain':'허용되지 않은 도메인이에요(콘솔 승인 도메인 추가 필요)'}; return M[c]||('오류: '+(e.message||c)); }
+    'auth/configuration-not-found':'로그인이 아직 설정되지 않았어요 (Firebase 콘솔에서 인증 활성화 필요)','auth/popup-blocked':'팝업이 차단됐어요. 팝업 허용 후 다시 시도하세요','auth/popup-closed-by-user':'로그인 창이 닫혔어요','auth/network-request-failed':'네트워크 오류. 연결을 확인하세요','auth/unauthorized-domain':'허용되지 않은 도메인이에요(콘솔 승인 도메인 추가 필요)','auth/requires-recent-login':'보안을 위해 다시 로그인이 필요해요. 로그아웃 후 다시 로그인한 뒤 시도해주세요','auth/user-token-expired':'로그인 세션이 만료됐어요. 다시 로그인한 뒤 시도해주세요','auth/user-mismatch':'삭제하려는 계정과 다른 계정으로 인증됐어요. 같은 계정으로 다시 시도해주세요','auth/operation-not-supported-in-this-environment':'이 환경에서는 이 방식으로 본인 확인을 할 수 없어요. 앱에서 다시 시도해주세요','auth/cancelled-popup-request':'본인 확인 창이 취소됐어요. 다시 시도해주세요'}; return M[c]||('오류: '+(e.message||c)); }
   // ---- 게이트 ----
   if(sessionStorage.getItem('vb_guest')==='1'){ hideLogin(); }
   auth.onAuthStateChanged(async (user)=>{
@@ -4177,10 +4282,76 @@ game.init();
       if(changed){ location.reload(); return; }
       hideLogin(); saveCloud();
     } else {
+      if(window.__vbDeleting) return;   // 계정 삭제 진행 중이면 로그인 화면/동기화 플래그를 건드리지 않음
       if(sessionStorage.getItem('vb_guest')==='1') return;
       sessionStorage.removeItem('vb_synced'); showLogin();
     }
   });
+
+  // ---- 계정 삭제 (재인증 → Firestore 문서 삭제 → Auth 계정 삭제) ----
+  const delStatus = m => { const s=$('set-del-status'); if(s) s.textContent = m||''; };
+  async function _reauth(u, pid){
+    try{
+      if(pid==='google.com'){
+        if(nativeAuth){ const r=await nativeAuth.signInWithGoogle({scopes:['profile','email']}); const c=(r&&r.credential)||{}; await u.reauthenticateWithCredential(firebase.auth.GoogleAuthProvider.credential(c.idToken,c.accessToken)); }
+        else { await u.reauthenticateWithPopup(new firebase.auth.GoogleAuthProvider()); }
+        return true;
+      } else if(pid==='apple.com'){
+        if(nativeAuth){ const r=await nativeAuth.signInWithApple({scopes:['name','email']}); const c=(r&&r.credential)||{}; const p=new firebase.auth.OAuthProvider('apple.com'); await u.reauthenticateWithCredential(p.credential({idToken:c.idToken, rawNonce:c.nonce})); }
+        else { await u.reauthenticateWithPopup(new firebase.auth.OAuthProvider('apple.com')); }
+        return true;
+      } else if(pid==='password'){
+        const pw=($('set-del-pw')||{}).value||'';
+        if(!pw){ delStatus('비밀번호를 입력하세요'); return false; }
+        await u.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(u.email, pw));
+        return true;
+      }
+    }catch(e){ delStatus('본인 확인 실패: '+mapErr(e)); return false; }
+    delStatus('본인 확인 방법을 확인할 수 없어요. 다시 로그인 후 시도해주세요.');
+    return false;
+  }
+  async function _purgeAndDelete(u){
+    // 계정(uid)을 먼저 지우면 재시도 경로가 사라지므로, 클라우드 데이터를 먼저 정리한다.
+    if(window.vbDB){
+      // 랭킹 행(uid 매칭) 정리 — 인증이 유효한 u.delete() 이전에 (best-effort: 규칙 미허용 시 계속 진행)
+      try{ const rs = await window.vbDB.collection('vb_ranking').where('uid','==',u.uid).get();
+        await Promise.all(rs.docs.map(d=>d.ref.delete())); }catch(e){ console.warn('vb_ranking 정리 실패:', e); }
+      // 사용자 문서 삭제(이메일·전체 학습데이터 포함) — 반드시 성공. 실패 시 throw → 계정 유지하여 재시도 가능
+      await window.vbDB.collection('vb_users').doc(u.uid).delete();
+    }
+    await u.delete();
+  }
+  function _finishDelete(){
+    // vb_ 접두사 로컬 데이터 일괄 정리(vb_explore_v1 등 포함)
+    try{ Object.keys(localStorage).filter(k=>k.startsWith('vb_')).forEach(k=>{ try{ localStorage.removeItem(k); }catch(e){} }); }catch(e){}
+    try{ sessionStorage.removeItem('vb_synced'); sessionStorage.removeItem('vb_guest'); }catch(e){}
+    if(typeof showGameAlert==='function') showGameAlert('계정과 모든 데이터가 삭제되었어요.<br>이용해 주셔서 감사합니다.', ()=>location.reload());
+    else location.reload();
+  }
+  window.vbDeleteAccount = async function(){
+    const u=auth.currentUser; const go=$('set-del-go');
+    if(!u){ delStatus('로그인된 계정이 없어요.'); return; }
+    const pid=((u.providerData[0]||{}).providerId)||'';
+    if(go) go.disabled=true; delStatus('삭제 처리 중...');
+    window.__vbDeleting=true;   // 삭제 중 onAuthStateChanged(null)가 로그인 화면을 띄우지 않도록
+    const fail = m => { window.__vbDeleting=false; if(go) go.disabled=false; if(m) delStatus(m); };
+    try{
+      if(pid==='password'){
+        const pw=($('set-del-pw')||{}).value||'';
+        if(!pw){ fail('비밀번호를 입력하세요'); return; }
+        await u.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(u.email, pw));
+      }
+      await _purgeAndDelete(u); _finishDelete();   // 성공 → 곧 reload되므로 플래그 유지 OK
+    }catch(e){
+      if(e && e.code==='auth/requires-recent-login'){
+        delStatus('본인 확인이 필요해요...');
+        const ok=await _reauth(u, pid);
+        if(ok){ try{ await _purgeAndDelete(auth.currentUser); _finishDelete(); return; }
+          catch(e2){ const c2=(e2&&e2.code)||''; fail((c2==='auth/requires-recent-login'||c2==='auth/user-token-expired') ? '본인 확인이 만료됐어요. 로그아웃 후 다시 로그인한 뒤 시도해주세요' : '삭제 실패: '+mapErr(e2)); } }
+        else { fail(); }   // _reauth가 이미 상태 메시지 표시 → 플래그·버튼만 복원
+      } else { fail('삭제 실패: '+mapErr(e)); }
+    }
+  };
 })();
 BgMusic.playTrack('title');
 
@@ -4319,7 +4490,7 @@ function flashFX(kind) {
 
                 // Firestore에 점수 등록
                 if(!window.vbDB) { showGameAlert("인터넷 연결을 확인해주세요."); btn.disabled=false; btn.innerText="랭킹 등록"; return; }
-                window.vbDB.collection('vb_ranking').add({ name: name.slice(0,20), score: score, createdAt: Date.now() })
+                window.vbDB.collection('vb_ranking').add({ name: name.slice(0,20), score: score, createdAt: Date.now(), uid: (window.vbAuth&&window.vbAuth.currentUser&&window.vbAuth.currentUser.uid)||null })
                 .then(() => {
                     showGameAlert("랭킹 등록 완료!");
                     showSheetRanking(); // 등록 후 랭킹판 보여주기
