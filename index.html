@@ -971,7 +971,7 @@
 .ach-card { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: rgba(255,250,240,0.92); border: 1.5px solid #e0d0b0; }
 .ach-card.ach-locked { opacity: 0.45; filter: grayscale(0.6); }
 .ach-card.ach-unlocked { border-color: #d4af37; background: rgba(255,248,220,0.96); }
-.ach-card.ach-legendary-card { border-color: #9b59b6; background: rgba(155,89,182,0.07); }
+.ach-card.ach-legendary-card { border-color: #9b59b6; background: rgba(255,248,220,0.96); }
 .ach-card-icon { font-size: 1.55rem; width: 34px; text-align: center; flex-shrink: 0; }
 .ach-card-body { flex: 1; min-width: 0; }
 .ach-card-name { font-size: 0.88rem; font-weight: bold; color: #3b2810; }
@@ -1659,6 +1659,12 @@ let ACTIVE_WORDDATA = wordData;
 const WORD_MAP = {};
 function rebuildWordMap(){ for(const k in WORD_MAP) delete WORD_MAP[k]; ['easy','normal','hard'].forEach(t => (ACTIVE_WORDDATA[t]||[]).forEach(o => { WORD_MAP[o.w] = o; })); }
 rebuildWordMap();
+// [도감] 카테고리 무관 전체 단어 조회용(지역인재+수능 통합) — 다른 카테고리에서 졸업한 단어도 뜻·출처가 나오게
+const ALL_WORD_MAP = {};
+(function buildAllWordMap(){
+  const sets = [wordData, window.wordDataCsat].filter(Boolean);
+  sets.forEach(ds => ['easy','normal','hard'].forEach(t => (ds[t]||[]).forEach(o => { if(o && o.w && !ALL_WORD_MAP[o.w]) ALL_WORD_MAP[o.w] = o; })));
+})();
 let TOTAL_WORDS = Object.keys(WORD_MAP).length;
 // 카테고리 설정: 'csat'(수능) / 'regional'(지역인재). 수능 데이터 없으면 지역인재로 폴백.
 function setGameCategory(cat){
@@ -2185,7 +2191,7 @@ const storyLines = [
     { noChar:true, name:"나(사장)", text:"감사합니다! 그런데 손님들이 다 영어로 주문한다면서요?" },
     { img:'chars/npc_realtor.png', s:"🥸", name:"부동산 사장님", text:"그렇지. 여긴 손님들이 <b style='color:var(--red)'>단어 뜻</b>을 말하면, 자네가 알맞은 <b style='color:var(--blue)'>영단어 컵</b>을 줘야 해." },
     { img:'chars/rush.png', s:"👿", name:"진상 손님", text:"(갑자기 등장) 어이! 빨리빨리 안 줘? 난 성격 급해서 3초밖에 못 기다려!" },
-    { img:'chars/npc_realtor.png', s:"🥸", name:"부동산 사장님", text:"저런 빨간 녀석들은 <b style='color:var(--red)'>진상 손님</b>이야. 시간 제한이 짧으니 서둘러야 해." },
+    { img:'chars/npc_realtor.png', s:"🥸", name:"부동산 사장님", text:"저렇게 <b style='color:var(--red)'>버럭하는 손님</b>은 성격이 급해서 오래 못 기다려. 시간 제한이 짧으니 서둘러 골라야 해." },
     { img:'chars/vip.png', s:"🎩", name:"VIP", text:"흠... 저는 품격 있게 직접 스펠링을 적어서 주문하겠습니다." },
     { img:'chars/npc_realtor.png', s:"🥸", name:"부동산 사장님", text:"저런 <b style='color:var(--gold)'>VIP</b>는 팁을 많이 주지. 타자를 쳐서 입력해야 해. 그럼 행운을 비네!" }
 ];
@@ -2280,7 +2286,7 @@ const game = {
             this.sortedWords.sort((a,b) => a.w.length - b.w.length);
         }
         const vipInput = document.getElementById('vip-input');
-        if(vipInput) vipInput.onkeypress = (e) => { if(e.key==='Enter') game.checkVipAnswer(); };
+        if(vipInput) vipInput.onkeydown = (e) => { if(e.key==='Enter' || e.keyCode===13){ e.preventDefault(); game.checkVipAnswer(); } };
 
         try { this.mastered = JSON.parse(localStorage.getItem('vb_mastered_v7')) || []; }
         catch(e){ console.warn('마스터 단어 저장본 손상 — 초기화', e); this.mastered = []; }
@@ -2584,11 +2590,7 @@ const game = {
                     duration: 99999,
                     onDismiss: () => {
                         this.startTimer();
-                        // VIP: 대화창 닫힌 뒤에 키보드 올림
-                        if(isVip) {
-                            const inp = document.getElementById('vip-input');
-                            if(inp) setTimeout(() => inp.focus(), 80);
-                        }
+                        // VIP: 자동으로 키보드 올리지 않음 — 문제를 읽고 입력창을 직접 탭하면 그때 올라옴
                     }
                 });
                 return;
@@ -3633,7 +3635,7 @@ equipItem: function(category, level) {
             list.innerHTML = "<p style='text-align:center'>아직 졸업한 단어가 없어요.<br>손님 주문을 맞히면 단어가 도감에 등록됩니다!</p>";
         } else {
             [...mastered].reverse().forEach(wkey => {
-                const o = WORD_MAP[wkey] || { w: wkey, m: '', s: '' };
+                const o = WORD_MAP[wkey] || ALL_WORD_MAP[wkey] || { w: wkey, m: '', s: '' };
                 const src = o.s ? `<div style="font-size:0.65rem; color:#a98e6a; margin-top:2px;">${o.s}</div>` : '';
                 const el = document.createElement('div'); el.className='wb-item';
                 el.innerHTML = `<div><span class="wb-word">${o.w}</span> <span class="wb-mean">${o.m}</span>${src}</div><div class="speaker-icon" onclick="speak('${o.w}')">🔊</div>`;
@@ -3986,7 +3988,7 @@ equipItem: function(category, level) {
 
         document.getElementById('customer-area').innerHTML = `
             <div class="customer type-${c.type}" id="cust-el">
-                <div class="bubble" id="bubble-el"><div>${txt}</div>${srcTag}<button type="button" class="bubble-speak-btn" title="발음 듣기" onclick="event.stopPropagation(); speak(game.currentCust && game.currentCust.data && game.currentCust.data.w);">🔊</button></div>
+                <div class="bubble" id="bubble-el"><div>${txt}</div>${srcTag}</div>
                 ${nameTag}
                 ${c.timed ? `<div class="timer-bar-wrap"><div class="timer-fill" id="timer-bar"></div></div>`
                           : `<div class="no-timer-tag"><svg class="bic" viewBox="0 0 24 24" fill="currentColor"><path d="M5 9h12v4.5a4.5 4.5 0 0 1-4.5 4.5h-3A4.5 4.5 0 0 1 5 13.5z"/><path d="M17 10h1.6a2.4 2.4 0 0 1 0 4.8H17" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>천천히 골라요</div>`}
