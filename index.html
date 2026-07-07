@@ -1165,6 +1165,27 @@
         </div>
     </div>
 
+    <!-- 성별 선택 (플레이어 바리스타) -->
+    <style>
+      #gender-screen .panel{ max-width:420px; }
+      .gender-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:18px 0 6px; }
+      .gender-card{ background:#fff8ee; border:2.5px solid #e6cfa8; border-radius:16px; padding:12px 8px 10px; cursor:pointer; font-family:'Jua','Nunito',sans-serif; transition:transform .1s; }
+      .gender-card:active{ transform:translateY(2px); }
+      .gender-card img{ width:100%; height:150px; object-fit:contain; object-position:bottom center; display:block; }
+      .gender-card span{ display:block; margin-top:6px; font-size:1rem; color:#5b3b1a; font-weight:bold; }
+      .gender-card.m{ border-color:#9fc3e8; } .gender-card.f{ border-color:#f0b8c9; }
+    </style>
+    <div id="gender-screen" class="overlay hidden">
+      <div class="panel">
+        <h2>바리스타 선택</h2>
+        <p>어떤 바리스타로 시작할까요?<br><span style="font-size:.82rem;color:#8d7a66;">함께 카페를 꾸려갈 나의 모습이에요</span></p>
+        <div class="gender-grid">
+          <button class="gender-card m" onclick="selectGender('m')"><img src="chars/barista_m.png" alt="남자 바리스타"><span>👨‍🍳 남자 바리스타</span></button>
+          <button class="gender-card f" onclick="selectGender('f')"><img src="chars/barista_f.png" alt="여자 바리스타"><span>👩‍🍳 여자 바리스타</span></button>
+        </div>
+      </div>
+    </div>
+
     <div class="overlay hidden" id="pause-screen">
         <h2>일시 정지</h2>
         <div class="pause-menu">
@@ -1224,6 +1245,14 @@
           <div class="set-account" id="set-account-status">게스트로 플레이 중</div>
           <button id="set-login-btn" class="set-btn set-btn-primary" onclick="sessionStorage.removeItem('vb_guest'); location.reload();">로그인 하기</button>
           <button id="set-logout-btn" class="set-btn set-btn-neutral hidden" onclick="vbSignOut()">로그아웃</button>
+        </div>
+        <div class="set-sec">
+          <div class="set-label">바리스타</div>
+          <p class="set-desc">카페를 함께 꾸려갈 나의 캐릭터예요. 언제든 바꿀 수 있어요.</p>
+          <div style="display:flex; gap:8px;">
+            <button id="set-gender-m" class="set-btn set-btn-neutral" onclick="vbSetGenderPref('m')" style="flex:1;">👨‍🍳 남자</button>
+            <button id="set-gender-f" class="set-btn set-btn-neutral" onclick="vbSetGenderPref('f')" style="flex:1;">👩‍🍳 여자</button>
+          </div>
         </div>
         <div class="set-sec hidden" id="set-danger-sec">
           <div class="set-label">계정 삭제</div>
@@ -1699,6 +1728,13 @@ function looksInflected(w) {
 }
 
 // 3. 헬퍼 함수
+function selectGender(g){
+    try{ localStorage.setItem('vb_gender', (g==='f'?'f':'m')); }catch(e){}
+    var gs=document.getElementById('gender-screen'); if(gs){ gs.classList.add('hidden'); gs.style.display=''; }
+    game.startStory(); // 성별 저장 후 프롤로그 진행(게이트 통과)
+}
+window.selectGender = selectGender;
+
 function showDifficulty() {
     // 첫 실행이면 프롤로그(조작 설명)를 한 번 보여준 뒤 카테고리→난이도로 — 프롤로그 끝에서 다시 showDifficulty 호출됨
     if(!localStorage.getItem('vb_seen_intro')) {
@@ -1889,7 +1925,8 @@ const AFFECTION_STORY = {
     m_roa: [
         '로아가 말없이 잔을 비우고 천천히 고개를 끄덕였다.<br>"…제법이군. 며칠 더 지켜보지."',
         '단골이 된 로아가 처음으로 옅게 웃었다.<br>"자네 커피엔 단어가 살아 있어. 떠돌던 내가 머물고 싶어질 만큼."',
-        '로아가 낡은 비법 노트를 카운터에 올려두었다.<br>"이 카페가 내 긴 여정의 끝이 될 줄이야. …고맙네, 사장."'
+        { m:'로아가 낡은 비법 노트를 카운터에 올려두었다.<br>"이 카페가 내 긴 여정의 끝이 될 줄이야. …좋은 맞수를 뒀군, 사장."',
+          f:'로아가 낡은 비법 노트를 카운터에 올려두고, 잠시 자네를 바라보았다.<br>"긴 여정의 끝에 자네가 있을 줄이야. …이제, 떠나고 싶지 않군."' }
     ],
     m_luna: [
         '보름달 아래, 루나가 잔 너머로 속삭였다.<br>"네 단어엔 달빛이 깃들어 있구나. 흥미로워."',
@@ -1899,7 +1936,8 @@ const AFFECTION_STORY = {
     m_sera: [
         '변장한 세라가 구석 자리에 살그머니 앉았다.<br>"여기선 아무도 절 아이돌로 안 봐서… 그냥 손님이라 좋아요."',
         '세라가 카페를 SNS에 올렸다. "제 최애 단어 카페 💛"<br>덕분에 새 손님이 부쩍 늘었다!',
-        '세라가 무대 의상 대신 앞치마를 집어 들었다.<br>"여기가… 제 진짜 무대예요. 계속 와도 되죠?"'
+        { m:'세라가 무대 의상 대신 앞치마를 집어 들고 살짝 볼을 붉혔다.<br>"여기가… 제 진짜 무대예요. 사장님 곁이라면요. 계속 와도 되죠?"',
+          f:'세라가 무대 의상 대신 앞치마를 집어 들었다.<br>"여기가… 제 진짜 \'집\'이에요. 사장님은 제 최고의 팬이자 친구예요!"' }
     ]
 };
 
@@ -1918,12 +1956,14 @@ const MAIN_DIALOGUE = {
         greet: {
             low: [ '"실력부터 보지. 주문을 맞춰보게."', '"이름은 됐네. 커피로 말하지."', '"기대는 안 해. 증명해보게."' ],
             mid: [ '"자네라면… 이번엔 좀 더 까다로운 걸로."', '"왔네. 늘 마시던 거, 알지?"', '"손님이 아니라 동료에게 묻듯 주문하지."' ],
-            high:[ '"…자네 가게는 묘하게 발이 떨어지질 않아."', '"오늘 주문은 내 비법 한 줄. 잘 받아 적게."', '"여정의 끝이 여기일지도 모르겠군. 자, 한 잔."' ]
+            high:{ m:[ '"자네 가게는 묘하게 발이 떨어지질 않아."', '"오늘 주문은 내 비법 한 줄. 잘 받아 적게."', '"좋은 맞수를 둔 기분이군. 자, 한 잔."' ],
+                   f:[ '"…자네 곁이라 그런가, 발이 떨어지질 않는군."', '"떠돌이 검객이 머물 이유가 생겼어. …자네 말이야."', '"이 한 잔을 자네와 나누려고 먼 길을 왔네."' ] }
         },
         served: {
             low: [ '로아가 잔을 비우곤 짧게 끄덕였다. "…합격."', '"나쁘지 않아." 그는 그 말만 남기고 돌아섰다.' ],
             mid: [ '"역시 자네군." 로아의 입꼬리가 살짝 올라갔다.', '"다음엔 더 어려운 걸 가져오지." 즐거운 듯한 목소리였다.' ],
-            high:[ '"완벽에 가까워." 로아가 처음으로 환히 웃었다.', '"또 오겠네. …아니, 머물지도 모르지." 그가 가방을 내려놓았다.' ]
+            high:{ m:[ '"완벽에 가까워. 좋은 맞수야." 로아가 처음으로 환히 웃었다.', '"또 오겠네. 자네 커피 때문에." 그가 가방을 내려놓았다.' ],
+                   f:[ '"…자네 곁이면, 여정을 멈춰도 좋겠어." 로아가 나직이 웃었다.', '"이 미소, 자네에게만 보이는 거야." 그가 슬며시 가방을 내려놓았다.' ] }
         }
     },
     m_luna: {
@@ -1958,15 +1998,34 @@ const MAIN_DIALOGUE = {
         greet: {
             low: [ '"저… 그냥 평범한 손님이에요. 주문할게요!"', '"여기 단어 카페 맞죠? 한번 해볼래요."', '"조금 긴장돼요. 잘 부탁드려요!"' ],
             mid: [ '"사장님 보러 왔… 아니, 커피 마시러 왔어요!"', '"오늘도 저 알아봐 주실 거죠? 주문이요!"', '"여기 오면 마음이 놓여요. 자, 문제 주세요."' ],
-            high:[ '"무대 끝나자마자 달려왔어요. 보고 싶어서요."', '"여기가 제 진짜 \'집\' 같아요. …이상하죠?"', '"사장님한테만은 변장 안 해도 될 것 같아요."' ]
+            high:{ m:[ '"무대 끝나자마자 달려왔어요. …사장님 보고 싶어서요."', '"여기가 제 진짜 \'집\' 같아요. …사장님이 있어서요, 헤헤."', '"사장님한테만은 변장 안 해도 될 것 같아요."' ],
+                   f:[ '"사장님 카페 오면 마음이 놓여요. 저 여기 완전 팬이에요!"', '"여기가 제 진짜 \'집\' 같아요. 사장님 덕분이에요!"', '"사장님한테만은 변장 안 해도 편해요. 좋은 친구 같아서요!"' ] }
         },
         served: {
             low: [ '세라가 환하게 웃었다. "와, 역시 잘하시네요!"', '"또 와도 돼요? …농담 아니에요!" 그녀가 손을 흔들었다.' ],
             mid: [ '"역시 사장님!" 세라의 눈이 반짝였다.', '"오늘 하루가 다 풀렸어요. 고마워요!"' ],
-            high:[ '"여기 있으면 외롭지 않아요." 세라가 작게 속삭였다.', '"제 최고의 무대는 여기예요. 다음에 또 올게요!"' ]
+            high:{ m:[ '"여기 있으면 외롭지 않아요." 세라가 살며시 볼을 붉혔다.', '"제 최고의 무대는 여기예요. 다음에 또 올게요!"' ],
+                   f:[ '"사장님이랑 있으면 든든해요!" 세라가 밝게 웃었다.', '"제 최고의 무대는 여기예요. 또 놀러 올게요!"' ] }
         }
     }
 };
+
+// ===== 첫 만남 대사(#8) — 그 캐릭터를 처음 만난 순간에만. 이름은 아직 밝히지 않음(???) =====
+const MAIN_FIRSTMEET = {
+    m_roa:  '낡은 여행 가방을 든 손님이 문가에 멈춰 섰다. 검객 같은 눈매다.<br>"…이 골목 끝에서 좋은 원두 향이 나더군. 이름은 됐네. 실력부터 보지."',
+    m_luna: '보름달 아래, 검은 로브의 여인이 소리 없이 들어섰다.<br>"후훗… 재미있는 가게로구나. 내 주문을 맞혀 보렴. 이름은… 그 다음에 알려주마."',
+    m_sera: '모자를 깊이 눌러쓴 손님이 조심스레 문을 열었다.<br>"저… 여기 조용해서 좋네요. 저는 그냥… 평범한 손님이에요. (설마 못 알아보겠지…?)"'
+};
+
+// ===== 성별/이름 공개 헬퍼 =====
+function vbGender(){ return localStorage.getItem('vb_gender')==='f' ? 'f' : 'm'; }
+// 대사 배열이 {m:[],f:[]} 형태면 플레이어 성별에 맞는 배열을, 아니면 그대로 반환
+function resolveGenderLines(v){ if(v && !Array.isArray(v) && (v.m||v.f)){ return v[vbGender()] || v.m || v.f; } return v; }
+// 막 해금 스토리 한 줄 — {m,f} 객체면 성별별, 아니면 문자열 그대로
+function affStoryLine(id, i){ var v=(AFFECTION_STORY[id]||[])[i]; if(v && typeof v==='object'){ return v[vbGender()] || v.m || v.f || ''; } return v||''; }
+// 메인 캐릭터 이름 공개 여부: 1막(첫 유대) 해금 전에는 ??? 로 가림
+function mainNameKnown(id){ return ((game && game.charActs && game.charActs[id])||0) >= 1; }
+function mainDisplayName(ch){ if(ch && ch.kind==='main' && !mainNameKnown(ch.id)) return '???'; return ch ? ch.name : ''; }
 
 // 오답/시간초과 때 메인 캐릭터 위로 한마디 (30% 확률로 등장)
 const MAIN_WRONG = {
@@ -2187,7 +2246,7 @@ function speak(text, callback) {
 /* --- Story Data --- */
 const storyLines = [
     { img:'chars/npc_realtor.png', s:"🥸", name:"부동산 사장님", text:"자, 계약은 끝났네. 영어 마을이라 월세가 좀 비싸지만 목은 좋아." },
-    { noChar:true, name:"나(사장)", text:"감사합니다! 그런데 손님들이 다 영어로 주문한다면서요?" },
+    { player:true, name:"나(사장)", text:"감사합니다! 그런데 손님들이 다 영어로 주문한다면서요?" },
     { img:'chars/npc_realtor.png', s:"🥸", name:"부동산 사장님", text:"그렇지. 여긴 손님들이 <b style='color:var(--red)'>단어 뜻</b>을 말하면, 자네가 알맞은 <b style='color:var(--blue)'>영단어 컵</b>을 줘야 해." },
     { img:'chars/rush.png', s:"👿", name:"진상 손님", text:"(갑자기 등장) 어이! 빨리빨리 안 줘? 난 성격 급해서 3초밖에 못 기다려!" },
     { img:'chars/npc_realtor.png', s:"🥸", name:"부동산 사장님", text:"저렇게 <b style='color:var(--red)'>버럭하는 손님</b>은 성격이 급해서 오래 못 기다려. 시간 제한이 짧으니 서둘러 골라야 해." },
@@ -2267,7 +2326,7 @@ const CRAFTED_DEFS = {
 // [5] 게임 엔진 (Game Object)
 // ==========================================
 const game = {
-    wallet: 0, score: 0, lifetimeScore: 0, lives: 5, day: 1, bestDay: 1, lastDaily: '', dailyStreak: 0, affection: {}, charActs: {}, mainSeenDay: {}, moodBoost: 0, totalCustomers: 0, dailyCount: 0, masteredCount: 0,
+    wallet: 0, score: 0, lifetimeScore: 0, lives: 5, day: 1, bestDay: 1, lastDaily: '', dailyStreak: 0, affection: {}, charActs: {}, mainSeenDay: {}, mainMet: {}, moodBoost: 0, totalCustomers: 0, dailyCount: 0, masteredCount: 0,
     isMuted: false, gameMode: 'normal', isActive: false, isPaused: false, timer: null, currentCust: null,
     activePool: [], sortedWords: [], ownedItems: [], myWords: [],
     
@@ -2308,6 +2367,7 @@ const game = {
             this.affection = (data.affection && typeof data.affection==='object') ? data.affection : {}; // 메인 호감도
             this.charActs = (data.charActs && typeof data.charActs==='object') ? data.charActs : {};      // 해금된 스토리 막 수
             this.mainSeenDay = (data.mainSeenDay && typeof data.mainSeenDay==='object') ? data.mainSeenDay : {}; // 메인별 그날 첫 등장 추적(일일 대사)
+            this.mainMet = (data.mainMet && typeof data.mainMet==='object') ? data.mainMet : {}; // 메인별 첫 만남 여부(#8 첫만남 대사)
             this.moodBoost = (typeof data.moodBoost==='number' && data.moodBoost>0) ? data.moodBoost : 0; // 카페라떼: 남은 골드+50% 손님 수
             this.bestDay = data.bestDay || data.day || 1;       // 최고 기록(게임오버에도 유지)
             this.lastDaily = data.lastDaily || '';              // 마지막 출석 보상 날짜(YYYY-M-D)
@@ -2408,7 +2468,7 @@ const game = {
             myWords: this.myWords,
             day: this.day, score: this.score, lifetimeScore: this.lifetimeScore || 0,
             bestDay: this.bestDay || 1, lastDaily: this.lastDaily || '', dailyStreak: this.dailyStreak || 0,
-            affection: this.affection || {}, charActs: this.charActs || {}, mainSeenDay: this.mainSeenDay || {}, moodBoost: this.moodBoost || 0,
+            affection: this.affection || {}, charActs: this.charActs || {}, mainSeenDay: this.mainSeenDay || {}, mainMet: this.mainMet || {}, moodBoost: this.moodBoost || 0,
             lives: (this.gameMode === 'review' && this._livesBackup !== undefined) ? this._livesBackup : this.lives, // [버그수정] 복습 모드는 본편 라이프 백업값을 저장
             stats: { totalServed: totalServedCount, totalVip: totalVipCount, totalItems: totalItemsBought, totalCorrect: totalCorrectCount, totalWrong: totalWrongCount, currentQuests: currentQuests },
             totalCustomers: this.totalCustomers, dailyCount: this.dailyCount, isMuted: this.isMuted,
@@ -2680,10 +2740,14 @@ const game = {
             const reward = AFFECTION_REWARD[actIdx] || 0;
             this.wallet += reward; this.updateHUD();
             const ch = CHAR_BY_ID[id];
-            const story = (AFFECTION_STORY[id] || [])[actIdx] || '';
+            const story = affStoryLine(id, actIdx);
             BgMusic.playJingle(id.replace('m_', ''));
+            // 첫 유대(1막) 해금 시 비로소 이름을 밝힌다(#10)
+            const nameReveal = (actIdx===0 && ch && ch.kind==='main')
+                ? `<div style="font-size:0.92rem;color:#7b1fa2;margin-bottom:10px;">✨ 드디어 이름을 알려주었다 — <b>${ch.name}</b></div>` : '';
             showGameAlert(
                 `💞 <b>${ch?ch.name:''}</b>와의 유대 ${actIdx+1}막 해금!<br><br>`+
+                nameReveal+
                 `<span style="font-size:0.92rem;color:#444;">${story}</span><br><br>`+
                 `<img src="sprites/coin.svg" style="width:16px;height:16px;vertical-align:middle;"> +${reward.toLocaleString()}G`
             );
@@ -2697,6 +2761,15 @@ const game = {
     // 메인 손님 등장 인사: 그날 그 캐릭터 첫 등장이면 일일 대사, 아니면 호감 단계별 인사
     mainGreeting: function(id){
         const d = MAIN_DIALOGUE[id]; if(!d) return '';
+        if(!this.mainMet) this.mainMet = {};
+        // 첫 만남(#8) — 그 캐릭터를 생애 처음 만난 순간엔 소개 대사(이름 미공개)
+        if(!this.mainMet[id]){
+            this.mainMet[id] = 1;
+            if(!this.mainSeenDay) this.mainSeenDay = {};
+            this.mainSeenDay[id] = this.todayStr(); // 첫 만남 날은 '오늘 첫 등장' 소진 처리
+            this.saveData();
+            if(MAIN_FIRSTMEET[id]) return MAIN_FIRSTMEET[id];
+        }
         if(!this.mainSeenDay) this.mainSeenDay = {};
         const today = this.todayStr();
         if(this.mainSeenDay[id] !== today){
@@ -2704,10 +2777,10 @@ const game = {
             const line = this.pickLine(d.daily);
             if(line) return line;
         }
-        return this.pickLine(d.greet[this.affTier(id)]);
+        return this.pickLine(resolveGenderLines(d.greet[this.affTier(id)]));
     },
-    // 메인 손님 응대 완료 후 작별 대사(호감 단계별)
-    mainFarewell: function(id){ const d = MAIN_DIALOGUE[id]; return d ? this.pickLine(d.served[this.affTier(id)]) : ''; },
+    // 메인 손님 응대 완료 후 작별 대사(호감 단계별·성별별)
+    mainFarewell: function(id){ const d = MAIN_DIALOGUE[id]; return d ? this.pickLine(resolveGenderLines(d.served[this.affTier(id)])) : ''; },
 
     // ===== 대화창 시스템 =====
     showDialogue: function(charId, text, opts) {
@@ -2721,7 +2794,7 @@ const game = {
         if(!box || !nameTag || !textEl) return;
 
         if(charLarge) charLarge.src = ch.img || '';
-        nameTag.textContent = ch.name;
+        nameTag.textContent = mainDisplayName(ch);
         textEl.textContent = text.replace(/<[^>]+>/g, '').replace(/&[a-z]+;/gi, '');
         box.classList.add('dlg-active');
         document.getElementById('game-container').classList.add('dlg-mode');
@@ -3658,7 +3731,7 @@ equipItem: function(category, level) {
             card.style.setProperty('--rc', col);
             if(unlocked) {
                 card.innerHTML = `<div class="cdex-art">${charSVG(ch)}</div>
-                    <div class="cdex-name">${ch.name}</div>
+                    <div class="cdex-name">${mainDisplayName(ch)}</div>
                     <div class="cdex-rarity">${RARITY_LABEL[ch.rarity]||''}</div>`;
                 card.onclick = () => {
                     let extra = '';
@@ -3670,14 +3743,14 @@ equipItem: function(category, level) {
                             `<div style="height:9px;background:#eee;border-radius:5px;overflow:hidden;margin:4px 0 2px;"><div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#ff8fc4,#e91e63);"></div></div>`;
                         const acts = AFFECTION_STORY[ch.id] || [];
                         for(let i=0;i<acts.length;i++){
-                            if(i < seen) extra += `<div style="font-size:0.8rem;color:#7b1fa2;font-style:italic;margin-top:6px;">${i+1}막 · ${acts[i]}</div>`;
+                            if(i < seen) extra += `<div style="font-size:0.8rem;color:#7b1fa2;font-style:italic;margin-top:6px;">${i+1}막 · ${affStoryLine(ch.id, i)}</div>`;
                             else { extra += `<div style="font-size:0.78rem;color:#aaa;margin-top:6px;">🔒 ${i+1}막 — 호감도 ${AFFECTION_TIERS[i]} 필요</div>`; break; }
                         }
                     } else if(ch.story) {
                         extra = `<br><br><span style="font-size:0.82rem;color:#7b1fa2;font-style:italic;">${ch.story}</span>`;
                     }
                     showGameAlert(
-                        `<b style="color:${col};font-size:1.15rem;">${ch.name}</b>`+
+                        `<b style="color:${col};font-size:1.15rem;">${mainDisplayName(ch)}</b>`+
                         (ch.title ? `<br><span style="font-size:0.8rem;color:#888;">${ch.title}</span>` : '')+
                         `<br><br><span style="font-size:0.9rem;color:#444;">${ch.desc||''}</span>`+
                         extra
@@ -3851,8 +3924,14 @@ equipItem: function(category, level) {
             : '<svg class="hic" viewBox="0 0 24 24"><path d="M4 9.5h3L11 6v12L7 14.5H4z" fill="currentColor"/><path d="M14.5 9a3.8 3.8 0 0 1 0 6M16.8 6.8a7 7 0 0 1 0 10.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
     },
     startStory: function() {
+        // 성별 미선택이면 바리스타 선택 화면 먼저 (선택 후 selectGender가 다시 startStory 호출)
+        if(!localStorage.getItem('vb_gender')){
+            document.getElementById('start-screen').classList.add('hidden');
+            const gs=document.getElementById('gender-screen'); if(gs){ gs.classList.remove('hidden'); gs.style.display='flex'; }
+            return;
+        }
         BgMusic.playTrack('cafe');
-        this.storyIndex=0; document.getElementById('start-screen').classList.add('hidden'); document.getElementById('story-screen').classList.remove('hidden'); document.getElementById('story-screen').style.display='flex'; this.renderStory(); 
+        this.storyIndex=0; document.getElementById('start-screen').classList.add('hidden'); document.getElementById('story-screen').classList.remove('hidden'); document.getElementById('story-screen').style.display='flex'; this.renderStory();
     },
     
     renderStory: function() {
@@ -3865,10 +3944,12 @@ equipItem: function(category, level) {
         const line = storyLines[this.storyIndex];
         const charEl = document.getElementById('story-char');
         const emojiEl = document.getElementById('story-avatar');
-        if(line.img){
+        // 플레이어(나 사장) 라인 = 게임 시작 시 선택한 성별 바리스타
+        const imgSrc = line.player ? ((localStorage.getItem('vb_gender')==='f') ? 'chars/barista_f.png' : 'chars/barista_m.png') : line.img;
+        if(imgSrc){
             charEl.onload = function(){ charEl.style.display=''; emojiEl.style.display='none'; };
             charEl.onerror = function(){ charEl.style.display='none'; emojiEl.style.display=''; emojiEl.textContent = line.s || '💬'; };
-            charEl.src = line.img;
+            charEl.src = imgSrc;
             if(charEl.complete && charEl.naturalWidth>0){ charEl.style.display=''; emojiEl.style.display='none'; }
         } else if(line.s && !line.noChar){
             charEl.style.display='none'; charEl.removeAttribute('src');
@@ -4230,7 +4311,16 @@ window.vbOpenSettings = function(){
     if(loginBtn) loginBtn.classList.remove('hidden');
     if(dangerSec) dangerSec.classList.add('hidden');
   }
+  if(typeof vbSyncGenderButtons==='function') vbSyncGenderButtons();
   const s=document.getElementById('settings-screen'); if(s){ s.classList.remove('hidden'); s.style.display='flex'; }
+};
+// [바리스타 성별] 설정에서 언제든 변경 — 저장 후 버튼 하이라이트 갱신
+window.vbSetGenderPref = function(g){ try{ localStorage.setItem('vb_gender', (g==='f'?'f':'m')); }catch(e){} vbSyncGenderButtons(); };
+window.vbSyncGenderButtons = function(){
+  var g = localStorage.getItem('vb_gender')==='f' ? 'f' : 'm';
+  var m=document.getElementById('set-gender-m'), f=document.getElementById('set-gender-f');
+  if(m){ m.classList.toggle('set-btn-primary', g==='m'); m.classList.toggle('set-btn-neutral', g!=='m'); }
+  if(f){ f.classList.toggle('set-btn-primary', g==='f'); f.classList.toggle('set-btn-neutral', g!=='f'); }
 };
 // firebase 미가용(오프라인/차단) 시 폴백 — 실제 삭제는 아래 인증 IIFE에서 덮어씀
 if(typeof window.vbDeleteAccount!=='function'){ window.vbDeleteAccount=function(){ const st=document.getElementById('set-del-status'); if(st) st.textContent='지금은 계정 삭제를 처리할 수 없어요. 네트워크 확인 후 다시 시도하세요.'; }; }

@@ -727,7 +727,7 @@ const CHIBI = {
 };
 // [에셋] 걷기 스프라이트 4프레임 로드 (동행별). none은 chef 스프라이트 사용. 로드 전엔 drawChibi가 절차적으로 폴백.
 const WALK_FRAMES = {};
-['chef','roa','luna','sera'].forEach(name=>{
+['chef','baristaf','roa','luna','sera'].forEach(name=>{
   WALK_FRAMES[name] = [0,1,2,3].map(i=>{ const im=new Image(); im.src='chars/walk_'+name+'_'+i+'.png'; return im; });
 });
 // [에셋] 페인티드 맵 (픽셀 타일셋 대체) — 바닥 텍스처 + 서 있는 오브젝트(투명)
@@ -1307,7 +1307,7 @@ const World = {
   drawChibi(cx, footY, pal, s, wp, moving, facing, ckey){
     const ctx=this.ctx;
     // ===== 스프라이트 경로 =====
-    const name = (!ckey || ckey==='none') ? 'chef' : ckey;
+    const name = (!ckey || ckey==='none') ? ((localStorage.getItem('vb_gender')==='f')?'baristaf':'chef') : ckey;
     const frames = WALK_FRAMES[name];
     if(frames && frames[0] && frames[0].complete && frames[0].naturalWidth>0){
       const idx = moving ? (((Math.floor(wp/(Math.PI/2))%4)+4)%4) : 0;
@@ -1594,8 +1594,10 @@ const Battle = {
     if(battle.classList.contains('intro')){ clearTimeout(this._introT); battle.classList.remove('intro');
       document.getElementById('e-sprite').classList.remove('enter'); this.msg('무엇을 할까?'); this.setButtons(true); return; }
     if(this._skip){ clearTimeout(this._skipT); const r=this._skip; this._skip=null; r(); } },
-  setSelfSprite(){ const comp=COMPANIONS[Explore.state.companion||'none']; const ps=document.getElementById('p-self'); ps.className='sprite-self';
-    const bi=comp&&(comp.battleImg||comp.img);
+  setSelfSprite(){ const ckey=Explore.state.companion||'none'; const comp=COMPANIONS[ckey]; const ps=document.getElementById('p-self'); ps.className='sprite-self';
+    let bi=comp&&(comp.battleImg||comp.img);
+    // 기본(동료 없음) = 선택한 성별 바리스타 뒷모습
+    if(ckey==='none' && localStorage.getItem('vb_gender')==='f') bi='chars/baristaf_back.png';
     // 이미지가 없거나 로드 실패하면 이모지로 폴백(기본 요리사 뒷모습 PNG 추가 전까지 안전)
     if(bi){ ps.classList.add('has-img'); ps.innerHTML='<img src="'+bi+'" onerror="this.parentNode.className=\'sprite-self emoji\';this.parentNode.textContent=\'🧑‍🍳\'">'; }
     else { ps.classList.add('emoji'); ps.textContent='🧑‍🍳'; } },
