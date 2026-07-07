@@ -1074,17 +1074,18 @@ const World = {
   // ----- 이동/업데이트 -----
   // 오버레이(스탯/조합/스펠/동행/전투)가 떠 있으면 이동·인카운터 정지
   overlayOpen(){ return !!(document.querySelector('.ex-overlay.show') || (window.Battle&&Battle.active)); },
-  update(){
+  update(f){
+    f = f || 1;   // 프레임 배율(delta-time). 미지정 시 60fps 가정
     if(this.overlayOpen()){ this.moving=false; return; }
     let vx=this.stick.dx, vy=this.stick.dy;
     if(this.keys.l)vx-=1; if(this.keys.r)vx+=1; if(this.keys.u)vy-=1; if(this.keys.d)vy+=1;
     const mag=Math.hypot(vx,vy);
     this.moving = mag>0.18;   // 데드존 ↑(살짝 기울임은 무시)
     if(this.moving){
-      this.walkT=(this.walkT||0)+0.28;   // 보행 위상(팔다리 스윙)
+      this.walkT=(this.walkT||0)+0.28*f;   // 보행 위상(팔다리 스윙)
       vx/=Math.max(1,mag); vy/=Math.max(1,mag);
       if(Math.abs(vx)>0.2) this.facing=vx<0?-1:1;
-      const SPD=0.058;   // 이동 속도 둔화(기존 0.085)
+      const SPD=0.058*f;   // 이동 속도(delta-time 반영 — fps 무관 일정)
       const nx=this.px+vx*SPD, ny=this.py+vy*SPD;
       // 충돌: 발 위치 타일 검사
       if(!this.isBarrier(Math.round(nx), Math.round(this.py))) this.px=nx;
@@ -1154,7 +1155,14 @@ const World = {
   release(){ this.stick.active=false; this.stick.dx=0; this.stick.dy=0; this.keys={}; },
 
   // ----- 렌더 -----
-  loop(){ this.raf=requestAnimationFrame(()=>this.loop()); this.update(); this.bob+=0.1; this.render(); if(this._miniDirty) this.drawMinimap(); },
+  loop(ts){ this.raf=requestAnimationFrame(t=>this.loop(t));
+    // [이동감] delta-time 기반 — 프레임레이트가 흔들려도(네이티브 WKWebView) 이동/애니 속도 일정
+    const now = ts || (window.performance && performance.now ? performance.now() : 0);
+    let dt = this._lastTs ? (now - this._lastTs)/1000 : 1/60;
+    this._lastTs = now;
+    if(dt > 0.05) dt = 0.05;   // 백그라운드 복귀 등 큰 점프 방지
+    const f = dt * 60;          // 60fps 기준 프레임 배율(1.0=60fps, 2.0=30fps)
+    this.update(f); this.bob += 0.1*f; this.render(); if(this._miniDirty) this.drawMinimap(); },
   // ===== 미니맵(안개 걷힘) + 지도 완성 =====
   initMinimap(){ const cv=document.getElementById('minimap'); if(!cv)return; cv.width=this.WT; cv.height=this.HT; this._mmctx=cv.getContext('2d'); this._miniDirty=true; },
   buildExplored(){ const zone=Explore.state.map.zone; const saved=(Explore.state.explored||{})[zone];
