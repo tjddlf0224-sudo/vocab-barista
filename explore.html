@@ -555,7 +555,7 @@ const SaveBridge = {
       equip:Object.assign({weapon:null,armor:null},ex.equip||{}),
       materials:ex.materials||{}, items:ex.items||[], companion:ex.companion||'none',
       map:ex.map||{zone:'forest'}, pos:ex.pos||null, steps:ex.steps||0,
-      quests:ex.quests||{}, events:ex.events||{}, explored:ex.explored||{}, maps:ex.maps||{} }; },
+      quests:ex.quests||{}, questN:ex.questN||{}, events:ex.events||{}, explored:ex.explored||{}, maps:ex.maps||{} }; },
   saveExplore(s){ localStorage.setItem(EXPLORE_KEY,JSON.stringify(s)); },
 };
 
@@ -697,6 +697,13 @@ const MATERIALS = {
   syrup:    { name:'시럽',     icon:'🍯', img:'sprites/syrup.svg' },
   cacao:    { name:'카카오',   icon:'🟤', img:'sprites/cacao.svg' },
   goldbean: { name:'황금 원두', icon:'🌟', img:'sprites/goldbean.svg', rare:true }, // 채집X, 전투 희귀 드롭만
+  // ---- 몬스터 전용 드롭(채집X) — 퀘스트·장비 제작 재료 ----
+  gel:      { name:'슬라임 젤',    icon:'🫧', rare:true, loot:true },
+  tusk:     { name:'멧돼지 어금니', icon:'🦷', rare:true, loot:true },
+  feather:  { name:'검은 깃털',    icon:'🪶', rare:true, loot:true },
+  core:     { name:'로스팅 코어',  icon:'⚙️', rare:true, loot:true },
+  fang:     { name:'그림자 송곳니', icon:'🦴', rare:true, loot:true },
+  ember:    { name:'도깨비 불씨',  icon:'🔥', rare:true, loot:true },
 };
 // 채집 노드로 등장하는 재료(황금 원두는 제외 — 전투 보상으로만 획득)
 const GATHER_MATS = Object.keys(MATERIALS).filter(k => !MATERIALS[k].rare);
@@ -747,12 +754,20 @@ const COMP_PASSIVE = {
 // ---------- 장비 (대장간: 골드+재료로 제작) ----------
 const EQUIP_DB = {
   weapon: [
-    { id:'w_bean',  name:'원두 검',    icon:'🗡️', atk:4, cost:{gold:200, bean:5} },
-    { id:'w_roast', name:'로스팅 창',  icon:'🔱', atk:8, cost:{gold:600, bean:12, berry:6} },
+    { id:'w_bean',  name:'원두 검',      icon:'🗡️', atk:4,  cost:{gold:200, bean:5} },
+    { id:'w_roast', name:'로스팅 창',    icon:'🔱', atk:8,  cost:{gold:600, bean:12, berry:6} },
+    { id:'w_tusk',  name:'어금니 도끼',  icon:'🪓', atk:12, cost:{gold:900, tusk:3, bean:10} },
+    { id:'w_fang',  name:'송곳니 단검',  icon:'🗡️', atk:16, cost:{gold:1400, fang:4, gel:3} },
+    { id:'w_ember', name:'불씨 로스터',  icon:'🔥', atk:21, cost:{gold:2000, ember:5, core:2} },
+    { id:'w_core',  name:'코어 브레이커', icon:'⚔️', atk:28, cost:{gold:3000, core:5, fang:3, goldbean:1} },
   ],
   armor: [
-    { id:'a_foam',  name:'우유거품 방패', icon:'🛡️', def:3, hp:10, cost:{gold:200, berry:5} },
-    { id:'a_bean',  name:'원두 갑옷',     icon:'🧥', def:6, hp:20, cost:{gold:600, bean:8, berry:8} },
+    { id:'a_foam',    name:'우유거품 방패', icon:'🛡️', def:3,  hp:10, cost:{gold:200, berry:5} },
+    { id:'a_bean',    name:'원두 갑옷',     icon:'🧥', def:6,  hp:20, cost:{gold:600, bean:8, berry:8} },
+    { id:'a_tusk',    name:'어금니 흉갑',   icon:'🛡️', def:10, hp:32, cost:{gold:900, tusk:3, berry:10} },
+    { id:'a_feather', name:'깃털 로브',     icon:'🧥', def:13, hp:48, cost:{gold:1400, feather:5, milk:6} },
+    { id:'a_gel',     name:'젤 슈트',       icon:'🥋', def:17, hp:66, cost:{gold:2000, gel:6, core:2} },
+    { id:'a_core',    name:'코어 플레이트', icon:'🦺', def:22, hp:90, cost:{gold:3000, core:4, fang:3, goldbean:1} },
   ],
 };
 const MAT_ICON = Object.fromEntries(Object.entries(MATERIALS).map(([k,m])=>[k,m.icon]));
@@ -766,20 +781,71 @@ const CRAFT_DB = [
   { id:'cr_def',   name:'크림 실드',    icon:'🛡️', cost:{milk:2,berry:2},    effect:'defup',  where:'battle', edesc:'탐험: 이번 전투 받는 피해 −50%' },
   { id:'cr_heal',  name:'회복 물약',    icon:'🧪', cost:{milk:1,berry:2},    effect:'heal',   where:'battle', edesc:'탐험: 체력 40% 회복 (전투·이동 중 사용)', healPct:0.4 },
 ];
-// ---------- 퀘스트 NPC (재료 배달 의뢰) ----------
+// ---------- 퀘스트 NPC (에스컬레이팅 반복 의뢰) ----------
+// 각 stage.need = [{type:'mat'|'item', key, count}] · 단계가 오를수록 수량↑ → 조합아이템/드롭재료 요구 → 무한 스케일링
 const QUEST_NPCS = [
   { id:'q_granny', name:'플로라 할머니', img:'chars/npc_granny.png', portrait:'chars/npc_granny_talk.png',
-    ask:'허리가 아파서 원두를 못 줍겠구나…<br><b>커피 원두 5개</b>만 가져다주면 고맙겠는데.',
-    need:{mat:'bean', count:5}, reward:{gold:140, exp:22, item:'cr_heal'},
-    done:'네 덕분에 향긋한 커피를 볶았단다. 또 놀러오렴~' },
+    stages:[
+      { ask:'허리가 아파서 원두를 못 줍겠구나…<br><b>커피 원두 5개</b>만 가져다주면 고맙겠는데.',
+        need:[{type:'mat',key:'bean',count:5}], reward:{gold:140, exp:22, item:'cr_heal'},
+        done:'네 덕분에 향긋한 커피를 볶았단다. 또 놀러오렴~' },
+      { ask:'요즘 단골이 부쩍 늘었지 뭐니.<br><b>커피 원두 10개</b>랑 <b>우유 3개</b>가 더 있어야겠구나.',
+        need:[{type:'mat',key:'bean',count:10},{type:'mat',key:'milk',count:3}], reward:{gold:260, exp:36},
+        done:'아이고 든든해라. 이 할미가 진한 라떼 한 잔 타주마.' },
+      { ask:'요 앞 멧돼지 이빨이 그렇게 단단하다며?<br><b>멧돼지 어금니 2개</b>만 구해다 주렴. 씹는 약을 만들 거란다.',
+        need:[{type:'mat',key:'tusk',count:2}], reward:{gold:340, exp:48, item:'cr_def'},
+        done:'오독오독! 이제 딱딱한 원두도 잘 씹겠어. 고맙다야~' },
+      { ask:'네가 만든 <b>회복 물약</b>이 그렇게 좋다며?<br>이 할미한테도 <b>2개</b>만 나눠주면 안 되겠니?',
+        need:[{type:'item',key:'cr_heal',count:2}], reward:{gold:520, exp:60, item:'cr_atk'},
+        done:'덕분에 무릎이 다 나았어! 십년은 젊어진 기분이구나 호호.' },
+      { ask:'무서운 그림자 늑대 이빨로 부적을 만들면<br>널 지켜줄 게다. <b>그림자 송곳니 3개</b>를 부탁하마.',
+        need:[{type:'mat',key:'fang',count:3}], reward:{gold:820, exp:92, item:'cr_heal'},
+        done:'이 부적을 늘 지니렴. 이 할미가 언제나 응원한단다. ❤️' },
+    ],
+    endless:{ ask:'단골이 자꾸 늘어서 말이야~<br><b>커피 원두 {c}개</b>만 또 부탁하마!',
+      key:'bean', base:16, step:4, reward:{goldBase:240, goldStep:40, exp:34} } },
+
   { id:'q_rico', name:'바리스타 리코', img:'chars/npc_rico.png', portrait:'chars/npc_rico_talk.png',
-    ask:'시그니처 라떼를 만들 <b>우유 4개</b>가 필요해.<br>구해다 주면 팁을 두둑이 줄게!',
-    need:{mat:'milk', count:4}, reward:{gold:120, exp:18, item:'cr_atk'},
-    done:'그때 그 우유로 인생 라떼를 뽑았지. 고마워!' },
+    stages:[
+      { ask:'시그니처 라떼를 만들 <b>우유 4개</b>가 필요해.<br>구해다 주면 팁을 두둑이 줄게!',
+        need:[{type:'mat',key:'milk',count:4}], reward:{gold:120, exp:18, item:'cr_atk'},
+        done:'그때 그 우유로 인생 라떼를 뽑았지. 고마워!' },
+      { ask:'신메뉴 개발 중이야! <b>시럽 5개</b>랑 <b>카카오 2개</b>…<br>완벽한 밸런스를 찾아야 한다고.',
+        need:[{type:'mat',key:'syrup',count:5},{type:'mat',key:'cacao',count:2}], reward:{gold:280, exp:40},
+        done:'크… 이게 바로 예술이지. 넌 내 소울메이트야!' },
+      { ask:'슬라임 젤이 젤라토랑 식감이 똑같대!<br><b>슬라임 젤 3개</b>만… 머, 먹어도 되는 거 맞겠지…?',
+        need:[{type:'mat',key:'gel',count:3}], reward:{gold:380, exp:52, item:'cr_time'},
+        done:'말도 안 돼… 이거 미슐랭 감이야! (우물우물)' },
+      { ask:'바리스타 대회 출전 세트가 필요해!<br>네가 만든 <b>카페라떼</b>랑 <b>타임 시럽</b> 하나씩만 빌려줘!',
+        need:[{type:'item',key:'cr_mood',count:1},{type:'item',key:'cr_time',count:1}], reward:{gold:580, exp:66, item:'cr_def'},
+        done:'우승이다!! 트로피 절반은 네 거야. 진심이라고.' },
+      { ask:'에스프레소 머신이 터졌어… 😭<br>골렘한테서 <b>로스팅 코어 2개</b>만 구해줘! 제발!',
+        need:[{type:'mat',key:'core',count:2}], reward:{gold:860, exp:96, item:'cr_atk'},
+        done:'머신이 부활했어! 넌 이 카페의 은인이야. 평생 공짜 커피 줄게!' },
+    ],
+    endless:{ ask:'또 신메뉴 아이디어가 떠올랐어!<br><b>우유 {c}개</b>만 더 대줄 수 있어?',
+      key:'milk', base:12, step:3, reward:{goldBase:260, goldStep:44, exp:34} } },
+
   { id:'q_navi', name:'숲요정 나비', img:'chars/npc_navi.png', portrait:'chars/npc_navi_talk.png',
-    ask:'반짝이는 <b>시럽 3개</b>를 모아오면<br>요정의 축복을 나눠줄게! ✨',
-    need:{mat:'syrup', count:3}, reward:{gold:90, exp:34, item:'cr_def'},
-    done:'네 시럽으로 좋은 마법을 부렸어. 반짝반짝!' },
+    stages:[
+      { ask:'반짝이는 <b>시럽 3개</b>를 모아오면<br>요정의 축복을 나눠줄게! ✨',
+        need:[{type:'mat',key:'syrup',count:3}], reward:{gold:90, exp:34, item:'cr_def'},
+        done:'네 시럽으로 좋은 마법을 부렸어. 반짝반짝!' },
+      { ask:'달콤한 마법 물약을 끓일 거야~<br><b>카카오 4개</b>랑 <b>커피 체리 4개</b>가 필요해!',
+        need:[{type:'mat',key:'cacao',count:4},{type:'mat',key:'berry',count:4}], reward:{gold:230, exp:54},
+        done:'보글보글~ 완벽한 물약이 됐어! 고마워 친구야!' },
+      { ask:'까마귀 깃털로 날개 마법을 부릴 거야!<br><b>검은 깃털 3개</b>만 구해다 줘~ 훨훨!',
+        need:[{type:'mat',key:'feather',count:3}], reward:{gold:350, exp:70, item:'cr_heal'},
+        done:'휘리릭~ 하늘을 나는 기분이야! 너도 언젠가 태워줄게!' },
+      { ask:'반짝이는 마법엔 반짝이는 재료지!<br>네가 만든 <b>골든 블렌드</b> 1개만 주면… 대박 마법 보여줄게!',
+        need:[{type:'item',key:'cr_score',count:1}], reward:{gold:540, exp:88, item:'cr_def'},
+        done:'우와아~ 별가루가 쏟아진다! 이런 마법은 나도 처음이야!' },
+      { ask:'도깨비 불씨로 요정 축제를 밝힐 거야! ✨<br><b>도깨비 불씨 4개</b>만 모아다 줘!',
+        need:[{type:'mat',key:'ember',count:4}], reward:{gold:800, exp:120, item:'cr_score'},
+        done:'축제가 시작됐어! 넌 우리 숲의 영원한 친구야! 🎉' },
+    ],
+    endless:{ ask:'또 새로운 마법을 연구 중이야~<br><b>시럽 {c}개</b>만 더 모아다 줄래?',
+      key:'syrup', base:10, step:3, reward:{goldBase:220, goldStep:40, exp:42} } },
 ];
 // ---------- 숨겨진 이벤트: 어둠의 상인 (영어 대결) ----------
 const DARK_MERCHANT = { name:'어둠의 상인', img:'chars/npc_merchant.png' };
@@ -1434,12 +1500,12 @@ const World = {
 // ============================================================
 // 몬스터 도감(id로 조회) — 존이 이 id들을 참조
 const MONSTERS = {
-  slime:      { id:'slime',      name:'원두 슬라임', emoji:'🫧', art:'monsters/slime.png',      lv:3, hp:24, atk:7,  def:2,  exp:14, gold:12, drop:'bean'  },
-  boar:       { id:'boar',       name:'들 멧돼지',   emoji:'🐗', art:'monsters/boar.png',       lv:5, hp:34, atk:10, def:4,  exp:22, gold:20, drop:'berry' },
-  crow:       { id:'crow',       name:'까마귀 떼',   emoji:'🐦‍⬛', art:'monsters/crow.png',      lv:4, hp:18, atk:12, def:1,  exp:18, gold:16, drop:'bean'  },
-  golem:      { id:'golem',      name:'로스팅 골렘', emoji:'🪨', art:'monsters/golem.png',      lv:8, hp:80, atk:16, def:10, exp:60, gold:50, drop:'berry' },
-  shadowwolf: { id:'shadowwolf', name:'그림자 늑대', emoji:'🐺', art:'monsters/shadowwolf.png', lv:7, hp:42, atk:16, def:4,  exp:32, gold:26, drop:'berry' },
-  wisp:       { id:'wisp',       name:'도깨비불',   emoji:'🔵', art:'monsters/wisp.png',       lv:6, hp:28, atk:14, def:2,  exp:28, gold:24, drop:'bean'  },
+  slime:      { id:'slime',      name:'원두 슬라임', emoji:'🫧', art:'monsters/slime.png',      lv:3, hp:24, atk:7,  def:2,  exp:14, gold:12, drops:[{mat:'bean',chance:0.9},{mat:'gel',chance:0.4}] },
+  boar:       { id:'boar',       name:'들 멧돼지',   emoji:'🐗', art:'monsters/boar.png',       lv:5, hp:34, atk:10, def:4,  exp:22, gold:20, drops:[{mat:'berry',chance:0.9},{mat:'tusk',chance:0.35}] },
+  crow:       { id:'crow',       name:'까마귀 떼',   emoji:'🐦‍⬛', art:'monsters/crow.png',      lv:4, hp:18, atk:12, def:1,  exp:18, gold:16, drops:[{mat:'bean',chance:0.85},{mat:'feather',chance:0.4}] },
+  golem:      { id:'golem',      name:'로스팅 골렘', emoji:'🪨', art:'monsters/golem.png',      lv:8, hp:80, atk:16, def:10, exp:60, gold:50, drops:[{mat:'berry',chance:0.9,count:2},{mat:'core',chance:0.45}] },
+  shadowwolf: { id:'shadowwolf', name:'그림자 늑대', emoji:'🐺', art:'monsters/shadowwolf.png', lv:7, hp:42, atk:16, def:4,  exp:32, gold:26, drops:[{mat:'berry',chance:0.85},{mat:'fang',chance:0.4}] },
+  wisp:       { id:'wisp',       name:'도깨비불',   emoji:'🔵', art:'monsters/wisp.png',       lv:6, hp:28, atk:14, def:2,  exp:28, gold:24, drops:[{mat:'bean',chance:0.8},{mat:'ember',chance:0.45}] },
 };
 // 존(지역) 레지스트리 — 이름/해제레벨/난이도/틴트/몬스터풀/보스/이웃
 const ZONES = {
@@ -1629,8 +1695,11 @@ const Battle = {
     es.classList.remove('lunge');
     if(Explore.state.stats.hp<=0) return this.lose(); this.busy=false; this.setButtons(true); },
   async win(){ const e=this.enemy; Sfx.play('win'); exHaptic('success'); document.getElementById('e-sprite').classList.add('dead'); this.msg(`${e.name}을(를) 쓰러뜨렸다!`); await this.wait(700);
-    const gold=Math.round(e.gold*(1+Explore.effBonus().goldPct)); Explore.cafe.wallet+=gold; Explore.state.materials[e.drop]=(Explore.state.materials[e.drop]||0)+1;
-    let txt=`승리! 🪙+${gold} · ${MATERIALS[e.drop].icon}${MATERIALS[e.drop].name}+1 · ⭐EXP+${e.exp}`; Explore.state.exp+=e.exp;
+    const gold=Math.round(e.gold*(1+Explore.effBonus().goldPct)); Explore.cafe.wallet+=gold;
+    // 몬스터별 확률 드롭 테이블
+    const drops=e.drops||(e.drop?[{mat:e.drop,chance:1}]:[]); const dparts=[];
+    drops.forEach(d=>{ if(this._rand() < (d.chance==null?1:d.chance)){ const cnt=d.count||1; Explore.state.materials[d.mat]=(Explore.state.materials[d.mat]||0)+cnt; const m=MATERIALS[d.mat]||{}; dparts.push(`${m.icon||''}${m.name||d.mat}+${cnt}`); } });
+    let txt=`승리! 🪙+${gold}${dparts.length?' · '+dparts.join(' · '):''} · ⭐EXP+${e.exp}`; Explore.state.exp+=e.exp;
     // 황금 원두 희귀 드롭(보스 35% · 일반 12%) — 골든 블렌드 조합 재료
     if(this._rand() < (e.isBoss?0.35:0.12)){ Explore.state.materials.goldbean=(Explore.state.materials.goldbean||0)+1; txt+=`<br><span class="lvlup">🌟 황금 원두를 발견했다! (+1)</span>`; }
     const ups=[]; while(Explore.state.exp>=expNeed(Explore.state.level)){ Explore.state.exp-=expNeed(Explore.state.level); Explore.state.level++;
@@ -1660,35 +1729,55 @@ const Battle = {
 //  퀘스트 NPC (재료 배달)
 // ============================================================
 const Quest = {
-  cur:null,
+  cur:null, curStage:null,
+  _n(id){ return (Explore.state.questN&&Explore.state.questN[id])||0; },
+  _info(req){ if(req.type==='item'){ const c=CRAFT_DB.find(x=>x.id===req.key)||{}; return {icon:c.icon||'🎁', name:c.name||req.key}; }
+    const m=MATERIALS[req.key]||{}; return {icon:m.icon||'', name:m.name||req.key}; },
+  _have(req){ if(req.type==='item') return (Explore.cafe.craftedItems||{})[req.key]||0;
+    return (Explore.state.materials||{})[req.key]||0; },
+  _met(need){ return need.every(req=>this._have(req)>=req.count); },
+  _progress(need){ return need.map(req=>{ const i=this._info(req), h=this._have(req), ok=h>=req.count;
+    return `<span style="color:${ok?'#4CAF50':'#c9871f'}">${i.icon} ${h} / ${req.count}</span>`; }).join('   '); },
+  _stage(def,n){ if(n < def.stages.length) return def.stages[n];
+    const e=def.endless, rep=n-def.stages.length, c=e.base+e.step*rep;
+    return { ask:e.ask.replace('{c}', c), need:[{type:'mat',key:e.key,count:c}],
+      reward:{gold:e.reward.goldBase+e.reward.goldStep*rep, exp:e.reward.exp},
+      done:'또 도와줬구나, 정말 고마워! 다음에 또 부탁해도 되지? 😊' }; },
   talk(id){ const def=QUEST_NPCS.find(q=>q.id===id); if(!def)return; this.cur=def;
-    if(!Explore.state.quests) Explore.state.quests={};
-    const st=Explore.state.quests[id], need=def.need, have=(Explore.state.materials[need.mat]||0), m=MATERIALS[need.mat];
+    if(!Explore.state.quests) Explore.state.quests={}; if(!Explore.state.questN) Explore.state.questN={};
+    // 구버전 세이브 마이그레이션: 'done'=1단계 완료로 환산
+    if(Explore.state.quests[id]==='done' && Explore.state.questN[id]==null){ Explore.state.questN[id]=1; delete Explore.state.quests[id]; }
+    const n=this._n(id), stage=this._stage(def,n), active=Explore.state.quests[id]==='active';
+    this.curStage=stage;
     document.getElementById('q-portrait').src=def.portrait||def.img;
     document.getElementById('q-name').textContent=def.name;
     const tx=document.getElementById('q-text'), ac=document.getElementById('q-actions');
-    if(st==='done'){ tx.innerHTML=def.done; ac.innerHTML=`<button class="q-btn ghost" onclick="Quest.close()">닫기</button>`; }
-    else if(st==='active'){
-      if(have>=need.count){ tx.innerHTML=`부탁한 <b>${m.icon} ${m.name} ${need.count}개</b>를 다 모았구나!<br>건네줄까요?`;
-        ac.innerHTML=`<button class="q-btn ok" onclick="Quest.turnIn()">완료 (${m.icon}${need.count} 전달)</button><button class="q-btn ghost" onclick="Quest.close()">닫기</button>`; }
-      else { tx.innerHTML=`${def.ask}<br><br><span style="color:#c9871f">진행: ${m.icon} ${have} / ${need.count}</span>`;
+    if(active){
+      if(this._met(stage.need)){ tx.innerHTML=`부탁한 걸 다 모아왔구나!<br>${this._progress(stage.need)}<br>건네줄까?`;
+        ac.innerHTML=`<button class="q-btn ok" onclick="Quest.turnIn()">완료 · 전달</button><button class="q-btn ghost" onclick="Quest.close()">닫기</button>`; }
+      else { tx.innerHTML=`${stage.ask}<br><br>진행: ${this._progress(stage.need)}`;
         ac.innerHTML=`<button class="q-btn ghost" onclick="Quest.close()">더 모아올게요</button>`; } }
-    else { tx.innerHTML=def.ask;
+    else { tx.innerHTML=(n>0?`<span style="color:#9ac47a">✔ 지난 부탁 고마웠어! 하나 더 부탁해도 될까?</span><br><br>`:'')+stage.ask;
       ac.innerHTML=`<button class="q-btn ok" onclick="Quest.accept()">수락</button><button class="q-btn ghost" onclick="Quest.close()">다음에</button>`; }
     document.getElementById('quest-dlg').classList.add('show');
   },
-  accept(){ if(!this.cur)return; Explore.state.quests[this.cur.id]='active'; Explore.persist();
+  accept(){ if(!this.cur)return; if(!Explore.state.quests)Explore.state.quests={};
+    Explore.state.quests[this.cur.id]='active'; Explore.persist();
     if(window.Sfx)Sfx.play('correct'); this.talk(this.cur.id); },
-  turnIn(){ const def=this.cur; if(!def)return; const need=def.need, have=Explore.state.materials[need.mat]||0;
-    if(have<need.count){ this.talk(def.id); return; }
-    Explore.state.materials[need.mat]=have-need.count; Explore.state.quests[def.id]='done';
-    const rwtxt=Explore.grantReward(def.reward);
+  turnIn(){ const def=this.cur, stage=this.curStage; if(!def||!stage)return;
+    if(!this._met(stage.need)){ this.talk(def.id); return; }
+    // 요구 재료/조합아이템 차감
+    stage.need.forEach(req=>{ if(req.type==='item'){ const ci=Explore.cafe.craftedItems||{}; ci[req.key]=(ci[req.key]||0)-req.count; if(ci[req.key]<=0)delete ci[req.key]; Explore.cafe.craftedItems=ci; }
+      else { Explore.state.materials[req.key]=(Explore.state.materials[req.key]||0)-req.count; } });
+    if(!Explore.state.questN)Explore.state.questN={}; Explore.state.questN[def.id]=this._n(def.id)+1;
+    delete Explore.state.quests[def.id];  // 완료 → 다음 단계 수락 대기(available)
+    const rwtxt=Explore.grantReward(stage.reward);
     if(window.Sfx)Sfx.play('levelup'); if(window.exHaptic)exHaptic('success');
-    document.getElementById('q-text').innerHTML=`고마워! 이건 답례야.<br><span class="lvlup">${rwtxt}</span>`;
+    document.getElementById('q-text').innerHTML=`${stage.done}<br><span class="lvlup">${rwtxt}</span>`;
     document.getElementById('q-actions').innerHTML=`<button class="q-btn ok" onclick="Quest.close()">좋아!</button>`;
     if(window.World)World.updateActionBtn();
   },
-  close(){ document.getElementById('quest-dlg').classList.remove('show'); this.cur=null; if(window.World)World.updateActionBtn(); },
+  close(){ document.getElementById('quest-dlg').classList.remove('show'); this.cur=null; this.curStage=null; if(window.World)World.updateActionBtn(); },
 };
 // ============================================================
 //  숨겨진 이벤트: 어둠의 상인 영어 대결
