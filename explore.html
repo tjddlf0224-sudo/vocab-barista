@@ -492,6 +492,7 @@
 
 </div><!-- /rotator -->
 <script src="shared/worddata.js"></script>
+<script src="shared/ads.js"></script>
 <script>
 // ============================================================
 // Vocab Barista — 탐험 (가로 / 스크롤 맵 / 조이스틱 / 전투)
@@ -1707,7 +1708,24 @@ const Battle = {
     if(ups.length){ txt+=`<br><span class="lvlup">🎉 레벨 업! Lv ${ups[ups.length-1]} (HP·공·방 상승, 체력 회복)</span>`; setTimeout(()=>Sfx.play('levelup'),450); }
     this.msg(txt); this.renderBars(); Explore.refreshHUD(); Explore.persist(); this.setButtons(false);
     await this.wait(1500); this.close(); },   // 결과 잠깐 보여주고 자동으로 전투 종료(탭하면 즉시)
-  async lose(){ this.msg('정신을 잃었다… 카페 근처에서 깨어났다. (체력 회복)'); Explore.state.stats.hp=Math.max(1,Math.round(Explore.state.stats.maxHp*0.5));
+  // [광고] 전투 패배 시 리워드 광고로 그 자리 부활 제안(부활/포기 버튼)
+  _askAdRevive(){ return new Promise(resolve=>{
+    const cmds=document.querySelector('#battle .b-cmds'); if(!cmds){ resolve(false); return; }
+    const orig=cmds.innerHTML; const done=v=>{ cmds.innerHTML=orig; resolve(v); };
+    cmds.innerHTML='<button class="b-cmd" style="grid-column:1/3; background:linear-gradient(180deg,#7cc6f0,#4a9fd8)" id="_rvAd">🎬 광고 보고 부활</button>'
+      +'<button class="b-cmd" style="grid-column:3/5; background:linear-gradient(180deg,#b58f7a,#9a745c)" id="_rvNo">포기</button>';
+    const ad=document.getElementById('_rvAd'), no=document.getElementById('_rvNo');
+    ad.onclick=async()=>{ ad.disabled=true; const ok=await (window.VBAds?VBAds.rewarded():Promise.resolve(false)); done(ok); };
+    no.onclick=()=>done(false);
+  }); },
+  async lose(){ this.busy=true; this.setButtons(false);
+    this.msg('쓰러졌다… 🎬 광고를 보고 그 자리에서 부활할까?');
+    const revived=await this._askAdRevive();
+    if(revived){ Explore.state.stats.hp=this.pStat().maxHp;   // 풀 회복하고 전투 계속
+      this.msg('❤️ 부활! 다시 싸우자!'); this.renderBars(); Explore.refreshHUD(); Explore.persist();
+      await this.wait(700); this.busy=false; this.setButtons(true); return; }
+    // 거절/실패 → 기존 마을 부활
+    this.msg('정신을 잃었다… 카페 근처에서 깨어났다. (체력 회복)'); Explore.state.stats.hp=Math.max(1,Math.round(Explore.state.stats.maxHp*0.5));
     // 마을 입구(시작점) 근처로 이동 — 쓰러진 자리에 그대로 두지 않음
     if(window.World && World.start){ World.px=World.start.x; World.py=World.start.y;
       Explore.state.pos={x:World.px,y:World.py}; if(World.updateActionBtn) World.updateActionBtn(); }

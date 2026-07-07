@@ -1349,7 +1349,10 @@
         </div>
         <div id="ranking-board" class="quest-list hidden"></div>
 
-        <div style="display:flex; gap:10px; justify-content:center; margin-top:20px; width:90%;">
+        <button id="revive-ad-btn" class="buy-btn" onclick="game.reviveByAd()" style="background:linear-gradient(180deg,#7cc6f0,#4a9fd8); box-shadow:0 4px 0 #3a7fb0; width:90%; margin-top:16px; font-size:1rem;">
+            🎬 광고 보고 무료 부활
+        </button>
+        <div style="display:flex; gap:10px; justify-content:center; margin-top:10px; width:90%;">
             <button id="revive-btn" class="buy-btn" onclick="game.revive()" style="background:linear-gradient(180deg,#f4a8a0,#e58880); box-shadow:0 4px 0 #cf6f67; flex:1; font-size:1rem;">
                 ❤️ 부활 (450G)
             </button>
@@ -1361,6 +1364,7 @@
 
 <script src="shared/worddata.js"></script>
 <script src="shared/worddata_csat.js"></script>
+<script src="shared/ads.js"></script>
 <script>
 // ==========================================
 // [0] 카페 BGM 엔진 (MP3 파일 버전)
@@ -3082,40 +3086,40 @@ const game = {
     },
 
     revive: function() {
-        const reviveCost = 450; 
-        
+        const reviveCost = 450;
         if(this.wallet < reviveCost) {
             showGameAlert(`골드가 부족합니다! (필요: ${reviveCost}G)`);
             return;
         }
-
         this.wallet -= reviveCost;
-        this.lives = 1; 
+        this._applyRevive();
+    },
+
+    // [광고] 리워드 광고 시청 시 무료 부활
+    reviveByAd: async function() {
+        const ok = await (window.VBAds ? VBAds.rewarded() : Promise.resolve(false));
+        if(!ok){ showGameAlert("광고 시청이 완료되지 않아 부활하지 못했어요."); return; }
+        this._applyRevive();
+    },
+
+    // 부활 공통 처리(골드/광고 공용)
+    _applyRevive: function() {
+        this.lives = 1;
         this.isActive = true;
         this.isPaused = false;
-        
         this.saveData();
         this.updateHUD();
-        
         document.getElementById('result-screen').classList.add('hidden');
-        playSound('buy'); 
-        
+        playSound('buy');
         setTimeout(() => {
-    // alert 대신 showGameAlert 함수 호출
-    showGameAlert("❤️ 부활 성공!<br>영업을 재개합니다.", () => {
-
-    // 1. 콤보 끊기 (추가된 부분)
-    this.combo = 0;       // 콤보 점수 0으로
-    this.updateHUD();     // 화면 점수판 갱신
-
-    // 2. 게임 재개 (원래 있던 코드)
-
-        // 확인 버튼을 눌렀을 때 실행될 코드들
-        // [버그수정] 죽기 직전 손님(비활성 버튼·공개된 정답)을 버리고 항상 새 턴으로 재개
-        this.currentCust = null;
-        this.nextTurn();
-    });
-}, 100);
+            showGameAlert("❤️ 부활 성공!<br>영업을 재개합니다.", () => {
+                this.combo = 0;       // 콤보 끊기
+                this.updateHUD();
+                // [버그수정] 죽기 직전 손님(비활성 버튼·공개된 정답)을 버리고 항상 새 턴으로 재개
+                this.currentCust = null;
+                this.nextTurn();
+            });
+        }, 100);
     },
 
 // [1. 아이템 구매 - 5단계 버전으로 교체됨]
@@ -3746,17 +3750,13 @@ equipItem: function(category, level) {
         // 1. 결과 화면 켜기 (기존 유지)
         this.showResultScreen(this.day, this.score);
 
-        // 2. 버튼 로직 (기존 유지)
-        const revBtn = document.getElementById('revive-btn');
-        if(revBtn) {
-            if(this.gameMode === 'normal') {
-                revBtn.style.display = 'inline-block';
-                revBtn.classList.remove('hidden');
-            } else {
-                revBtn.style.display = 'none';
-                revBtn.classList.add('hidden');
-            }
-        }
+        // 2. 버튼 로직 (기존 유지) — 부활 버튼들은 일반 모드에서만 노출
+        const normal = (this.gameMode === 'normal');
+        ['revive-btn','revive-ad-btn'].forEach(id=>{
+            const b = document.getElementById(id); if(!b) return;
+            b.style.display = normal ? (id==='revive-ad-btn' ? 'block' : 'inline-block') : 'none';
+            b.classList.toggle('hidden', !normal);
+        });
     },
 
     // [버그수정] 게임오버 시 저장본만 리셋된 진행도로 기록(메모리는 유지) — 강제 종료/새로고침 시 무료 이어하기 방지.
@@ -3881,6 +3881,8 @@ equipItem: function(category, level) {
         this.updateHUD(); this.showFloatingText("복습 시작!", document.body); this.nextTurn();
     },
     startNextDay: function() {
+        // [광고] 영업일 종료마다 카운트 → 3일에 1회 전면광고(자연스러운 끊김)
+        try{ if(window.VBAds) VBAds.interstitialEvery('dayclear', 3); }catch(e){}
         playSound('bell');
         BgMusic.playTrack('cafe');
         this.day++; this.dailyCount=0; this.isActive=true; this.saveData();
