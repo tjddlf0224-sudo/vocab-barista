@@ -2023,8 +2023,8 @@ function vbGender(){ return localStorage.getItem('vb_gender')==='f' ? 'f' : 'm';
 function resolveGenderLines(v){ if(v && !Array.isArray(v) && (v.m||v.f)){ return v[vbGender()] || v.m || v.f; } return v; }
 // 막 해금 스토리 한 줄 — {m,f} 객체면 성별별, 아니면 문자열 그대로
 function affStoryLine(id, i){ var v=(AFFECTION_STORY[id]||[])[i]; if(v && typeof v==='object'){ return v[vbGender()] || v.m || v.f || ''; } return v||''; }
-// 메인 캐릭터 이름 공개 여부: 1막(첫 유대) 해금 전에는 ??? 로 가림
-function mainNameKnown(id){ return ((game && game.charActs && game.charActs[id])||0) >= 1; }
+// 메인 캐릭터 이름 공개 여부: 2막(호감 60) 해금 전에는 ??? 로 가림 (1막=첫만남 직후라 너무 이름)
+function mainNameKnown(id){ return ((game && game.charActs && game.charActs[id])||0) >= 2; }
 function mainDisplayName(ch){ if(ch && ch.kind==='main' && !mainNameKnown(ch.id)) return '???'; return ch ? ch.name : ''; }
 
 // 오답/시간초과 때 메인 캐릭터 위로 한마디 (30% 확률로 등장)
@@ -2742,8 +2742,8 @@ const game = {
             const ch = CHAR_BY_ID[id];
             const story = affStoryLine(id, actIdx);
             BgMusic.playJingle(id.replace('m_', ''));
-            // 첫 유대(1막) 해금 시 비로소 이름을 밝힌다(#10)
-            const nameReveal = (actIdx===0 && ch && ch.kind==='main')
+            // 2막(호감 60) 해금 시 비로소 이름을 밝힌다(#10) — 첫만남 직후 공개 방지
+            const nameReveal = (actIdx===1 && ch && ch.kind==='main')
                 ? `<div style="font-size:0.92rem;color:#7b1fa2;margin-bottom:10px;">✨ 드디어 이름을 알려주었다 — <b>${ch.name}</b></div>` : '';
             showGameAlert(
                 `💞 <b>${ch?ch.name:''}</b>와의 유대 ${actIdx+1}막 해금!<br><br>`+
