@@ -43,7 +43,16 @@
       ['vbSignInGoogle','vbSignInApple','vbSignInEmail','vbSignUpEmail','vbResetPw'].forEach(function(n){
         window[n]=window[n]||function(){ var e=document.getElementById('vbLoginError'); if(e) e.textContent='로그인 준비 중이에요. 잠시 후 다시 시도하거나 "로그인 없이 둘러보기"를 눌러주세요.'; };
       });
+      // [로그인 깜빡임 방지] 직전에 로그인했던 기기면(자동로그인 예상) 첫 페인트부터 로그인창을 숨겨,
+      // Firebase 세션복원(onAuthStateChanged, ~1초) 전까지 로그인창이 번쩍였다 사라지는 것을 막는다.
+      try{
+        if(localStorage.getItem('vb_was_authed')==='1' || sessionStorage.getItem('vb_guest')==='1'){
+          document.documentElement.classList.add('vb-prelogged');
+        }
+      }catch(e){}
     </script>
+    <style>/* 자동로그인 예상 시 로그인 오버레이를 첫 페인트부터 숨김(깜빡임 방지) */
+      html.vb-prelogged #login-screen{ display:none !important; }</style>
     <meta name="theme-color" content="#3e2723">
 
     <!-- 오프라인 번들 폰트 (Google Fonts 로컬화) -->
@@ -4339,7 +4348,8 @@ if(typeof window.vbDeleteAccount!=='function'){ window.vbDeleteAccount=function(
   const $ = id => document.getElementById(id);
   const loginErr = m => { const e=$('vbLoginError'); if(e) e.textContent=m||''; };
   const hideLogin = () => { const l=$('login-screen'); if(l) l.classList.add('hidden'); };
-  const showLogin = () => { const l=$('login-screen'); if(l) l.classList.remove('hidden'); };
+  // 로그인창을 실제로 띄울 때는 조기숨김 클래스도 제거(세션 만료 등으로 로그아웃 판정된 경우)
+  const showLogin = () => { document.documentElement.classList.remove('vb-prelogged'); const l=$('login-screen'); if(l) l.classList.remove('hidden'); };
   // Firebase Auth 없으면(오프라인/차단) 로그인 건너뛰고 로컬로 진행
   if(typeof firebase==='undefined' || !window.vbAuth){ hideLogin(); return; }
   const auth = window.vbAuth;
@@ -4390,7 +4400,7 @@ if(typeof window.vbDeleteAccount!=='function'){ window.vbDeleteAccount=function(
   window.vbResetPw = async function(){ loginErr(''); const em=$('vbLoginEmail').value.trim();
     if(!em){ loginErr('이메일을 먼저 입력하세요'); return; }
     try{ await auth.sendPasswordResetEmail(em); loginErr('재설정 메일을 보냈어요 ✉️'); }catch(e){ loginErr(mapErr(e)); } };
-  window.vbSignOut = async function(){ try{ if(nativeAuth) await nativeAuth.signOut(); await auth.signOut(); }catch(e){} sessionStorage.removeItem('vb_synced'); sessionStorage.removeItem('vb_guest'); location.reload(); };
+  window.vbSignOut = async function(){ try{ if(nativeAuth) await nativeAuth.signOut(); await auth.signOut(); }catch(e){} sessionStorage.removeItem('vb_synced'); sessionStorage.removeItem('vb_guest'); try{ localStorage.removeItem('vb_was_authed'); }catch(e){} location.reload(); };
   window.vbGuest = function(){ sessionStorage.setItem('vb_guest','1'); hideLogin(); };
   function mapErr(e){ const c=(e&&e.code)||''; const M={
     'auth/invalid-email':'올바른 이메일 형식이 아니에요','auth/user-not-found':'가입되지 않은 이메일이에요','auth/wrong-password':'비밀번호가 틀렸어요',
@@ -4401,6 +4411,7 @@ if(typeof window.vbDeleteAccount!=='function'){ window.vbDeleteAccount=function(
   if(sessionStorage.getItem('vb_guest')==='1'){ hideLogin(); }
   auth.onAuthStateChanged(async (user)=>{
     if(user){
+      try{ localStorage.setItem('vb_was_authed','1'); }catch(e){}  // 다음 실행 때 로그인창 조기숨김용
       if(sessionStorage.getItem('vb_synced')==='1'){ hideLogin(); return; }
       const changed = await loadCloud(user.uid); sessionStorage.setItem('vb_synced','1');
       if(changed){ location.reload(); return; }
@@ -4408,6 +4419,7 @@ if(typeof window.vbDeleteAccount!=='function'){ window.vbDeleteAccount=function(
     } else {
       if(window.__vbDeleting) return;   // 계정 삭제 진행 중이면 로그인 화면/동기화 플래그를 건드리지 않음
       if(sessionStorage.getItem('vb_guest')==='1') return;
+      try{ localStorage.removeItem('vb_was_authed'); }catch(e){}  // 로그아웃/세션만료 → 다음엔 로그인창 정상 노출
       sessionStorage.removeItem('vb_synced'); showLogin();
     }
   });
