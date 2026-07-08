@@ -345,22 +345,10 @@
    [통합] 피버 모드 & 콤보 & 티어 시스템 & 상점 스타일
    ========================================= */
 
-/* 1. 피버 모드: 네온 나이트 스타일 (화려한 클럽 분위기) */
-@keyframes feverBg {
-    0% { background: linear-gradient(180deg, #2e0a24, #3e163e); }
-    50% { background: linear-gradient(180deg, #0a0a2e, #16213e); }
-    100% { background: linear-gradient(180deg, #0a2e1a, #163e21); }
-}
-
-.fever-mode .cafe-view {
-    animation: feverBg 0.5s infinite alternate;
-}
-
-/* 피버일 때 배경(책상 등)은 어둡게 눌러줌 */
-.fever-mode .scene-layer {
-    filter: brightness(0.6) contrast(1.2); 
-    transition: filter 0.5s;
-}
+/* 1. 피버 모드: 부드러운 핑크 네온 (아래 .fever-mode .scene-bg / #fever-overlay / .cafe-view 로 통일)
+   [버그수정] 옛 과격 버전 잔재 제거 — feverBg 스트로브(어두운 보라/파랑/초록 깜빡임)가
+   cafe-view에 걸려 네이티브/특정 화면비에서 새어나와 고양이(나비) 등 손님이 지저분하게(깨진 듯)
+   보이던 문제. scene-layer 필터는 DOM에 없는 죽은 규칙이라 함께 삭제. */
 
 /* 콤보 UI — 그라데이션 숫자 + COMBO 리본 (깔끔 리디자인) */
 #combo-ui {
@@ -488,7 +476,7 @@
 .cafe-view { background: linear-gradient(180deg, #6f4e3d 0%, #5d4037 45%, #4e342e 100%); }
 .scene-bg { position:absolute; inset:0; z-index:0; overflow:hidden; pointer-events:none; }
 .scene-photo { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center top; }
-.scene-layer, .scene-bg { transition: filter .5s; }
+.scene-bg { transition: filter .5s; }
 
 /* 벽 하단 우드 패널(웨인스코트) */
 .scene-wainscot {
@@ -2526,6 +2514,8 @@ const game = {
     },
 
     nextTurn: function() {
+        // [버그수정] 진입 즉시 대기중인 다음-턴 예약을 취소 — 중복 스폰(손님 2명 연속) 방지
+        if(this._nextTurnTO) { clearTimeout(this._nextTurnTO); this._nextTurnTO = null; }
         if(!this.isActive || this.isPaused) return;
 
         this.turnCount = (this.turnCount || 0) + 1; // [SRS] 턴 카운터
@@ -2822,6 +2812,21 @@ const game = {
             cb();
         }
     },
+    // [버그수정] 대화창을 '조용히' 닫기 — 저장된 onDismiss(다음손님/타이머 시작)를 실행하지 않음.
+    // 새 손님이 렌더될 때(renderScene) 이전 대화의 넘김 콜백이 실행돼 손님이 겹쳐 스폰되던 문제 방지.
+    dismissDialogSilent: function() {
+        const box = document.getElementById('dlg-box');
+        if(box) box.classList.remove('dlg-active');
+        const gc = document.getElementById('game-container'); if(gc) gc.classList.remove('dlg-mode');
+        if(this._dlgTimer) { clearTimeout(this._dlgTimer); this._dlgTimer = null; }
+        this._dlgOnDismiss = null;
+    },
+    // [버그수정] 다음 손님 예약은 항상 '한 번만' — 여러 경로(정답/오답/패스/작별타이머)에서
+    // setTimeout(nextTurn)이 중복 예약돼 손님이 2명 연속 튀어나오던 문제 방지(single-flight).
+    scheduleNextTurn: function(ms) {
+        if(this._nextTurnTO) clearTimeout(this._nextTurnTO);
+        this._nextTurnTO = setTimeout(() => { this._nextTurnTO = null; this.nextTurn(); }, ms || 0);
+    },
 
     // 4. 미스터리 박스
     buyMysteryBox: function() {
@@ -2911,14 +2916,14 @@ const game = {
                         // [버그수정] 예전엔 duration:99999 + 별도 setTimeout(2200) 이중 메커니즘이라 탭과 타이머가 경합하고,
                         // 정답 탭이 대화를 즉시 닫아버렸음. 인사 대사처럼 duration(최대 노출)+onDismiss(넘김) 단일 방식으로 통일.
                         // → 최대 3.5초 노출, 500ms 뒤 탭하면 즉시 넘김, 어느 쪽이든 nextTurn은 한 번만 실행.
-                        const advance = () => { if(el) el.classList.add('leaving'); setTimeout(() => this.nextTurn(), 420); };
+                        const advance = () => { if(el) el.classList.add('leaving'); this.scheduleNextTurn(420); };
                         this.showDialogue(cust.char.id, fw, { duration: 3500, onDismiss: advance });
                         return;
                     }
                 }
                 if(el) el.classList.add('leaving');
                 if(nc) this.showFloatingText(`📖 ${nc.ch.name} 등록! +${nc.bonus}G`, document.getElementById('cust-el'));
-                setTimeout(() => this.nextTurn(), 400);
+                this.scheduleNextTurn(400);
             };
             this.currentCust.solved = true;
 
@@ -3140,9 +3145,9 @@ const game = {
         // 5. 퇴장 처리
         if(this.lives <= 0) setTimeout(() => this.gameOver(), 1500);
         else setTimeout(() => {
-            this.hideDialogue();
+            this.dismissDialogSilent();
             document.getElementById('cust-el').classList.add('leaving');
-            setTimeout(() => this.nextTurn(), 400);
+            this.scheduleNextTurn(400);
         }, 1500);
     },
 
@@ -3234,7 +3239,7 @@ const game = {
                 if(!this.currentCust || this.currentCust.solved) return showGameAlert("패스할 손님이 없습니다.");
                 charge(); this.saveData(); this.updateHUD(); playSound('buy'); this.closeOverlays();
                 const ce=document.getElementById('cust-el'); if(ce) ce.classList.add('leaving');
-                setTimeout(() => this.nextTurn(), 400); checkQuests(); return;
+                this.scheduleNextTurn(400); checkQuests(); return;
             }
             if(id === 'con_hint') {
                 if(!this.currentCust || this.currentCust.solved) return showGameAlert("힌트를 쓸 손님이 없습니다.");
@@ -4026,7 +4031,7 @@ equipItem: function(category, level) {
 
     renderScene: function() {
         this.isTimeFrozen = false; // 새 손님 오면 시간 정지 해제
-        this.hideDialogue(); // 이전 대화창 즉시 닫기
+        this.dismissDialogSilent(); // [버그수정] 이전 대화창 닫되 넘김 콜백은 실행 안 함(손님 겹침 방지)
         
         const c = this.currentCust;
         const container = document.getElementById('game-container');
