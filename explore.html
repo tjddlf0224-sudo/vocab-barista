@@ -391,9 +391,19 @@
 <!-- 스탯 & 장비 -->
 <div id="stats-screen" class="ex-overlay">
   <div class="cs-panel" style="max-width:760px; max-height:92%; overflow-y:auto; padding-bottom:calc(14px + env(safe-area-inset-bottom));">
-    <div class="cs-title">📊 스탯 & 장비</div>
+    <div class="cs-title">📊 스탯</div>
     <div id="stats-body"></div>
     <button class="cs-close" onclick="World.closeStats()">닫기</button>
+  </div>
+</div>
+
+<!-- 대장간(장비 제작/장착) — 맵의 대장간 건물에서만 열림 -->
+<div id="forge-screen" class="ex-overlay">
+  <div class="cs-panel" style="max-width:760px; max-height:92%; overflow-y:auto; padding-bottom:calc(14px + env(safe-area-inset-bottom));">
+    <div class="cs-title">⚒️ 대장간</div>
+    <div style="font-size:.82rem; color:#cdbf9e; margin-bottom:10px;">골드와 재료로 무기·방어구를 <b style="color:#ffd54f">제작·장착</b>해요. 제작 즉시 장착돼요.</div>
+    <div id="forge-body"></div>
+    <button class="cs-close" onclick="World.closeForge()">닫기</button>
   </div>
 </div>
 
@@ -978,17 +988,23 @@ const World = {
     const clearAround=(x,y,r)=>{ for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){ const xx=x+dx,yy=y+dy;
       if(xx<1||xx>=this.WT-1||yy<2||yy>=this.HT-1)continue; this.barrier.delete(key(xx,yy)); this.trees=this.trees.filter(t=>!(t.x===xx&&t.y===yy)); }
       this.nodes=this.nodes.filter(n=>!(Math.abs(n.x-x)<=r&&Math.abs(n.y-y)<=r)); };
+    this.secret=null; this.forge=null;
     if(Explore.state.map.zone==='forest'){
       const spots=[ {x:Math.floor(this.WT*0.26), y:Math.floor(this.HT*0.34)},
                     {x:Math.floor(this.WT*0.72), y:Math.floor(this.HT*0.30)},
                     {x:Math.floor(this.WT*0.52), y:Math.floor(this.HT*0.60)} ];
       QUEST_NPCS.forEach((q,i)=>{ const sp=spots[i%spots.length]; clearAround(sp.x,sp.y,1);
         this.barrier.add(key(sp.x,sp.y)); this.npcs.push({ id:q.id, x:sp.x, y:sp.y }); });
-      // ----- 숨겨진 어둠의 상인(좌상단 비밀 공간) -----
+      // ----- 대장간(장비 제작소): 시작 지역이라 초반부터 접근 가능. 건물에 와야만 제작 -----
+      const fx=Math.floor(this.WT*0.40), fy=Math.floor(this.HT*0.44); clearAround(fx,fy,1);
+      this.barrier.add(key(fx,fy)); this.forge={ x:fx, y:fy };
+    }
+    if(Explore.state.map.zone==='deepwood'){
+      // ----- 숨겨진 어둠의 상인(좌상단 비밀 공간, 진입로만 살짝 트여있음) — 깊은 숲에만 -----
       const sx=3, sy=3; clearAround(sx,sy,1);
       for(let yy=sy+2; yy<=Math.floor(this.HT*0.40); yy++){ this.barrier.delete(key(sx,yy)); this.trees=this.trees.filter(t=>!(t.x===sx&&t.y===yy)); } // 진입로
       this.barrier.add(key(sx,sy)); this.secret={ x:sx, y:sy };
-    } else { this.secret=null; }
+    }
     // 나무는 정적이므로 y정렬을 1회만(렌더 루프의 매 프레임 sort 제거 — 저사양 GC/CPU 절감)
     this.trees.sort((a,b)=>a.y-b.y);
     this.buildExplored();
@@ -1046,6 +1062,8 @@ const World = {
     // 2) 숨겨진 어둠의 상인
     if(this.secret && (Explore.state.events||{}).darkMerchant!=='gone' && Math.abs(this.secret.x-ptx)+Math.abs(this.secret.y-pty)<=1){
       if(typeof DarkDuel!=='undefined') DarkDuel.meet(); return; }
+    // 2.5) 대장간(장비 제작소) — 건물에 와야만 제작 가능
+    if(this.forge && Math.abs(this.forge.x-ptx)+Math.abs(this.forge.y-pty)<=1){ this.openForge(); return; }
     // 3) 채집
     let best=null,bd=99;
     for(const n of this.nodes){ if(n.taken)continue; const d=Math.abs(n.x-ptx)+Math.abs(n.y-pty);
@@ -1148,10 +1166,11 @@ const World = {
     const battle=(window.Battle&&Battle.active);
     const npc = !battle && (this.npcs||[]).some(n=>Math.abs(n.x-ptx)+Math.abs(n.y-pty)<=1);
     const secret = !battle && this.secret && (Explore.state.events||{}).darkMerchant!=='gone' && Math.abs(this.secret.x-ptx)+Math.abs(this.secret.y-pty)<=1;
-    const talk = !!(npc||secret);
+    const forge = !battle && this.forge && Math.abs(this.forge.x-ptx)+Math.abs(this.forge.y-pty)<=1;
+    const talk = !!(npc||secret||forge);
     const near = !battle && !talk && this.nodes.some(n=>!n.taken && (Math.abs(n.x-ptx)+Math.abs(n.y-pty))<=1);
     b.classList.toggle('ready', near); b.classList.toggle('talk', talk);
-    const tx=b.querySelector('.ab-tx'); if(tx) tx.textContent = talk ? '대화' : '채집'; },
+    const tx=b.querySelector('.ab-tx'); if(tx) tx.textContent = forge ? '대장간' : talk ? '대화' : '채집'; },
   release(){ this.stick.active=false; this.stick.dx=0; this.stick.dy=0; this.keys={}; },
 
   // ----- 렌더 -----
@@ -1193,7 +1212,8 @@ const World = {
     if(this.gate) dot(this.gate.x,HT-1,'#ffcf4d');
     if(this.portal) dot(this.portal.x,0,'#b46bff');
     for(const n of (this.nodes||[])) if(!n.taken) dot(n.x,n.y,'#ffe066');
-    if(this.secret) dot(this.secret.x,this.secret.y,'#c9a6ff');   // 어둠의 상인은 숨김 유지(작은 점)
+    // 어둠의 상인은 미니맵에 표시하지 않음(진짜 숨겨진 이벤트) — 직접 발견해야 함
+    if(this.forge && seen(this.forge.x,this.forge.y)){ blk(this.forge.x,this.forge.y,'#3a2410',2); blk(this.forge.x,this.forge.y,'#ffb03a',1); } // 대장간은 유용한 랜드마크라 표시
     // 퀘스트 NPC — 발견 시 크고 선명하게(어두운 테두리+빨강 코어)
     for(const np of (this.npcs||[])){ if(!seen(np.x,np.y))continue; blk(np.x,np.y,'#20060a',2); blk(np.x,np.y,'#ff4d4d',1); }
     // 내 캐릭터 — 항상 가장 눈에 띄게(어두운 테두리 + 밝은 청록 코어)
@@ -1217,7 +1237,8 @@ const World = {
     if(this.portal) mark(this.portal.x,0,'#b46bff',true);
     for(const n of (this.nodes||[])) if(!n.taken) mark(n.x,n.y,'#ffe066');
     for(const np of (this.npcs||[])) mark(np.x,np.y,'#ff6b6b',true);
-    if(this.secret) mark(this.secret.x,this.secret.y,'#c9a6ff',true);
+    // 어둠의 상인은 전체지도에도 표시 안 함(숨겨진 이벤트). 대장간은 랜드마크라 표시.
+    if(this.forge) mark(this.forge.x,this.forge.y,'#ffb03a',true);
     const px=Math.round(this.px),py=Math.round(this.py); ctx.fillStyle='#fff'; ctx.fillRect(px*S-1,py*S-1,S+2,S+2);
     const t=document.getElementById('mapview-title'); if(t){ const zn=(ZONES[Explore.state.map.zone]||{}).name||''; const done=(Explore.state.maps||{})[Explore.state.map.zone];
       t.innerHTML = zn+' 지도 '+(done?'<span class="mv-done">완성 🗺️</span>':'· '+Math.round(this.exploredCount/(this.WT*this.HT)*100)+'%'); } },
@@ -1277,14 +1298,32 @@ const World = {
       ctx.font='bold '+Math.round(TS*0.64)+'px "Jua",sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
       ctx.lineWidth=Math.max(3,TS*0.06); ctx.strokeStyle='rgba(0,0,0,.55)'; ctx.strokeText(mk,gx,my);
       ctx.fillStyle=col; ctx.fillText(mk,gx,my); }
-    // ----- 숨겨진 어둠의 상인: 신비한 보라 표식 -----
-    if(this.secret && !((Explore.state.events||{}).darkMerchant==='gone') && !(this.secret.x<x0-1||this.secret.x>x1+1||this.secret.y<y0-1||this.secret.y>y1+1)){
-      const s=this.secret, dx=Math.round(s.x*TS-camX)+TS/2, dy=Math.round(s.y*TS-camY)+TS*0.5, pulse=0.5+0.5*Math.sin(this.bob*2);
-      ctx.save(); ctx.globalAlpha=0.3+0.4*pulse; ctx.fillStyle='#7a4fd0';
-      ctx.beginPath(); ctx.ellipse(dx,dy+TS*0.32,TS*0.4,TS*0.18,0,0,7); ctx.fill();
-      ctx.globalAlpha=0.85; ctx.fillStyle='#caa6ff'; ctx.font='bold '+Math.round(TS*0.72)+'px serif';
-      ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('✦', dx, dy - TS*0.1 + Math.sin(this.bob*2)*TS*0.08);
-      ctx.restore(); }
+    // ----- 숨겨진 어둠의 상인: 가까이(3칸 이내) 왔을 때만 희미하게 — 진짜 '숨겨진' 느낌 -----
+    if(this.secret && !((Explore.state.events||{}).darkMerchant==='gone')){
+      const s=this.secret, sdist=Math.abs(s.x-Math.round(this.px))+Math.abs(s.y-Math.round(this.py));
+      if(sdist<=3 && !(s.x<x0-1||s.x>x1+1||s.y<y0-1||s.y>y1+1)){
+        const dx=Math.round(s.x*TS-camX)+TS/2, dy=Math.round(s.y*TS-camY)+TS*0.5, pulse=0.5+0.5*Math.sin(this.bob*2);
+        const near = sdist<=1 ? 1 : (sdist<=2 ? 0.62 : 0.3);   // 가까울수록 또렷
+        ctx.save(); ctx.globalAlpha=(0.2+0.35*pulse)*near; ctx.fillStyle='#7a4fd0';
+        ctx.beginPath(); ctx.ellipse(dx,dy+TS*0.32,TS*0.4,TS*0.18,0,0,7); ctx.fill();
+        ctx.globalAlpha=0.8*near; ctx.fillStyle='#caa6ff'; ctx.font='bold '+Math.round(TS*0.72)+'px serif';
+        ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('✦', dx, dy - TS*0.1 + Math.sin(this.bob*2)*TS*0.08);
+        ctx.restore();
+      }
+    }
+    // ----- 대장간(장비 제작소) 랜드마크: 모루 아이콘 + 라벨 -----
+    if(this.forge && !(this.forge.x<x0-1||this.forge.x>x1+1||this.forge.y<y0-2||this.forge.y>y1+1)){
+      const f=this.forge, dx=Math.round(f.x*TS-camX)+TS/2, dy=Math.round(f.y*TS-camY)+TS;
+      ctx.save();
+      ctx.fillStyle='rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(dx,dy,TS*0.44,TS*0.14,0,0,7); ctx.fill();
+      ctx.font=Math.round(TS*1.2)+'px serif'; ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+      ctx.fillText('⚒️', dx, dy - TS*0.05);
+      const my=dy-TS*1.55+Math.sin(this.bob*1.5)*TS*0.05;
+      ctx.font='bold '+Math.round(TS*0.4)+'px "Jua","Nunito",sans-serif'; ctx.textBaseline='middle';
+      ctx.lineWidth=Math.max(3,TS*0.08); ctx.strokeStyle='rgba(40,20,10,.62)'; ctx.strokeText('⚒️ 대장간',dx,my);
+      ctx.fillStyle='#ffd9a0'; ctx.fillText('⚒️ 대장간',dx,my);
+      ctx.restore();
+    }
     // 팻말(마을로 가는 길)
     if(this.sign && this.sign.x>=x0-1 && this.sign.x<=x1+1 && this.sign.y>=y0-1 && this.sign.y<=y1+2){
       this.drawSign(Math.round(this.sign.x*TS-camX), Math.round(this.sign.y*TS-camY), TS); }
@@ -1444,9 +1483,12 @@ const World = {
     if(window.Battle && Battle.setSelfSprite) Battle.setSelfSprite();
     this.closeCompanionSelect();
   },
-  // ----- 스탯 & 장비(대장간) -----
+  // ----- 스탯(보기 전용) -----
   openStats(){ this.renderStats(); document.getElementById('stats-screen').classList.add('show'); },
   closeStats(){ document.getElementById('stats-screen').classList.remove('show'); },
+  // ----- 대장간(장비 제작/장착) — 맵의 대장간 건물에서만 열림 -----
+  openForge(){ this.renderForge(); document.getElementById('forge-screen').classList.add('show'); ExploreBgm.play('craft'); },
+  closeForge(){ document.getElementById('forge-screen').classList.remove('show'); ExploreBgm.play('map'); },
   costText(cost){ if(!cost)return''; const p=[]; if(cost.gold)p.push('🪙'+cost.gold);
     for(const k in cost){ if(k==='gold')continue; p.push((MAT_ICON[k]||k)+cost[k]); } return p.join('  '); },
   canAfford(cost){ if(!cost)return true; if((cost.gold||0)>Explore.cafe.wallet)return false;
@@ -1456,8 +1498,8 @@ const World = {
     for(const k in it.cost){ if(k==='gold')continue; Explore.state.materials[k]=(Explore.state.materials[k]||0)-it.cost[k]; }
     if(!Explore.state.items)Explore.state.items=[]; Explore.state.items.push(id);
     Explore.state.equip[slot]=id;  // 제작 즉시 장착
-    Explore.persist(); Explore.refreshHUD(); this.renderStats(); },
-  equipItem(slot,id){ Explore.state.equip[slot]=id; Explore.persist(); Explore.refreshHUD(); this.renderStats(); },
+    Explore.persist(); Explore.refreshHUD(); this.renderForge(); },
+  equipItem(slot,id){ Explore.state.equip[slot]=id; Explore.persist(); Explore.refreshHUD(); this.renderForge(); },
   // ----- 조합소 -----
   openCraft(){ this.renderCraft(); document.getElementById('craft-screen').classList.add('show'); ExploreBgm.play('craft'); },
   closeCraft(){ document.getElementById('craft-screen').classList.remove('show'); ExploreBgm.play('map'); },
@@ -1487,8 +1529,9 @@ const World = {
   renderStats(){
     const s=Explore.state; const eff=Explore.effStats(); const b=eff.bonus;
     const need=expNeed(s.level); const expPct=Math.min(100,(s.exp/need)*100);
-    const pass=COMP_PASSIVE[s.companion||'none']; const owned=s.items||[];
+    const pass=COMP_PASSIVE[s.companion||'none'];
     const plus=v=> v>0?` <small>(+${v})</small>`:'';
+    const eqName=slot=>{ const id=s.equip&&s.equip[slot]; if(!id)return'없음'; const it=(EQUIP_DB[slot]||[]).find(x=>x.id===id); return it?`${it.icon} ${it.name}`:'없음'; };
     let h='';
     h+=`<div class="st-row"><div class="st-chip">⭐ Lv ${s.level}</div>`
       +`<div class="st-chip">❤️ ${eff.maxHp}${plus(b.maxHp)}</div>`
@@ -1496,6 +1539,13 @@ const World = {
       +`<div class="st-chip">🛡️ ${eff.def}${plus(b.def)}</div></div>`;
     h+=`<div class="st-exp"><div style="width:${expPct}%"></div></div><div class="st-expt">EXP ${s.exp} / ${need}</div>`;
     h+=`<div class="st-pass">🤝 동행 패시브: ${pass?pass.label:'없음'}</div>`;
+    h+=`<div class="st-pass">🗡️ 무기: ${eqName('weapon')}　🛡️ 방어구: ${eqName('armor')}</div>`;
+    h+=`<div style="font-size:.78rem;color:#b8a888;margin-top:8px;">🔨 장비 제작·교체는 <b style="color:#ffd54f">원두 숲의 대장간</b>에서 할 수 있어요.</div>`;
+    document.getElementById('stats-body').innerHTML=h;
+  },
+  // 대장간 화면: 무기·방어구 제작/장착
+  renderForge(){
+    const s=Explore.state; const owned=s.items||[];
     const forge=(slot,list)=>{ let g='<div class="eq-grid">';
       list.forEach(it=>{ const isEq=s.equip[slot]===it.id; const isOwned=owned.includes(it.id);
         const bn=(it.atk?`⚔️+${it.atk} `:'')+(it.def?`🛡️+${it.def} `:'')+(it.hp?`❤️+${it.hp}`:'');
@@ -1505,9 +1555,9 @@ const World = {
         else btn=`<button class="eq-btn buy" ${this.canAfford(it.cost)?'':'disabled'} onclick="World.forgeItem('${slot}','${it.id}')">제작</button>`;
         g+=`<div class="eq-card${isEq?' equipped':''}"><span class="eq-ic">${it.icon}</span><div class="eq-info"><div class="nm">${it.name}</div><div class="bn">${bn}</div>${isOwned?'':`<div class="ct">${this.costText(it.cost)}</div>`}</div>${btn}</div>`;
       }); return g+'</div>'; };
-    h+=`<div class="st-sec">🗡️ 무기</div>`+forge('weapon',EQUIP_DB.weapon);
+    let h=`<div class="st-sec">🗡️ 무기</div>`+forge('weapon',EQUIP_DB.weapon);
     h+=`<div class="st-sec">🛡️ 방어구</div>`+forge('armor',EQUIP_DB.armor);
-    document.getElementById('stats-body').innerHTML=h;
+    document.getElementById('forge-body').innerHTML=h;
   },
 };
 
