@@ -1318,11 +1318,10 @@ const World = {
         ctx.restore();
       }
     }
-    // ----- 대장간(장비 제작소) 건물: 빌보드, 발끝 접지(약 3타일) -----
+    // ----- 대장간(장비 제작소) 건물: 빌보드, 바닥에 딱 붙게(그림자 없이, 발끝을 바닥선에 살짝 묻어 접지) -----
     if(this.forge && !(this.forge.x<x0-2||this.forge.x>x1+2||this.forge.y<y0-4||this.forge.y>y1+2)){
       const f=this.forge, fimg=MAP_OBJ.forge;
-      const gx=Math.round(f.x*TS-camX)+TS/2, gy=Math.round(f.y*TS-camY)+TS; // 발끝 = 타일 하단
-      ctx.fillStyle='rgba(0,0,0,.20)'; ctx.beginPath(); ctx.ellipse(gx,gy,TS*0.95,TS*0.16,0,0,7); ctx.fill();
+      const gx=Math.round(f.x*TS-camX)+TS/2, gy=Math.round(f.y*TS-camY)+TS+Math.round(TS*0.18); // 발끝을 타일바닥보다 살짝 아래로 묻어 '떠보임' 제거
       if(fimg&&fimg.complete&&fimg.naturalWidth){
         const h=TS*3.0, w=h*(fimg.naturalWidth/fimg.naturalHeight);
         ctx.drawImage(fimg, gx-w/2, gy-h, w, h);
