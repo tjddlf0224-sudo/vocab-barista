@@ -744,7 +744,7 @@ const WALK_FRAMES = {};
 const MAP_TEX = {};
 ['grass','path','water'].forEach(n=>{ const im=new Image(); im.src='tiles/'+n+'.png'; MAP_TEX[n]=im; });
 const MAP_OBJ = {};
-['tree_green','tree_orange','tree_pine','bush','rock','stump','flowers','grass_tuft']
+['tree_green','tree_orange','tree_pine','bush','rock','stump','flowers','grass_tuft','forge']
   .forEach(n=>{ const im=new Image(); im.src='sprites/'+n+'.png'; MAP_OBJ[n]=im; });
 // 채집 노드는 SVG 아이콘 사용(사용자 선호) — 페인티드 노드 아트 미사용
 const NODE_ART = {};
@@ -1311,18 +1311,18 @@ const World = {
         ctx.restore();
       }
     }
-    // ----- 대장간(장비 제작소) 랜드마크: 모루 아이콘 + 라벨 -----
-    if(this.forge && !(this.forge.x<x0-1||this.forge.x>x1+1||this.forge.y<y0-2||this.forge.y>y1+1)){
-      const f=this.forge, dx=Math.round(f.x*TS-camX)+TS/2, dy=Math.round(f.y*TS-camY)+TS;
-      ctx.save();
-      ctx.fillStyle='rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(dx,dy,TS*0.44,TS*0.14,0,0,7); ctx.fill();
-      ctx.font=Math.round(TS*1.2)+'px serif'; ctx.textAlign='center'; ctx.textBaseline='alphabetic';
-      ctx.fillText('⚒️', dx, dy - TS*0.05);
-      const my=dy-TS*1.55+Math.sin(this.bob*1.5)*TS*0.05;
-      ctx.font='bold '+Math.round(TS*0.4)+'px "Jua","Nunito",sans-serif'; ctx.textBaseline='middle';
-      ctx.lineWidth=Math.max(3,TS*0.08); ctx.strokeStyle='rgba(40,20,10,.62)'; ctx.strokeText('⚒️ 대장간',dx,my);
-      ctx.fillStyle='#ffd9a0'; ctx.fillText('⚒️ 대장간',dx,my);
-      ctx.restore();
+    // ----- 대장간(장비 제작소) 건물: 빌보드, 발끝 접지(약 3타일) -----
+    if(this.forge && !(this.forge.x<x0-2||this.forge.x>x1+2||this.forge.y<y0-4||this.forge.y>y1+2)){
+      const f=this.forge, fimg=MAP_OBJ.forge;
+      const gx=Math.round(f.x*TS-camX)+TS/2, gy=Math.round(f.y*TS-camY)+TS; // 발끝 = 타일 하단
+      ctx.fillStyle='rgba(0,0,0,.20)'; ctx.beginPath(); ctx.ellipse(gx,gy,TS*0.95,TS*0.16,0,0,7); ctx.fill();
+      if(fimg&&fimg.complete&&fimg.naturalWidth){
+        const h=TS*3.0, w=h*(fimg.naturalWidth/fimg.naturalHeight);
+        ctx.drawImage(fimg, gx-w/2, gy-h, w, h);
+      } else { // 로드 전 폴백: 모루 이모지
+        ctx.font=Math.round(TS*1.2)+'px serif'; ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+        ctx.fillText('⚒️', gx, gy-TS*0.4);
+      }
     }
     // 팻말(마을로 가는 길)
     if(this.sign && this.sign.x>=x0-1 && this.sign.x<=x1+1 && this.sign.y>=y0-1 && this.sign.y<=y1+2){
