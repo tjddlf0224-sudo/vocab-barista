@@ -139,7 +139,8 @@
   .eq-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
   .eq-card{ background:rgba(255,253,245,.96); border:2px solid #b9a87e; border-radius:12px; padding:8px 10px; text-align:left; display:flex; align-items:center; gap:9px; }
   .eq-card.equipped{ border-color:var(--gold); box-shadow:0 0 9px rgba(255,179,0,.55); }
-  .eq-ic{ font-size:1.7rem; }
+  .eq-ic{ font-size:1.7rem; width:38px; display:flex; align-items:center; justify-content:center; flex:0 0 auto; }
+  .eq-ic svg{ width:36px; height:36px; display:block; filter:drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
   .eq-info{ flex:1; min-width:0; } .eq-info .nm{ font-weight:bold; color:#3a2620; font-size:.92rem; }
   .eq-info .bn{ font-size:.76rem; color:#2e7d32; } .eq-info .ct{ font-size:.72rem; color:#b06a1e; }
   .eq-btn{ border:none; border-radius:10px; padding:8px 13px; font-family:inherit; font-weight:bold; font-size:.85rem; cursor:pointer; white-space:nowrap; }
@@ -783,6 +784,23 @@ const EQUIP_DB = {
     { id:'a_core',    name:'코어 플레이트', icon:'🦺', def:22, hp:90, cost:{gold:3000, core:4, fang:3, goldbean:1} },
   ],
 };
+// 장비별 전용 SVG 아이콘(재료 테마 색) — 이모지 중복 제거 + 어울리는 그림
+const EQUIP_ICON = {
+  // 무기
+  w_bean:'<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><g stroke="#3b2a1a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M20 5l3 4v15l-3 4-3-4V9z" fill="#cfd6dc"/><path d="M13 24h14" stroke="#7a5230" stroke-width="3.5"/><rect x="18.3" y="26" width="3.4" height="6" rx="1" fill="#95632f"/><ellipse cx="20" cy="35" rx="3.1" ry="4" fill="#6f4423"/><path d="M20 31.5v7" stroke="#3b2a1a" stroke-width="1.1"/></g></svg>',
+  w_roast:'<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><g stroke="#3b2a1a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M20 4c3 3 4 7 0 12-4-5-3-9 0-12z" fill="#ffb367"/><line x1="20" y1="14" x2="20" y2="36" stroke="#8a5a30" stroke-width="3"/><path d="M15 14h10" stroke="#c77b2f" stroke-width="2.6"/></g></svg>',
+  w_tusk:'<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><g stroke="#3b2a1a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><line x1="16" y1="6" x2="22" y2="36" stroke="#8a5a30" stroke-width="3"/><path d="M16 8c8-3 15 0 15 7 0 6-8 8-14 5z" fill="#efe7d6"/></g></svg>',
+  w_fang:'<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><g stroke="#3b2a1a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M25 6c4 6 3 15-7 22 3-9 1-16 7-22z" fill="#c9b6ee"/><path d="M14 26h9" stroke="#6b4a2a" stroke-width="3"/><rect x="16.5" y="28" width="3.2" height="6" rx="1" fill="#7a5aa0"/></g></svg>',
+  w_ember:'<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><g stroke="#3b2a1a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><line x1="20" y1="16" x2="20" y2="36" stroke="#8a5a30" stroke-width="3"/><rect x="11" y="7" width="18" height="10" rx="3" fill="#ff8a3d"/><circle cx="20" cy="12" r="2.6" fill="#ffe08a" stroke="none"/></g></svg>',
+  w_core:'<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><g stroke="#3b2a1a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M20 4l4 5v13l-4 4-4-4V9z" fill="#c2d8e8"/><path d="M11 24h18" stroke="#5a6b7a" stroke-width="3.5"/><circle cx="20" cy="24" r="3.3" fill="#5ad1ff"/><rect x="18.3" y="27" width="3.4" height="7" rx="1" fill="#4a5a68"/></g></svg>',
+  // 방어구
+  a_foam:'<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><g stroke="#3b2a1a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M20 5c6 2 11 2 12 3 0 12-4 20-12 24-8-4-12-12-12-24 1-1 6-1 12-3z" fill="#fff6e6"/><path d="M17 16c4-2 6 3 3 5-3 1-4-3-1-4" fill="none" stroke="#9ec7e6" stroke-width="2"/></g></svg>',
+  a_bean:'<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><g stroke="#3b2a1a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M8 10l6-3 6 3 6-3 6 3-2 16c-3 4-7 6-10 7-3-1-7-3-10-7z" fill="#b07a44"/><line x1="20" y1="8" x2="20" y2="33" stroke="#7a5230" stroke-width="1.6"/></g></svg>',
+  a_tusk:'<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><g stroke="#3b2a1a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M11 12l9-4 9 4-2 15c-2 4-5 5-7 6-2-1-5-2-7-6z" fill="#cfd6dc"/><path d="M9 11c-3 1-4 4-2 6 2-2 3-4 2-6z" fill="#efe7d6"/><path d="M31 11c3 1 4 4 2 6-2-2-3-4-2-6z" fill="#efe7d6"/></g></svg>',
+  a_feather:'<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><g stroke="#3b2a1a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M20 6c4 0 6 3 6 6l4 20c-4 3-16 3-20 0l4-20c0-3 2-6 6-6z" fill="#6fc7c0"/><path d="M20 12v18" stroke="#3b7a76" stroke-width="1.6"/><path d="M23 9c3-2 6-1 6-1-1 3-3 5-6 4z" fill="#bfeae6"/></g></svg>',
+  a_gel:'<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><g stroke="#3b2a1a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M14 8h12l2 6-2 4 2 4-3 8h-10l-3-8 2-4-2-4z" fill="#9ee29a"/><circle cx="17" cy="14" r="1.6" fill="#e6ffe0" stroke="none"/></g></svg>',
+  a_core:'<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><g stroke="#3b2a1a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M9 11l7-4 4 2 4-2 7 4-2 15c-3 4-6 6-9 7-3-1-6-3-9-7z" fill="#aeb9c4"/><circle cx="20" cy="20" r="3.6" fill="#5ad1ff"/><circle cx="20" cy="20" r="1.4" fill="#eaffff" stroke="none"/></g></svg>',
+};
 const MAT_ICON = Object.fromEntries(Object.entries(MATERIALS).map(([k,m])=>[k,m.icon]));
 // ---------- 조합 레시피 (재료+스펠링퀴즈 → 카페에서 쓰는 특별 아이템) ----------
 const CRAFT_DB = [
@@ -1299,10 +1317,15 @@ const World = {
       const h=TS*1.7, w=h*(img.naturalWidth/img.naturalHeight);
       ctx.fillStyle='rgba(0,0,0,.18)'; ctx.beginPath(); ctx.ellipse(gx,gy,w*0.30,TS*0.11,0,0,7); ctx.fill();
       ctx.drawImage(img, gx-w/2, gy-h, w, h);
+      const bob=Math.sin(this.bob*1.5)*TS*0.06;
+      // 이름표(머리 위)
+      const nameBottom=gy-h-TS*0.05+bob;
+      this.drawNameTag(gx, nameBottom, def.name||'', '#ffe9c8');
+      // 상태 마커(이름표 위): ❗진행가능 / …진행중 / ✔완료
       const st=(Explore.state.quests||{})[np.id]; const mk= st==='done'?'✔': st==='active'?'…':'!';
       const col= st==='done'?'#7CFC98': st==='active'?'#ffd54f':'#ff5d5d';
-      const my=gy-h-TS*0.24+Math.sin(this.bob*1.5)*TS*0.06;
-      ctx.font='bold '+Math.round(TS*0.64)+'px "Jua",sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      const my=nameBottom-TS*0.86;
+      ctx.font='bold '+Math.round(TS*0.6)+'px "Jua",sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
       ctx.lineWidth=Math.max(3,TS*0.06); ctx.strokeStyle='rgba(0,0,0,.55)'; ctx.strokeText(mk,gx,my);
       ctx.fillStyle=col; ctx.fillText(mk,gx,my); }
     // ----- 숨겨진 어둠의 상인: 가까이(3칸 이내) 왔을 때만 희미하게 — 진짜 '숨겨진' 느낌 -----
@@ -1322,13 +1345,16 @@ const World = {
     if(this.forge && !(this.forge.x<x0-2||this.forge.x>x1+2||this.forge.y<y0-4||this.forge.y>y1+2)){
       const f=this.forge, fimg=MAP_OBJ.forge;
       const gx=Math.round(f.x*TS-camX)+TS/2, gy=Math.round(f.y*TS-camY)+TS+Math.round(TS*0.18); // 발끝을 타일바닥보다 살짝 아래로 묻어 '떠보임' 제거
+      let topY=gy-TS*2.1; // 라벨 기본 위치(로드 전 대비)
       if(fimg&&fimg.complete&&fimg.naturalWidth){
         const h=TS*3.0, w=h*(fimg.naturalWidth/fimg.naturalHeight);
         ctx.drawImage(fimg, gx-w/2, gy-h, w, h);
+        topY=gy-h*0.74; // 지붕 위(연기 아래) 정도
       } else { // 로드 전 폴백: 모루 이모지
         ctx.font=Math.round(TS*1.2)+'px serif'; ctx.textAlign='center'; ctx.textBaseline='alphabetic';
         ctx.fillText('⚒️', gx, gy-TS*0.4);
       }
+      this.drawNameTag(gx, topY, '⚒️ 대장간', '#ffd9a0');
     }
     // 팻말(마을로 가는 길)
     if(this.sign && this.sign.x>=x0-1 && this.sign.x<=x1+1 && this.sign.y>=y0-1 && this.sign.y<=y1+2){
@@ -1419,6 +1445,23 @@ const World = {
     ctx.beginPath(); ctx.arc(cx-headR*0.4+fx, headY+headR*0.3, headR*0.1,0,7); ctx.fill();
     ctx.beginPath(); ctx.arc(cx+headR*0.4+fx, headY+headR*0.3, headR*0.1,0,7); ctx.fill();
     ctx.strokeStyle='#3a2a1e'; ctx.lineWidth=s*0.022; ctx.beginPath(); ctx.arc(cx+fx, headY+headR*0.26, headR*0.12, 0.15*Math.PI, 0.85*Math.PI); ctx.stroke();
+  },
+
+  // 오브젝트 위 이름표(둥근 다크 pill + 텍스트) — bottomY가 pill 하단
+  drawNameTag(cx, bottomY, text, accent){
+    const ctx=this.ctx, TS=this.TS;
+    ctx.save();
+    const fs=Math.max(11, Math.round(TS*0.34));
+    ctx.font='bold '+fs+'px "Jua","Nunito",sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    const tw=ctx.measureText(text).width, padX=Math.round(TS*0.18), padY=Math.round(TS*0.11);
+    const bw=tw+padX*2, bh=fs+padY*2, bx=Math.round(cx-bw/2), by=Math.round(bottomY-bh), r=bh/2;
+    ctx.fillStyle='rgba(28,18,10,0.74)';
+    ctx.beginPath();
+    ctx.moveTo(bx+r,by); ctx.arcTo(bx+bw,by,bx+bw,by+bh,r); ctx.arcTo(bx+bw,by+bh,bx,by+bh,r);
+    ctx.arcTo(bx,by+bh,bx,by,r); ctx.arcTo(bx,by,bx+bw,by,r); ctx.closePath(); ctx.fill();
+    ctx.fillStyle=accent||'#fff3e0'; ctx.fillText(text, cx, by+bh/2+0.5);
+    ctx.restore();
   },
 
   // 팻말: "마을로 가는 길" 표지판 (게이트 옆)
@@ -1559,7 +1602,7 @@ const World = {
         if(isEq) btn='<button class="eq-btn on" disabled>장착중</button>';
         else if(isOwned) btn=`<button class="eq-btn equip" onclick="World.equipItem('${slot}','${it.id}')">장착</button>`;
         else btn=`<button class="eq-btn buy" ${this.canAfford(it.cost)?'':'disabled'} onclick="World.forgeItem('${slot}','${it.id}')">제작</button>`;
-        g+=`<div class="eq-card${isEq?' equipped':''}"><span class="eq-ic">${it.icon}</span><div class="eq-info"><div class="nm">${it.name}</div><div class="bn">${bn}</div>${isOwned?'':`<div class="ct">${this.costText(it.cost)}</div>`}</div>${btn}</div>`;
+        g+=`<div class="eq-card${isEq?' equipped':''}"><span class="eq-ic">${EQUIP_ICON[it.id]||it.icon}</span><div class="eq-info"><div class="nm">${it.name}</div><div class="bn">${bn}</div>${isOwned?'':`<div class="ct">${this.costText(it.cost)}</div>`}</div>${btn}</div>`;
       }); return g+'</div>'; };
     let h=`<div class="st-sec">🗡️ 무기</div>`+forge('weapon',EQUIP_DB.weapon);
     h+=`<div class="st-sec">🛡️ 방어구</div>`+forge('armor',EQUIP_DB.armor);
