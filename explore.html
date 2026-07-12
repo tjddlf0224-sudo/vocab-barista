@@ -141,6 +141,7 @@
   .eq-card.equipped{ border-color:var(--gold); box-shadow:0 0 9px rgba(255,179,0,.55); }
   .eq-ic{ font-size:1.7rem; width:38px; display:flex; align-items:center; justify-content:center; flex:0 0 auto; }
   .eq-ic svg{ width:36px; height:36px; display:block; filter:drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
+  .eq-ic img{ width:40px; height:40px; object-fit:contain; display:block; filter:drop-shadow(0 1px 1px rgba(0,0,0,.28)); }
   .eq-info{ flex:1; min-width:0; } .eq-info .nm{ font-weight:bold; color:#3a2620; font-size:.92rem; }
   .eq-info .bn{ font-size:.76rem; color:#2e7d32; } .eq-info .ct{ font-size:.72rem; color:#b06a1e; }
   .eq-btn{ border:none; border-radius:10px; padding:8px 13px; font-family:inherit; font-weight:bold; font-size:.85rem; cursor:pointer; white-space:nowrap; }
@@ -801,6 +802,7 @@ const EQUIP_ICON = {
   a_gel:'<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><g stroke="#3b2a1a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M14 8h12l2 6-2 4 2 4-3 8h-10l-3-8 2-4-2-4z" fill="#9ee29a"/><circle cx="17" cy="14" r="1.6" fill="#e6ffe0" stroke="none"/></g></svg>',
   a_core:'<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><g stroke="#3b2a1a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"><path d="M9 11l7-4 4 2 4-2 7 4-2 15c-3 4-6 6-9 7-3-1-6-3-9-7z" fill="#aeb9c4"/><circle cx="20" cy="20" r="3.6" fill="#5ad1ff"/><circle cx="20" cy="20" r="1.4" fill="#eaffff" stroke="none"/></g></svg>',
 };
+window.EQUIP_ICON = EQUIP_ICON; // 대장간 아이콘 이미지 로드 실패 시 인라인 SVG 폴백용
 const MAT_ICON = Object.fromEntries(Object.entries(MATERIALS).map(([k,m])=>[k,m.icon]));
 // ---------- 조합 레시피 (재료+스펠링퀴즈 → 카페에서 쓰는 특별 아이템) ----------
 const CRAFT_DB = [
@@ -1605,7 +1607,8 @@ const World = {
         if(isEq) btn='<button class="eq-btn on" disabled>장착중</button>';
         else if(isOwned) btn=`<button class="eq-btn equip" onclick="World.equipItem('${slot}','${it.id}')">장착</button>`;
         else btn=`<button class="eq-btn buy" ${this.canAfford(it.cost)?'':'disabled'} onclick="World.forgeItem('${slot}','${it.id}')">제작</button>`;
-        g+=`<div class="eq-card${isEq?' equipped':''}"><span class="eq-ic">${EQUIP_ICON[it.id]||it.icon}</span><div class="eq-info"><div class="nm">${it.name}</div><div class="bn">${bn}</div>${isOwned?'':`<div class="ct">${this.costText(it.cost)}</div>`}</div>${btn}</div>`;
+        const icon = `<img src="sprites/eq_${it.id}.png" alt="" onerror="this.onerror=null;this.outerHTML=(window.EQUIP_ICON&&EQUIP_ICON['${it.id}'])||'${it.icon}'">`;
+        g+=`<div class="eq-card${isEq?' equipped':''}"><span class="eq-ic">${icon}</span><div class="eq-info"><div class="nm">${it.name}</div><div class="bn">${bn}</div>${isOwned?'':`<div class="ct">${this.costText(it.cost)}</div>`}</div>${btn}</div>`;
       }); return g+'</div>'; };
     let h=`<div class="st-sec">🗡️ 무기</div>`+forge('weapon',EQUIP_DB.weapon);
     h+=`<div class="st-sec">🛡️ 방어구</div>`+forge('armor',EQUIP_DB.armor);
