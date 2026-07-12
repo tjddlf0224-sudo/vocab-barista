@@ -996,7 +996,14 @@ const World = {
       QUEST_NPCS.forEach((q,i)=>{ const sp=spots[i%spots.length]; clearAround(sp.x,sp.y,1);
         this.barrier.add(key(sp.x,sp.y)); this.npcs.push({ id:q.id, x:sp.x, y:sp.y }); });
       // ----- 대장간(장비 제작소): 시작 지역이라 초반부터 접근 가능. 건물에 와야만 제작 -----
-      const fx=Math.floor(this.WT*0.40), fy=Math.floor(this.HT*0.44); clearAround(fx,fy,1);
+      const fx=Math.floor(this.WT*0.40), fy=Math.floor(this.HT*0.44);
+      // 건물(3타일 빌보드, 발끝접지)이 나무와 겹치지 않게 발자국 영역을 비대칭으로 정리(가로±2, 위2~아래3)
+      for(let dy=-2; dy<=3; dy++) for(let dx=-2; dx<=2; dx++){
+        const xx=fx+dx, yy=fy+dy; if(xx<1||xx>=this.WT-1||yy<2||yy>=this.HT-1) continue;
+        this.barrier.delete(key(xx,yy));
+        this.trees=this.trees.filter(t=>!(t.x===xx&&t.y===yy));
+        this.nodes=this.nodes.filter(n=>!(n.x===xx&&n.y===yy));
+      }
       this.barrier.add(key(fx,fy)); this.forge={ x:fx, y:fy };
     }
     if(Explore.state.map.zone==='deepwood'){
