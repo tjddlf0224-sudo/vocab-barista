@@ -1182,6 +1182,9 @@ const World = {
     }
     this.updateActionBtn(); // 채집 버튼 강조 갱신
     this.reveal();          // 안개 걷힘(미니맵)
+    // 이미 탐색한 지역이라 reveal이 미니맵을 다시 안 그려도, 플레이어 타일이 바뀌면 마커 갱신(실시간 추적)
+    const _ptx=Math.round(this.px), _pty=Math.round(this.py);
+    if(_ptx!==this._miniPx || _pty!==this._miniPy){ this._miniPx=_ptx; this._miniPy=_pty; this._miniDirty=true; }
     // 주기적 위치 저장
     if((++this._saveT)%30===0){ Explore.state.pos={x:this.px,y:this.py}; this.serializeExplored(); Explore.persist(); }
   },
@@ -1354,7 +1357,7 @@ const World = {
         ctx.font=Math.round(TS*1.2)+'px serif'; ctx.textAlign='center'; ctx.textBaseline='alphabetic';
         ctx.fillText('⚒️', gx, gy-TS*0.4);
       }
-      this.drawNameTag(gx, topY, '⚒️ 대장간', '#ffd9a0');
+      this.drawNameTag(gx, topY, '대장간', '#ffd9a0');
     }
     // 팻말(마을로 가는 길)
     if(this.sign && this.sign.x>=x0-1 && this.sign.x<=x1+1 && this.sign.y>=y0-1 && this.sign.y<=y1+2){
