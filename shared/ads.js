@@ -26,8 +26,9 @@ window.VBAds = (function () {
     var A = admob();
     if (!A || !isNative() || _inited) return Promise.resolve();
     _inited = true;
+    // [심사] 추적(ATT) 미사용 — 테스트 광고만 사용하며 추적 권한을 요청하지 않음(비개인화 광고).
+    // 실제 개인화 광고로 수익화할 때 requestTrackingAuthorization + NSUserTrackingUsageDescription + ASC 추적선언을 함께 되살릴 것.
     return Promise.resolve()
-      .then(function () { return A.requestTrackingAuthorization && A.requestTrackingAuthorization().catch(function () {}); })
       .then(function () { return A.initialize({ initializeForTesting: USE_TEST }); })
       .catch(function (e) { console.warn('[VBAds] init 실패', e); _inited = false; });
   }
