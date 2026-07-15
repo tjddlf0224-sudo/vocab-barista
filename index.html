@@ -1462,17 +1462,19 @@ const BgMusic = {
             document.addEventListener('touchstart', resumeOnInteraction, true);
             document.addEventListener('keydown', resumeOnInteraction, true);
             document.addEventListener('visibilitychange', () => {
-                if(document.hidden) { if(self._audio) self._audio.pause(); }
+                // 백그라운드로 나가면 BGM+징글 모두 정지 — 소리가 남아있으면 네이티브가
+                // 오디오 세션을 못 내려 잠금화면에 '재생 중'이 남는다(AppDelegate에서 세션 비활성화).
+                if(document.hidden) { if(self._audio) self._audio.pause(); self.stopJingle(); }
                 else if(!self.isMuted && !(window.game && game.isPaused)) {
                     if(self._audio) self._audio.play().catch(()=>{});
                 }
             });
-            window.addEventListener('pagehide', () => { if(self._audio) self._audio.pause(); });
+            window.addEventListener('pagehide', () => { if(self._audio) self._audio.pause(); self.stopJingle(); });
             window.addEventListener('beforeunload', () => { if(self._audio) self._audio.pause(); });
             try {
                 const App = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
                 if(App) App.addListener('appStateChange', s => {
-                    if(!s.isActive) { if(self._audio) self._audio.pause(); }
+                    if(!s.isActive) { if(self._audio) self._audio.pause(); self.stopJingle(); }
                     else if(!self.isMuted && self._audio) self._audio.play().catch(()=>{});
                 });
             } catch(e) {}
@@ -1501,6 +1503,12 @@ const BgMusic = {
             if(this._audio) this._audio.volume = 0.35;
             this._jingle = null;
         });
+    },
+
+    // 징글 즉시 정지(백그라운드 진입 시) — 소리가 남으면 오디오 세션이 안 내려감
+    stopJingle: function(){
+        if(this._jingle){ try{ this._jingle.pause(); }catch(e){} this._jingle = null; }
+        if(this._audio) this._audio.volume = 0.35;
     },
 
     play: function() {
@@ -4107,10 +4115,8 @@ equipItem: function(category, level) {
             this.renderVipSlots();
 
             document.getElementById('order-info').innerHTML = `VIP 주문: <b style="color:var(--gold)">직접 입력하세요!</b>`;
-            // VIP 메인 캐릭터: 대화창이 먼저 뜨므로 focus는 대화창 닫힐 때 (serveCustomer onDismiss)
-            if(!(ch && ch.kind === 'main' && c.greetLine)) {
-                setTimeout(() => inp.focus(), 100);
-            }
+            // [키패드] 자동 포커스 없음 — 키패드가 먼저 올라오면 문제(단어 뜻/글자칸)가 가려짐.
+            // 문제를 먼저 보여주고, 사용자가 입력칸을 직접 탭할 때만 키패드가 뜨게 한다.
             
         } else {
             document.getElementById('options-grid').classList.remove('hidden');
