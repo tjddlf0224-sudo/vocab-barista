@@ -3701,10 +3701,30 @@ equipItem: function(category, level) {
     },
 
     // [신규] 영업 종료 후 정비 모드 (결과창 대신 실행됨)
+    // [별점] 애플 공식 리뷰 요청(iOS17+ AppStore.requestReview / 이하 SKStoreReviewController).
+    // ⚠️ 앱스토어 지침(1.1.7): 특정 점수를 요구하거나("5점 주세요") 보상을 주면 안 되고,
+    //    자체 별점 창도 금지 — 공식 API만 부르고 문구·모양은 애플이 띄운다. 그래서 여기선 조건만 판단.
+    //    애플이 알아서 연 3회로 제한하고, 조건이 안 맞으면 조용히 무시한다(실패해도 게임엔 영향 없음).
+    maybeAskReview: function() {
+        try{
+            const C = window.Capacitor;
+            const R = C && C.Plugins && C.Plugins.InAppReview;
+            if(!R || !(C.isNativePlatform && C.isNativePlatform())) return;   // 웹/미지원이면 조용히 패스
+            if((this.bestDay || 1) < 3) return;                               // 충분히 즐겨본 사람에게만
+            const last = +(localStorage.getItem('vb_review_asked') || 0);
+            if(last && (Date.now() - last) < 90*24*60*60*1000) return;        // 최소 90일 간격(예의)
+            localStorage.setItem('vb_review_asked', String(Date.now()));
+            // 정비 화면이 그려진 뒤 자연스럽게(즉시 띄우면 화면 전환과 겹침)
+            setTimeout(() => { try{ R.requestReview(); }catch(e){} }, 1500);
+        }catch(e){}
+    },
+
     enterRestMode: function() {
         this.isActive = false;
         if(this.timer) clearInterval(this.timer);
         BgMusic.playTrack('shop');
+        // [별점] 하루를 무사히 마친 기분 좋은 순간 = 리뷰 요청 적기(조건은 maybeAskReview 안에서 판단)
+        this.maybeAskReview();
 
         // 1. 손님 서 있던 자리 비우기
         const area = document.querySelector('.customer-area');
