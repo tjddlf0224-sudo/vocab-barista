@@ -46,7 +46,11 @@ window.VBAds = (function () {
       .catch(function (e) { console.warn('[VBAds] rewarded 실패', e); try { handle && handle.remove && handle.remove(); } catch (e2) {} return false; });
   }
 
-  // 전면 광고: best-effort. 반환값 무시 가능.
+  // ⚠️ 전면 광고 — 현재 어디서도 호출하지 않음(2026-07 제거).
+  //   사고: prepare(네트워크 로드, 수 초) → show 구조라, startNextDay에서 던져놓으면
+  //   로드가 끝난 시점엔 이미 새 영업일 + VIP 입력 중이라 그 위로 광고가 덮쳤음(닫기도 안 먹힘).
+  //   되살리려면: ①미리 prepare 해두고 ②'로드 완료' 상태일 때만 ③안전한 순간(정비화면 등)에 show,
+  //   ④onInterstitialAdDismissed로 게임 재개, ⑤중복 show 방지 가드까지 갖출 것.
   function interstitial() {
     var A = admob();
     if (!A || !isNative()) return Promise.resolve(false);

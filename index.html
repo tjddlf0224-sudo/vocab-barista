@@ -4132,8 +4132,10 @@ equipItem: function(category, level) {
         this.updateHUD(); this.showFloatingText("복습 시작!", document.body); this.nextTurn();
     },
     startNextDay: function() {
-        // [광고] 영업일 종료마다 카운트 → 3일에 1회 전면광고(자연스러운 끊김)
-        try{ if(window.VBAds) VBAds.interstitialEvery('dayclear', 3); }catch(e){}
+        // [광고] 전면광고 제거됨 — prepareInterstitial(네트워크 로드, 수 초)이 끝난 뒤에야 show가 돼서
+        // 새 영업일이 시작되고 VIP 손님 입력 중에 광고가 덮치는 사고가 있었음(닫기도 안 먹힘).
+        // 수익 기여는 3일에 1회로 미미한 반면 게임을 막아버려 제거. 광고는 유저가 직접 누르는
+        // 리워드형(부활)만 유지. 되살릴 땐 반드시 '미리 로드해두고, 안전한 순간에, 로드된 경우에만' 표시할 것.
         playSound('bell');
         BgMusic.playTrack('cafe');
         this.day++; this.dailyCount=0; this.isActive=true; this.saveData();
