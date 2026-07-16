@@ -1368,7 +1368,8 @@ const World = {
     if(this.portalSign && this.portalSign.x>=x0-1 && this.portalSign.x<=x1+1 && this.portalSign.y>=y0-2 && this.portalSign.y<=y1+1){
       const tgt=ZONES[this.portalTarget]||{}, cur=ZONES[Explore.state.map.zone]||{};
       const locked = cur.next===this.portalTarget && (Explore.state.level||1) < (tgt.minLv||1);
-      const label = locked ? `🔒 ${tgt.name||''} Lv${tgt.minLv}` : `${tgt.name||''} →`;
+      // drawSign이 이모지를 제거하므로(폭 측정 오차) 잠김 표시는 🔒 대신 글자로 남긴다
+      const label = locked ? `${tgt.name||''} Lv${tgt.minLv} 필요` : `${tgt.name||''} →`;
       this.drawSign(Math.round(this.portalSign.x*TS-camX), Math.round(this.portalSign.y*TS-camY), TS, label, '▲'); }
     // 존 분위기 틴트(밤 등) — 플레이어 직전에 깔아 캐릭터는 또렷하게
     const zt=(ZONES[Explore.state.map.zone]||{}).tint;
@@ -1489,11 +1490,17 @@ const World = {
     ctx.beginPath(); ctx.moveTo(bx+r, by+bh*0.32); ctx.lineTo(bx+bw-r, by+bh*0.32);
     ctx.moveTo(bx+r, by+bh*0.68); ctx.lineTo(bx+bw-r, by+bh*0.68); ctx.stroke();
     // 글자 — 판자 폭에 맞춰 자동 축소(넘침 방지)
-    const maxW = bw - r*2 - TS*0.08;
+    // ⚠️ 이모지는 measureText가 실제 렌더 폭보다 작게 재서 축소 계산이 어긋난다(판자 밖으로 삐져나옴).
+    //    캔버스 팻말에선 이모지를 빼고 글자만 그린다(→ 화살표는 유지). 대장간 이름표와 같은 처리.
+    const clean = String(label).replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu, '').replace(/\s+/g, ' ').trim();
+    const maxW = (bw - r*2 - TS*0.08) * 0.96;   // 측정 오차 대비 4% 여유
     let fs = TS*0.27; ctx.font='bold '+Math.round(fs)+'px "Jua","Nunito",sans-serif';
-    while(ctx.measureText(label).width > maxW && fs > TS*0.13){ fs -= TS*0.012; ctx.font='bold '+Math.round(fs)+'px "Jua","Nunito",sans-serif'; }
+    let guard = 0;
+    while(ctx.measureText(clean).width > maxW && fs > TS*0.10 && guard++ < 200){
+        fs -= TS*0.01; ctx.font='bold '+Math.round(fs)+'px "Jua","Nunito",sans-serif';
+    }
     ctx.fillStyle='#fff3df'; ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText(label, cx, by+bh*0.5);
+    ctx.fillText(clean, cx, by+bh*0.5);
     // 방향 화살표
     ctx.fillStyle='#ffd54f'; ctx.font='bold '+Math.round(TS*0.42)+'px sans-serif';
     ctx.fillText(arrow, cx, arrow==='▲'? dy-TS*0.18 : dy+TS*1.0);
