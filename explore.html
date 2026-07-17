@@ -1147,10 +1147,13 @@ const World = {
       }
     }
   },
-  // 마을(카페)로 복귀 — 다음 입장 때 게이트 시작점에서 시작
+  // 마을(카페)로 복귀 — 다음 입장 때는 팻말 위쪽(start)에서 시작해야 한다.
+  // 게이트를 밟은 자리 그대로 복원되면, 조금만 움직여도 다시 게이트에 닿아 마을로 튕긴다.
   leaveToVillage(){ if(this._leaving)return; this._leaving=true; this.moving=false;
     this.toast('🏘️ 마을로 돌아갑니다…');
-    Explore.state.pos=null;
+    // 게이트 좌표가 아니라 '팻말 위쪽 시작점'을 저장. (_leaving 동안 pagehide가 덮어쓰지 못하게 막아둠)
+    Explore.state.pos = this.start ? { x:this.start.x, y:this.start.y } : null;
+    try{ Explore.persist(); }catch(e){}
     setTimeout(()=>{ try{ Explore.exitToCafe(); }catch(e){ location.href='index.html'; } }, 450); },
   // 상단 포털: 이웃 존으로 이동(앞으로 갈 땐 레벨 잠금, 되돌아가는 건 자유)
   tryZonePortal(){
@@ -2015,7 +2018,9 @@ const SpellQuiz = {
 window.SpellQuiz=SpellQuiz;
 window.Battle=Battle; window.World=World; window.Explore=Explore;
 
-window.addEventListener('pagehide', ()=>{ try{ Explore.state.pos={x:World.px,y:World.py}; Explore.persist(); }catch(e){} });
+// 마을로 나가는 중(leaveToVillage)이면 위치를 덮어쓰지 않는다 — 게이트 좌표가 저장되면
+// 다음 입장 때 게이트 위에서 시작해 조금만 움직여도 다시 마을로 튕긴다.
+window.addEventListener('pagehide', ()=>{ try{ if(World._leaving) return; Explore.state.pos={x:World.px,y:World.py}; Explore.persist(); }catch(e){} });
 window.addEventListener('DOMContentLoaded', ()=>{ Explore.init(); ExploreBgm.init(); });
 </script>
 </body>
