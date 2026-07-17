@@ -114,11 +114,18 @@
   .cs-selbadge{ position:absolute; top:6px; right:6px; background:var(--gold); color:#3a2620; font-size:.7rem; padding:1px 8px; border-radius:10px; font-weight:bold; }
   .cs-lockov{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;
     color:#fff; font-size:.76rem; line-height:1.3; background:rgba(20,12,10,.62); border-radius:12px; }
-  .cs-lockov .lk{ font-size:1.7rem; }
+  .cs-lockov .lk{ font-size:1.7rem; line-height:1; }
+  .cs-lockov .lk .uic{ width:1.7rem; height:1.7rem; vertical-align:0; }
+  .cs-art .uic{ width:44%; height:auto; opacity:.75; }
   .cs-close{ margin-top:14px; background:linear-gradient(180deg,#cfd8dc,#90a4ae); border:none; border-radius:12px;
     padding:9px 32px; font-family:inherit; font-size:1rem; color:#28323a; box-shadow:0 3px 0 #546e7a; }
   .cs-close:active{ transform:translateY(2px); box-shadow:0 1px 0 #546e7a; }
   /* ===== 스탯 & 장비 ===== */
+  /* UI 아이콘(SVG) — 이모지 대체. 글자와 같은 줄에 자연스럽게 붙도록 */
+  .uic{ width:1.15em; height:1.15em; vertical-align:-0.22em; display:inline-block; flex:0 0 auto; }
+  .st-chip .uic{ width:1.05em; height:1.05em; margin-right:2px; }
+  .cs-skill .uic{ width:1em; height:1em; vertical-align:-0.15em; margin-right:2px; }
+  .st-eqimg{ width:1.5em; height:1.5em; object-fit:contain; vertical-align:-0.4em; margin-right:1px; }
   .st-row{ display:flex; gap:9px; justify-content:center; flex-wrap:wrap; margin:8px 0; }
   .st-chip{ background:rgba(255,253,245,.96); border-radius:12px; padding:7px 14px; color:#3a2620; font-weight:bold; font-size:.95rem; }
   .st-chip small{ color:#2e7d32; font-weight:bold; }
@@ -1525,15 +1532,21 @@ const World = {
     COMP_ORDER.forEach(key=>{
       const c=COMPANIONS[key]; const recruited=Explore.isRecruited(key);
       const sk=(typeof SKILLS!=='undefined'&&SKILLS[key])||null;
-      const art = c.img ? `<img src="${c.img}" alt="${c.name}">` : `<span class="emoji">${c.emoji}</span>`;
+      // 기본(동행 없음)은 플레이어 성별에 맞는 바리스타 얼굴로 — 이모지 대신
+      const gImg = (key==='none')
+        ? ((localStorage.getItem('vb_gender')==='f') ? 'chars/barista_f.png' : 'chars/barista_m.png')
+        : c.img;
+      const art = gImg ? `<img src="${gImg}" alt="${c.name}">` : UI_ICON.unknown;
+      const skIcon = sk ? (UI_ICON[SKILL_ICON[key]] || '') : '';
       let html='';
       if(recruited){
         html = `<div class="cs-art">${art}</div><div class="cs-name">${c.name}</div>`
-             + `<div class="cs-skill">${sk?sk.icon+' '+sk.name:''}</div>`;
+             + `<div class="cs-skill">${sk? skIcon+' '+sk.name : ''}</div>`;
         if(key===cur) html += `<div class="cs-selbadge">선택중</div>`;
       } else {
-        html = `<div class="cs-art"><span class="emoji">❓</span></div><div class="cs-name">???</div><div class="cs-skill"></div>`
-             + `<div class="cs-lockov"><span class="lk">🔒</span>카페에서 ${c.name}<br>호감도 MAX 달성 시 해제</div>`;
+        // 잠금 오버레이가 설명을 다 하므로 뒤에 '???' 이름표를 또 두지 않는다(반투명 뒤로 비쳐 지저분)
+        html = `<div class="cs-art">${UI_ICON.unknown}</div><div class="cs-name">&nbsp;</div><div class="cs-skill"></div>`
+             + `<div class="cs-lockov"><span class="lk">${UI_ICON.lock}</span>카페에서 ${c.name}<br>호감도 MAX 달성 시 해제</div>`;
       }
       const card=document.createElement('div');
       card.className='cs-card'+(key===cur&&recruited?' selected':'')+(recruited?'':' locked');
@@ -1595,16 +1608,21 @@ const World = {
     const need=expNeed(s.level); const expPct=Math.min(100,(s.exp/need)*100);
     const pass=COMP_PASSIVE[s.companion||'none'];
     const plus=v=> v>0?` <small>(+${v})</small>`:'';
-    const eqName=slot=>{ const id=s.equip&&s.equip[slot]; if(!id)return'없음'; const it=(EQUIP_DB[slot]||[]).find(x=>x.id===id); return it?`${it.icon} ${it.name}`:'없음'; };
+    // 장착 장비는 '그 장비의 실제 이미지'로 보여준다(이모지 X)
+    const eqName=slot=>{
+      const id=s.equip&&s.equip[slot]; if(!id)return'없음';
+      const it=(EQUIP_DB[slot]||[]).find(x=>x.id===id); if(!it)return'없음';
+      return `<img class="st-eqimg" src="sprites/eq_${it.id}.png" alt="" onerror="this.remove()">${it.name}`;
+    };
     let h='';
-    h+=`<div class="st-row"><div class="st-chip">⭐ Lv ${s.level}</div>`
-      +`<div class="st-chip">❤️ ${eff.maxHp}${plus(b.maxHp)}</div>`
-      +`<div class="st-chip">⚔️ ${eff.atk}${plus(b.atk)}</div>`
-      +`<div class="st-chip">🛡️ ${eff.def}${plus(b.def)}</div></div>`;
+    h+=`<div class="st-row"><div class="st-chip">${UI_ICON.level} Lv ${s.level}</div>`
+      +`<div class="st-chip">${UI_ICON.hp} ${eff.maxHp}${plus(b.maxHp)}</div>`
+      +`<div class="st-chip">${UI_ICON.atk} ${eff.atk}${plus(b.atk)}</div>`
+      +`<div class="st-chip">${UI_ICON.def} ${eff.def}${plus(b.def)}</div></div>`;
     h+=`<div class="st-exp"><div style="width:${expPct}%"></div></div><div class="st-expt">EXP ${s.exp} / ${need}</div>`;
-    h+=`<div class="st-pass">🤝 동행 패시브: ${pass?pass.label:'없음'}</div>`;
-    h+=`<div class="st-pass">🗡️ 무기: ${eqName('weapon')}　🛡️ 방어구: ${eqName('armor')}</div>`;
-    h+=`<div style="font-size:.78rem;color:#b8a888;margin-top:8px;">🔨 장비 제작·교체는 <b style="color:#ffd54f">원두 숲의 대장간</b>에서 할 수 있어요.</div>`;
+    h+=`<div class="st-pass">${UI_ICON.pass} 동행 패시브: ${pass?pass.label:'없음'}</div>`;
+    h+=`<div class="st-pass">${UI_ICON.weapon} 무기: ${eqName('weapon')}　${UI_ICON.armor} 방어구: ${eqName('armor')}</div>`;
+    h+=`<div style="font-size:.78rem;color:#b8a888;margin-top:8px;">${UI_ICON.forge} 장비 제작·교체는 <b style="color:#ffd54f">원두 숲의 대장간</b>에서 할 수 있어요.</div>`;
     document.getElementById('stats-body').innerHTML=h;
   },
   // 대장간 화면: 무기·방어구 제작/장착
@@ -1650,6 +1668,31 @@ const SKILLS = {
   luna: { name:'달빛 세례',     icon:'🌙', mult:2.0, ignoreDef:true, color:'#b46bff', fx:'moon' },
   sera: { name:'스타라이트 쇼', icon:'⭐', mult:1.8, heal:0.3, color:'#ff8fc4', fx:'star' },
 };
+
+// ===== UI 아이콘(SVG) — 이모지 대체. 게임 아트톤(굵은 외곽선 없는 플랫)에 맞춘 인라인 SVG =====
+// 이모지는 기기·OS마다 모양이 달라 아트와 따로 놀고, 캔버스/폭 측정도 어긋난다. 전부 SVG로 통일.
+const UI_ICON = (function(){
+  const w = (p, vb) => `<svg class="uic" viewBox="${vb||'0 0 24 24'}" xmlns="http://www.w3.org/2000/svg">${p}</svg>`;
+  return {
+    // 스탯
+    level:  w('<path d="M12 3l2.6 5.6 6.1.8-4.5 4.2 1.2 6.1L12 16.8 6.6 19.7l1.2-6.1L3.3 9.4l6.1-.8z" fill="#ffcf4d" stroke="#b8860b" stroke-width="1.2" stroke-linejoin="round"/>'),
+    hp:     w('<path d="M12 20.5S3.6 15 3.6 9.3A4.6 4.6 0 0 1 12 6.6a4.6 4.6 0 0 1 8.4 2.7c0 5.7-8.4 11.2-8.4 11.2z" fill="#ff6b7a" stroke="#c62839" stroke-width="1.2" stroke-linejoin="round"/>'),
+    atk:    w('<path d="M14.5 3.5L20.5 3l-.5 6-8 8-5.5-5.5z" fill="#cfd6dc" stroke="#5a6b7a" stroke-width="1.2" stroke-linejoin="round"/><path d="M7 14l3 3-4.5 4.5-3-3z" fill="#95632f" stroke="#5a3a1c" stroke-width="1.2" stroke-linejoin="round"/>'),
+    def:    w('<path d="M12 3l7.5 2.6v5.2c0 4.6-3.1 8.6-7.5 10.1-4.4-1.5-7.5-5.5-7.5-10.1V5.6z" fill="#9fc4e8" stroke="#3f6c96" stroke-width="1.2" stroke-linejoin="round"/>'),
+    pass:   w('<path d="M7.5 12.5l3 3 6.5-6.5" fill="none" stroke="#7ccf8f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="8.6" fill="none" stroke="#7ccf8f" stroke-width="1.6"/>'),
+    weapon: w('<path d="M14.5 3.5L20.5 3l-.5 6-8 8-5.5-5.5z" fill="#cfd6dc" stroke="#5a6b7a" stroke-width="1.2" stroke-linejoin="round"/><path d="M7 14l3 3-4.5 4.5-3-3z" fill="#95632f" stroke="#5a3a1c" stroke-width="1.2" stroke-linejoin="round"/>'),
+    armor:  w('<path d="M12 3l7.5 2.6v5.2c0 4.6-3.1 8.6-7.5 10.1-4.4-1.5-7.5-5.5-7.5-10.1V5.6z" fill="#9fc4e8" stroke="#3f6c96" stroke-width="1.2" stroke-linejoin="round"/>'),
+    forge:  w('<rect x="3" y="14.5" width="18" height="3.2" rx="1.2" fill="#8a5a30" stroke="#5a3a1c" stroke-width="1.1"/><path d="M6.5 14.5c0-3.6 2.5-6 5.5-6s5.5 2.4 5.5 6z" fill="#b0b8c0" stroke="#5a6b7a" stroke-width="1.2" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.1" fill="#ff8a3d"/>'),
+    lock:   w('<rect x="5.5" y="10.5" width="13" height="9.5" rx="2" fill="#c9a24a" stroke="#7a5a1e" stroke-width="1.3"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" fill="none" stroke="#7a5a1e" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="15" r="1.5" fill="#7a5a1e"/>'),
+    unknown:w('<circle cx="12" cy="12" r="9" fill="none" stroke="#a89a86" stroke-width="1.6"/><path d="M9.3 9.3a2.8 2.8 0 1 1 3.2 3.9v1.3" fill="none" stroke="#a89a86" stroke-width="2" stroke-linecap="round"/><circle cx="12.2" cy="17.3" r="1.2" fill="#a89a86"/>'),
+    // 스킬
+    sk_coffee: w('<path d="M4.5 7h11v6.5a4.5 4.5 0 0 1-4.5 4.5H9a4.5 4.5 0 0 1-4.5-4.5z" fill="#8a5a30" stroke="#4e3016" stroke-width="1.2" stroke-linejoin="round"/><path d="M15.5 8.5h1.8a2.4 2.4 0 0 1 0 4.8h-1.8" fill="none" stroke="#4e3016" stroke-width="1.4"/><path d="M6.5 4.2c0 1-1 1.2-1 2.2M10 3.6c0 1.2-1 1.4-1 2.6M13.5 4.2c0 1-1 1.2-1 2.2" fill="none" stroke="#d8c3a5" stroke-width="1.3" stroke-linecap="round"/>'),
+    sk_slash:  w('<path d="M14.5 3.5L20.5 3l-.5 6-8 8-5.5-5.5z" fill="#ffe08a" stroke="#b8860b" stroke-width="1.2" stroke-linejoin="round"/><path d="M7 14l3 3-4.5 4.5-3-3z" fill="#95632f" stroke="#5a3a1c" stroke-width="1.2" stroke-linejoin="round"/>'),
+    sk_moon:   w('<path d="M17.5 15.2A7.2 7.2 0 0 1 9 6.4a7.4 7.4 0 1 0 8.5 8.8z" fill="#c9b6ee" stroke="#6b4aa0" stroke-width="1.2" stroke-linejoin="round"/>'),
+    sk_star:   w('<path d="M12 3l2.6 5.6 6.1.8-4.5 4.2 1.2 6.1L12 16.8 6.6 19.7l1.2-6.1L3.3 9.4l6.1-.8z" fill="#ffb3d1" stroke="#c2185b" stroke-width="1.2" stroke-linejoin="round"/>'),
+  };
+})();
+const SKILL_ICON = { none:'sk_coffee', roa:'sk_slash', luna:'sk_moon', sera:'sk_star' };
 function expNeed(level){ return Math.floor(40*Math.pow(level,1.6)); }
 
 const Battle = {
