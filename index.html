@@ -818,6 +818,9 @@
 .hic{ width:21px; height:21px; display:block; margin:0 auto; }
 .hic.heart{ display:inline-block; width:20px; height:20px; vertical-align:-4px; margin:0; }
 .set-gimg{ width:1.5em; height:1.5em; object-fit:cover; object-position:top center; border-radius:50%; vertical-align:-0.42em; margin-right:5px; background:rgba(255,255,255,.5); }
+.cr-ic{ width:44px; height:44px; object-fit:contain; display:block; }
+.inv-item .icon .cr-ic, .shop-item .icon .cr-ic{ width:100%; height:100%; }
+.cr-ic.sm{ width:1.35em; height:1.35em; display:inline-block; vertical-align:-0.32em; margin-right:3px; }
 .bic{ width:1.05em; height:1.05em; vertical-align:-0.16em; margin-right:6px; flex:0 0 auto; }
 .ss-brand .bic, .ss-tag .bic{ vertical-align:-0.12em; }
 .it-ic{ width:30px; height:30px; vertical-align:middle; display:inline-block; }
@@ -1698,6 +1701,15 @@ const UI_ICON = (function(){
 })();
 window.UI_ICON = UI_ICON;   // 인라인 onerror/핸들러에서도 쓸 수 있게(최상위 const는 window에 안 붙음)
 
+// 조합템 아이콘 — 탐험 조합소에서 만든 아이템. 제미나이 에셋(sprites/cr_*.png) 우선, 실패 시 이모지 폴백.
+function craftIcon(id, item, cls){
+  if(!id || !item) return (item && item.icon) || '';
+  // 에셋 우선, 실패 시 기존 SVG 아이콘(ICONS.*)으로 폴백 — 텍스트가 아니라 마크업으로 되돌려야 함
+  return `<img class="${cls||'cr-ic'}" src="sprites/${id}.png" alt=""
+     onerror="this.outerHTML=(window.CRAFTED_DEFS&&CRAFTED_DEFS['${id}']&&CRAFTED_DEFS['${id}'].icon)||''">`;
+}
+window.craftIcon = craftIcon;
+
 // 알림창 닫기 버튼을 눌렀을 때 실행할 '할 일'을 저장할 변수
 var onAlertClose = null;
 
@@ -2411,6 +2423,7 @@ const CRAFTED_DEFS = {
     cr_shield: { name:'포근한 라떼', icon:ICONS.shield, effect:'shield', where:'cafe', desc:'한 번 틀려도 콤보 유지' },
     cr_life:   { name:'에너지 샷',   icon:ICONS.heart, effect:'life',   where:'cafe', desc:'라이프 +1' },
 };
+window.CRAFTED_DEFS = CRAFTED_DEFS;  // 조합템 아이콘 onerror 폴백에서 참조
 
 // ==========================================
 // [5] 게임 엔진 (Game Object)
@@ -3520,7 +3533,7 @@ const game = {
                 const d = CRAFTED_DEFS[id];
                 const el = document.createElement('div'); el.className = 'shop-item consumable';
                 el.style.borderLeft = '4px solid #66bb6a';
-                el.innerHTML = `<div style="display:flex;align-items:center;"><div class="icon">${d.icon}</div><div><div style="font-weight:bold;">${d.name} <span style="font-size:0.78rem;color:#388e3c;">x${ci[id]}</span></div><div style="font-size:0.8rem;">${d.desc}</div></div></div><button class="buy-btn" style="background:linear-gradient(180deg,#66bb6a,#388e3c);" onclick="game.useCraftedItem('${id}')">사용</button>`;
+                el.innerHTML = `<div style="display:flex;align-items:center;"><div class="icon">${craftIcon(id, d)}</div><div><div style="font-weight:bold;">${d.name} <span style="font-size:0.78rem;color:#388e3c;">x${ci[id]}</span></div><div style="font-size:0.8rem;">${d.desc}</div></div></div><button class="buy-btn" style="background:linear-gradient(180deg,#66bb6a,#388e3c);" onclick="game.useCraftedItem('${id}')">사용</button>`;
                 list.appendChild(el);
             });
         }
@@ -3562,7 +3575,7 @@ const game = {
         const ci = this.craftedItems || {};
         if (!ci[id] || ci[id] <= 0) return;
         const d = CRAFTED_DEFS[id]; if (!d) return;
-        if (d.where === 'battle') { showGameAlert(`${d.icon} <b>${d.name}</b>은(는) 🗺️ 탐험 전투 중 🎒 버튼으로 사용해요.`, null); return; }
+        if (d.where === 'battle') { showGameAlert(`${craftIcon(id, d, "cr-ic sm")} <b>${d.name}</b>은(는) 탐험 전투 중 가방 버튼으로 사용해요.`, null); return; }
         if (d.effect === 'double') { this.doubleNext = true; }
         else if (d.effect === 'shield') { this.comboShield = true; }
         else if (d.effect === 'mood') { this.moodBoost = (this.moodBoost || 0) + 3; this.updateHUD(); }
@@ -3581,7 +3594,7 @@ const game = {
         this.craftedItems = ci; this.saveData();
         if (typeof playSound === 'function') playSound('buy');
         this.renderShopItems();
-        showGameAlert(`${d.icon} <b>${d.name}</b> 사용!<br><span style="font-size:0.9rem;color:#555;">${d.desc}</span>`, null);
+        showGameAlert(`${craftIcon(id, d, "cr-ic sm")} <b>${d.name}</b> 사용!<br><span style="font-size:0.9rem;color:#555;">${d.desc}</span>`, null);
     },
 
     // [신규] 인벤토리 열기
@@ -3596,7 +3609,7 @@ const game = {
     const maxLvl = this.shopLevels[category] || 0;
     const curEquip = this.currentEquip[category] || 0;
 
-    document.getElementById('inv-title').innerText = `🎒 ${category.toUpperCase()} 컬렉션`;
+    document.getElementById('inv-title').innerText = `${category.toUpperCase()} 컬렉션`;
 
     for(let i=0; i < maxLvl; i++) {
         const item = items[i];

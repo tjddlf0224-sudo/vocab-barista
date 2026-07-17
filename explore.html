@@ -146,6 +146,8 @@
   .eq-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
   .eq-card{ background:rgba(255,253,245,.96); border:2px solid #b9a87e; border-radius:12px; padding:8px 10px; text-align:left; display:flex; align-items:center; gap:9px; }
   .eq-card.equipped{ border-color:var(--gold); box-shadow:0 0 9px rgba(255,179,0,.55); }
+  .cr-ic{ width:38px; height:38px; object-fit:contain; display:block; filter:drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
+  .cr-ic.sm{ width:1.35em; height:1.35em; display:inline-block; vertical-align:-0.32em; margin-right:2px; }
   .eq-ic{ font-size:1.7rem; width:38px; display:flex; align-items:center; justify-content:center; flex:0 0 auto; }
   .eq-ic svg{ width:36px; height:36px; display:block; filter:drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
   .eq-ic img{ width:40px; height:40px; object-fit:contain; display:block; filter:drop-shadow(0 1px 1px rgba(0,0,0,.28)); }
@@ -679,7 +681,7 @@ const Explore = {
     if(rw.gold){ this.cafe.wallet=(this.cafe.wallet||0)+rw.gold; parts.push(`🪙+${rw.gold}`); }
     if(rw.exp){ const up=this.gainExp(rw.exp); parts.push(`⭐EXP+${rw.exp}`); if(up) parts.push(`🎉Lv ${this.state.level}!`); }
     if(rw.item){ if(!this.cafe.craftedItems) this.cafe.craftedItems={}; this.cafe.craftedItems[rw.item]=(this.cafe.craftedItems[rw.item]||0)+1;
-      const ci=(CRAFT_DB.find(x=>x.id===rw.item)||{}); parts.push(`${ci.icon||'🎁'}${ci.name||'아이템'}+1`); }
+      const ci=(CRAFT_DB.find(x=>x.id===rw.item)||{}); parts.push(`${ci.id?craftIcon(ci,'cr-ic sm'):''}${ci.name||'아이템'}+1`); }
     if(rw.mat){ this.state.materials[rw.mat]=(this.state.materials[rw.mat]||0)+(rw.matCount||1); const m=MATERIALS[rw.mat]||{}; parts.push(`${m.icon||''}${m.name||rw.mat}+${rw.matCount||1}`); }
     this.refreshHUD(); this.persist(); return parts.join(' · '); },
 };
@@ -812,6 +814,14 @@ const EQUIP_ICON = {
 window.EQUIP_ICON = EQUIP_ICON; // 대장간 아이콘 이미지 로드 실패 시 인라인 SVG 폴백용
 const MAT_ICON = Object.fromEntries(Object.entries(MATERIALS).map(([k,m])=>[k,m.icon]));
 // ---------- 조합 레시피 (재료+스펠링퀴즈 → 카페에서 쓰는 특별 아이템) ----------
+// 조합템 아이콘 — 제미나이 에셋(sprites/cr_*.png) 우선, 로드 실패 시 이모지 폴백.
+// 이모지는 기기마다 모양이 달라 아트와 따로 놀아서 실제 그림으로 교체.
+function craftIcon(item, cls){
+  if(!item || !item.id) return (item && item.icon) || '';
+  // 에셋 우선, 실패 시 원래 이모지로 폴백(CRAFT_DB는 icon이 이모지)
+  return `<img class="${cls||'cr-ic'}" src="sprites/${item.id}.png" alt=""
+     onerror="this.replaceWith(document.createTextNode('${item.icon||''}'))">`;
+}
 const CRAFT_DB = [
   { id:'cr_mood',  name:'카페라떼',     icon:'😊', cost:{bean:2,milk:2},     effect:'mood',   where:'cafe',   edesc:'카페: 다음 손님 3명 골드 +50%' },
   { id:'cr_time',  name:'타임 시럽',    icon:'⏳', cost:{syrup:3},           effect:'time',   where:'cafe',   edesc:'카페: 지금 손님 시간 +5초' },
@@ -1582,7 +1592,7 @@ const World = {
   closeCraft(){ document.getElementById('craft-screen').classList.remove('show'); ExploreBgm.play('map'); },
   renderCraft(){ this.renderMats(); const owned=Explore.cafe.craftedItems||{}; let h='<div class="eq-grid">';
     CRAFT_DB.forEach(r=>{ const can=this.canAfford(r.cost); const have=owned[r.id]||0;
-      h+=`<div class="eq-card"><span class="eq-ic">${r.icon}</span><div class="eq-info">`
+      h+=`<div class="eq-card"><span class="eq-ic">${craftIcon(r)}</span><div class="eq-info">`
         +`<div class="nm">${r.name}${have?` <small style="color:#7a5a2a">보유 x${have}</small>`:''}</div>`
         +`<div class="bn">${r.edesc}</div><div class="ct">${this.costDetail(r.cost)}</div></div>`
         +`<button class="eq-btn buy" ${can?'':'disabled'} onclick="World.startCraft('${r.id}')">조합</button></div>`; });
@@ -1602,7 +1612,7 @@ const World = {
     if(!Explore.cafe.craftedItems) Explore.cafe.craftedItems={};
     Explore.cafe.craftedItems[r.id]=(Explore.cafe.craftedItems[r.id]||0)+1;
     Explore.persist(); Explore.refreshHUD(); this.renderCraft();
-    this.toast(`${r.icon} <b>${r.name}</b> 조합 성공! 🎒 가방에 보관`); },
+    this.toast(`${craftIcon(r,'cr-ic sm')} <b>${r.name}</b> 조합 성공! 가방에 보관`); },
   renderStats(){
     const s=Explore.state; const eff=Explore.effStats(); const b=eff.bonus;
     const need=expNeed(s.level); const expPct=Math.min(100,(s.exp/need)*100);
