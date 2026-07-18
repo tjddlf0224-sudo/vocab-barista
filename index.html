@@ -1154,7 +1154,8 @@
     <style>
       #story-screen{ background:rgba(18,12,10,.5) !important; }
       .story-char{ position:absolute; left:50%; bottom:150px; transform:translateX(-50%); height:min(56%,300px); width:auto; max-width:76%; object-fit:contain; object-position:bottom center; filter:drop-shadow(0 8px 14px rgba(0,0,0,.45)); z-index:1; pointer-events:none; }
-      .story-emoji{ position:absolute; left:50%; bottom:168px; transform:translateX(-50%); font-size:5rem; z-index:1; }
+      .story-emoji{ position:absolute; left:50%; bottom:168px; transform:translateX(-50%); font-size:5rem; z-index:1; color:#8a6a4a; }
+      .story-emoji .bic{ width:5rem; height:5rem; margin-right:0; vertical-align:0; }
       .story-panel{ position:absolute; left:50%; bottom:18px; transform:translateX(-50%); width:min(94%,520px); z-index:2; background:linear-gradient(180deg,#fffdf7,#fff2d8); border:3px solid #caa26a; border-radius:18px; padding:14px 18px 16px; box-shadow:0 8px 24px rgba(0,0,0,.45); text-align:center; font-family:'Jua','Nunito',sans-serif; }
       .story-speaker2{ display:inline-block; background:linear-gradient(180deg,#c79a5a,#a6763a); color:#fff8ea; font-weight:bold; padding:3px 16px; border-radius:14px; margin-bottom:8px; font-size:1rem; }
       .story-panel .story-text2{ font-size:1.06rem; line-height:1.55; color:#3a2510; min-height:52px; margin:0 0 12px; font-weight:bold; }
@@ -1206,7 +1207,7 @@
                 <button type="button" class="tts-rate-btn" data-rate="1.0" onclick="setTtsRate(1.0)">1.0x</button>
                 <button type="button" class="tts-rate-btn" data-rate="1.2" onclick="setTtsRate(1.2)">1.2x</button>
             </div>
-            <button class="btn-mini" style="background:linear-gradient(180deg,#b9a9d6,#9a86c4); color:#fff; box-shadow:0 3px 0 #7a68a8;" onclick="vbOpenSettings()">⚙️ 설정 · 계정</button>
+            <button class="btn-mini" style="background:linear-gradient(180deg,#b9a9d6,#9a86c4); color:#fff; box-shadow:0 3px 0 #7a68a8;" onclick="vbOpenSettings()"><span data-ic="settings"></span> 설정 · 계정</button>
             <button class="btn-mini" style="background:linear-gradient(180deg,#cdbfb0,#a89684); color:#fff; box-shadow:0 3px 0 #8a7560;" onclick="game.manualQuit()">저장하고 타이틀로</button>
             <button class="reset-btn pause-reset" onclick="game.resetData()">데이터 초기화</button>
         </div>
@@ -1409,14 +1410,14 @@
         <div id="ranking-board" class="quest-list hidden"></div>
 
         <button id="revive-ad-btn" class="buy-btn" onclick="game.reviveByAd()" style="display:none; background:linear-gradient(180deg,#7cc6f0,#4a9fd8); box-shadow:0 4px 0 #3a7fb0; width:90%; margin-top:16px; font-size:1rem;">
-            🎬 광고 보고 무료 부활
+            <span data-ic="film"></span> 광고 보고 무료 부활
         </button>
         <div style="display:flex; gap:10px; justify-content:center; margin-top:10px; width:90%;">
             <button id="revive-btn" class="buy-btn" onclick="game.revive()" style="background:linear-gradient(180deg,#f4a8a0,#e58880); box-shadow:0 4px 0 #cf6f67; flex:1; font-size:1rem;">
-                ❤️ 부활 (450G)
+                <span data-ic="heart"></span> 부활 (450G)
             </button>
             <button class="btn-mini" onclick="game.exitToTitle()" style="background:linear-gradient(180deg,#cdbfb0,#a89684); box-shadow:0 3px 0 #8a7560; flex:1; font-size:1rem;">
-                🏠 타이틀
+                <span data-ic="home"></span> 타이틀
             </button>
         </div>
     </div>
@@ -1545,11 +1546,8 @@ const BgMusic = {
     },
 
     updateBtn: function() {
-        const txt = this.isMuted ? "🔇" : "🎵";
-        const btn1 = document.getElementById('bgm-btn');
-        const btn2 = document.getElementById('bgm-pause-btn');
-        if(btn1) btn1.innerText = txt;
-        if(btn2) btn2.innerText = txt + " BGM";
+        // [정리] 구 UI 잔재 — #bgm-btn·#bgm-pause-btn 마크업은 이 문서에 없다(dead code).
+        // 실제 사운드 아이콘은 game.updateSoundIcon()이 #sound-toggle에 SVG로 그린다.
     }
 };
 
@@ -1699,10 +1697,33 @@ const UI_ICON = (function(){
     trophy:   w('<path d="M6 4h12v3.2a6 6 0 0 1-12 0z" fill="#ffcf4d" stroke="#b8860b" stroke-width="1.2" stroke-linejoin="round"/><path d="M6 5.4H3.4V7A3 3 0 0 0 6 9.9M18 5.4h2.6V7A3 3 0 0 1 18 9.9" fill="none" stroke="#b8860b" stroke-width="1.5"/><rect x="10.7" y="12.4" width="2.6" height="4" fill="#b8860b"/><rect x="7.4" y="18.6" width="9.2" height="2.3" rx="1.1" fill="#b8860b"/><rect x="9.2" y="16.3" width="5.6" height="2.4" rx="1" fill="#e0a83a"/>'),
     heart:    w('<path d="M12 20.5S3.6 15 3.6 9.3A4.6 4.6 0 0 1 12 6.6a4.6 4.6 0 0 1 8.4 2.7c0 5.7-8.4 11.2-8.4 11.2z" fill="#ff6b7a" stroke="#c62839" stroke-width="1.1" stroke-linejoin="round"/>'),
     lock:     w('<rect x="5.5" y="10.5" width="13" height="9.5" rx="2" fill="#c9a24a" stroke="#7a5a1e" stroke-width="1.3"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" fill="none" stroke="#7a5a1e" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="15" r="1.5" fill="#7a5a1e"/>'),
+    film:     w('<rect x="3.2" y="5.5" width="17.6" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7.2 5.5v13M16.8 5.5v13" stroke="currentColor" stroke-width="1.5"/><path d="M10.2 9.8l4.6 2.4-4.6 2.4z" fill="currentColor"/>'),
+    home:     w('<path d="M3.4 11.2L12 3.6l8.6 7.6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.8 10.6v9.2h12.4v-9.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10 19.8v-5.2h4v5.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>'),
+    party:    w('<path d="M4 20.4l4.6-11.2 6.6 6.6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M13.4 3.6c1.5 1 1.9 2.9 1.1 4.4M17.6 6.2c1.7-.2 2.9.8 3.3 2.3M14.6 10.6c1.3-1 3-.7 4.2.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>'),
+    spark:    w('<path d="M12 2.8c1 4 1.4 4.4 5.4 5.4-4 1-4.4 1.4-5.4 5.4-1-4-1.4-4.4-5.4-5.4 4-1 4.4-1.4 5.4-5.4z" fill="currentColor"/><path d="M18.4 14.4c.5 2 .7 2.2 2.7 2.7-2 .5-2.2.7-2.7 2.7-.5-2-.7-2.2-2.7-2.7 2-.5 2.2-.7 2.7-2.7z" fill="currentColor" opacity=".75"/>'),
+    sunrise:  w('<circle cx="12" cy="14" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 6.4V3.6M5.6 8.4L3.8 6.6M18.4 8.4l1.8-1.8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M2.6 18.4h18.8" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>'),
+    gift:     w('<rect x="3.4" y="9.6" width="17.2" height="10.8" rx="1.8" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="2.4" y="6.2" width="19.2" height="3.6" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 6.2v14.2" stroke="currentColor" stroke-width="1.7"/><path d="M12 6.2C10.4 3 8 2.6 7.2 3.8c-.9 1.3.7 2.4 4.8 2.4zM12 6.2c1.6-3.2 4-3.6 4.8-2.4.9 1.3-.7 2.4-4.8 2.4z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>'),
+    pause:    w('<rect x="6.6" y="4.6" width="3.8" height="14.8" rx="1.3" fill="currentColor"/><rect x="13.6" y="4.6" width="3.8" height="14.8" rx="1.3" fill="currentColor"/>'),
+    xmark:    w('<path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>'),
+    injured:  w('<circle cx="12" cy="12" r="8.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.6 8.4h14.8" stroke="currentColor" stroke-width="1.7"/><path d="M7.6 5.2l8.8 4.6" stroke="currentColor" stroke-width="1.5"/><circle cx="9" cy="14" r="1.1" fill="currentColor"/><circle cx="15" cy="14" r="1.1" fill="currentColor"/><path d="M9.4 17.8c1.6-1.1 3.6-1.1 5.2 0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'),
+    mail:     w('<rect x="2.8" y="5.2" width="18.4" height="13.6" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3.4 6.6L12 13l8.6-6.4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>'),
+    install:  w('<rect x="6" y="2.6" width="12" height="18.8" rx="2.4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.6v7.2M9 12l3 3 3-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M10.4 4.8h3.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'),
+    share:    w('<path d="M12 15.4V3.6M8.4 7.2L12 3.6l3.6 3.6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.4 11.6v7.2a1.8 1.8 0 0 0 1.8 1.8h9.6a1.8 1.8 0 0 0 1.8-1.8v-7.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>'),
+    hourglass:w('<path d="M6.4 3.4h11.2M6.4 20.6h11.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M7.6 3.4c0 4 4.4 5.4 4.4 8.6 0 3.2-4.4 4.6-4.4 8.6M16.4 3.4c0 4-4.4 5.4-4.4 8.6 0 3.2 4.4 4.6 4.4 8.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>'),
+    mute:     w('<path d="M4 9.4h3.4L12 5.6v12.8L7.4 14.6H4z" fill="currentColor"/><path d="M16 9.6l4.4 4.8M20.4 9.6L16 14.4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>'),
+    sound:    w('<path d="M4 9.4h3.4L12 5.6v12.8L7.4 14.6H4z" fill="currentColor"/><path d="M15.4 8.8a4.6 4.6 0 0 1 0 6.4M18.2 6.4a8.2 8.2 0 0 1 0 11.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>'),
+    shield:   w('<path d="M12 3l7.4 2.6v5.2c0 4.6-3.1 8.6-7.4 10-4.3-1.4-7.4-5.4-7.4-10V5.6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>'),
+    hearts:   w('<path d="M8.6 18.4S2.4 14.2 2.4 9.8A3.6 3.6 0 0 1 8.6 7.6a3.6 3.6 0 0 1 6.2 2.2c0 4.4-6.2 8.6-6.2 8.6z" fill="currentColor"/><path d="M17 12.2s-4.2-2.8-4.2-5.8a2.4 2.4 0 0 1 4.2-1.4 2.4 2.4 0 0 1 4.2 1.4c0 3-4.2 5.8-4.2 5.8z" fill="currentColor" opacity=".7"/>'),
     arrow:    w('<path d="M4 12h14M13 6.5l5.5 5.5L13 17.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>'),
   };
 })();
-window.UI_ICON = UI_ICON;   // 인라인 onerror/핸들러에서도 쓸 수 있게(최상위 const는 window에 안 붙음)
+window.UI_ICON = UI_ICON;
+// 정적 마크업의 아이콘 자리(data-ic)를 UI_ICON으로 채운다 — HTML에 거대한 SVG를 박지 않기 위해.
+// 주의: innerHTML로 나중에 생성되는 자리에는 안 닿으므로 그런 곳은 ${UI_ICON.x}를 직접 쓸 것.
+(function fillStaticIcons(){
+  const run = () => document.querySelectorAll('[data-ic]').forEach(el => { el.innerHTML = UI_ICON[el.dataset.ic] || ''; });
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run); else run();
+})();   // 인라인 onerror/핸들러에서도 쓸 수 있게(최상위 const는 window에 안 붙음)
 
 // 조합템 아이콘 — 탐험 조합소에서 만든 아이템. 제미나이 에셋(sprites/cr_*.png) 우선, 실패 시 이모지 폴백.
 function craftIcon(id, item, cls){
@@ -2040,7 +2061,7 @@ const AFFECTION_STORY = {
     ],
     m_sera: [
         '변장한 세라가 구석 자리에 살그머니 앉았다.<br>"여기선 아무도 절 아이돌로 안 봐서… 그냥 손님이라 좋아요."',
-        '세라가 카페를 SNS에 올렸다. "제 최애 단어 카페 💛"<br>덕분에 새 손님이 부쩍 늘었다!',
+        '세라가 카페를 SNS에 올렸다. "제 최애 단어 카페"<br>덕분에 새 손님이 부쩍 늘었다!',
         { m:'세라가 무대 의상 대신 앞치마를 집어 들고 살짝 볼을 붉혔다.<br>"여기가… 제 진짜 무대예요. 사장님 곁이라면요. 계속 와도 되죠?"',
           f:'세라가 무대 의상 대신 앞치마를 집어 들었다.<br>"여기가… 제 진짜 \'집\'이에요. 사장님은 제 최고의 팬이자 친구예요!"' }
     ]
@@ -2395,13 +2416,13 @@ function speak(text, callback) {
 
 /* --- Story Data --- */
 const storyLines = [
-    { img:'chars/npc_realtor.png', s:"🥸", name:"부동산 사장님", text:"자, 계약은 끝났네. 영어 마을이라 월세가 좀 비싸지만 목은 좋아." },
+    { img:'chars/npc_realtor.png', name:"부동산 사장님", text:"자, 계약은 끝났네. 영어 마을이라 월세가 좀 비싸지만 목은 좋아." },
     { player:true, name:"나(사장)", text:"감사합니다! 그런데 손님들이 다 영어로 주문한다면서요?" },
-    { img:'chars/npc_realtor.png', s:"🥸", name:"부동산 사장님", text:"그렇지. 여긴 손님들이 <b style='color:var(--red)'>단어 뜻</b>을 말하면, 자네가 알맞은 <b style='color:var(--blue)'>영단어 컵</b>을 줘야 해." },
-    { img:'chars/rush.png', s:"👿", name:"진상 손님", text:"(갑자기 등장) 어이! 빨리빨리 안 줘? 난 성격 급해서 3초밖에 못 기다려!" },
-    { img:'chars/npc_realtor.png', s:"🥸", name:"부동산 사장님", text:"저렇게 <b style='color:var(--red)'>버럭하는 손님</b>은 성격이 급해서 오래 못 기다려. 시간 제한이 짧으니 서둘러 골라야 해." },
-    { img:'chars/vip.png', s:"🎩", name:"VIP", text:"흠... 저는 품격 있게 직접 스펠링을 적어서 주문하겠습니다." },
-    { img:'chars/npc_realtor.png', s:"🥸", name:"부동산 사장님", text:"저런 <b style='color:var(--gold)'>VIP</b>는 팁을 많이 주지. 타자를 쳐서 입력해야 해. 그럼 행운을 비네!" }
+    { img:'chars/npc_realtor.png', name:"부동산 사장님", text:"그렇지. 여긴 손님들이 <b style='color:var(--red)'>단어 뜻</b>을 말하면, 자네가 알맞은 <b style='color:var(--blue)'>영단어 컵</b>을 줘야 해." },
+    { img:'chars/rush.png', name:"진상 손님", text:"(갑자기 등장) 어이! 빨리빨리 안 줘? 난 성격 급해서 3초밖에 못 기다려!" },
+    { img:'chars/npc_realtor.png', name:"부동산 사장님", text:"저렇게 <b style='color:var(--red)'>버럭하는 손님</b>은 성격이 급해서 오래 못 기다려. 시간 제한이 짧으니 서둘러 골라야 해." },
+    { img:'chars/vip.png', name:"VIP", text:"흠... 저는 품격 있게 직접 스펠링을 적어서 주문하겠습니다." },
+    { img:'chars/npc_realtor.png', name:"부동산 사장님", text:"저런 <b style='color:var(--gold)'>VIP</b>는 팁을 많이 주지. 타자를 쳐서 입력해야 해. 그럼 행운을 비네!" }
 ];
 
 // ==========================================
@@ -2608,7 +2629,7 @@ const game = {
         const reward = Math.min(1000, 200 + (this.dailyStreak-1)*100); // 200부터 +100씩, 최대 1000
         this.wallet += reward;
         this.saveData(); this.updateHUD(); this.checkAchievements();
-        showGameAlert(`🎁 <b>${this.dailyStreak}일 연속 출석!</b><br>오늘의 보상 🪙 +${reward}G<br><span style="font-size:0.82rem;color:#777;">매일 접속할수록 보상이 커져요 (최대 1,000G)</span>`, null);
+        showGameAlert(`${UI_ICON.gift} <b>${this.dailyStreak}일 연속 출석!</b><br>오늘의 보상 ${UI_ICON.coin} +${reward}G<br><span style="font-size:0.82rem;color:#777;">매일 접속할수록 보상이 커져요 (최대 1,000G)</span>`, null);
     },
 
 // [데이터 저장 수정]
@@ -2660,7 +2681,7 @@ const game = {
     // [탐험] 탐험 모드로 이동 — 잠금 확인 후, 카페 상태 저장하고 explore.html 로
     goExplore: function() {
         if(!this.isExploreUnlocked()) {
-            showGameAlert(`🔒 탐험은 '${this.EXPLORE_UNLOCK_RANK}' 랭크 달성 시 열립니다.<br>(누적 ${this.EXPLORE_UNLOCK_SCORE.toLocaleString()}점 필요 · 현재 ${(this.lifetimeScore||0).toLocaleString()}점)`);
+            showGameAlert(`${UI_ICON.lock} 탐험은 '${this.EXPLORE_UNLOCK_RANK}' 랭크 달성 시 열립니다.<br>(누적 ${this.EXPLORE_UNLOCK_SCORE.toLocaleString()}점 필요 · 현재 ${(this.lifetimeScore||0).toLocaleString()}점)`);
             return;
         }
         this.exploreVisits = (this.exploreVisits || 0) + 1;
@@ -2697,7 +2718,7 @@ const game = {
             this.wallet += 100; checkQuests();
             document.body.classList.remove('mode-review');
             this.saveData();
-            showGameAlert("📖 복습 완료! +100G", () => location.reload());
+            showGameAlert(`${UI_ICON.book} 복습 완료! +100G`, () => location.reload());
             return;
         }
 
@@ -2742,12 +2763,12 @@ const game = {
                                 `<img src="${c.img}" style="width:100%; border-radius:9px; background:rgba(255,255,255,.55);">`+
                                 `<div style="font-size:0.68rem; color:#5a3a1a; font-weight:bold; margin-top:3px; line-height:1.25;">${c.name}</div></div>`).join('');
                             showGameAlert(
-                                `🎉 <b>${CARD_TIER_LABEL[this.difficulty] || '난이도 마스터'}!</b><br>`+
-                                `<span style="font-size:0.9rem; color:#c2185b;">✨ 수집 카드 ${gotCards.length}장 획득!</span><br><br>`+
+                                `${UI_ICON.party} <b>${CARD_TIER_LABEL[this.difficulty] || '난이도 마스터'}!</b><br>`+
+                                `<span style="font-size:0.9rem; color:#c2185b;">${UI_ICON.spark} 수집 카드 ${gotCards.length}장 획득!</span><br><br>`+
                                 strip+
-                                `<br><span style="font-size:0.76rem; color:#888;">도감 → 🎴 카드에서 볼 수 있어요</span>`);
+                                `<br><span style="font-size:0.76rem; color:#888;">도감 → ${UI_ICON.card} 카드에서 볼 수 있어요</span>`);
                         } else {
-                            showGameAlert("🎉 현재 난이도 마스터! 타이틀 화면으로 이동합니다.");
+                            showGameAlert(`${UI_ICON.party} 현재 난이도 마스터! 타이틀 화면으로 이동합니다.`);
                         }
                         return;
                     }
@@ -2893,7 +2914,7 @@ const game = {
         this.affection[id] = Math.min(AFFECTION_MAX, (this.affection[id]||0) + amt);
         const ch = CHAR_BY_ID[id];
         const ce = document.getElementById('cust-el');
-        if(ce) this.showFloatingText(`💕 ${ch?ch.name:''} +${amt}`, ce);
+        if(ce) this.showFloatingText(`${UI_ICON.hearts} ${ch?ch.name:''} +${amt}`, ce);
         this.checkAffectionActs(id);
         this.saveData(); this.checkAchievements();
     },
@@ -2913,9 +2934,9 @@ const game = {
             BgMusic.playJingle(id.replace('m_', ''));
             // 2막(호감 60) 해금 시 비로소 이름을 밝힌다(#10) — 첫만남 직후 공개 방지
             const nameReveal = (actIdx===1 && ch && ch.kind==='main')
-                ? `<div style="font-size:0.92rem;color:#7b1fa2;margin-bottom:10px;">✨ 드디어 이름을 알려주었다 — <b>${ch.name}</b></div>` : '';
+                ? `<div style="font-size:0.92rem;color:#7b1fa2;margin-bottom:10px;">${UI_ICON.spark} 드디어 이름을 알려주었다 — <b>${ch.name}</b></div>` : '';
             showGameAlert(
-                `💞 <b>${ch?ch.name:''}</b>와의 유대 ${actIdx+1}막 해금!<br><br>`+
+                `${UI_ICON.hearts} <b>${ch?ch.name:''}</b>와의 유대 ${actIdx+1}막 해금!<br><br>`+
                 nameReveal+
                 `<span style="font-size:0.92rem;color:#444;">${story}</span><br><br>`+
                 `<img src="sprites/coin.svg" style="width:16px;height:16px;vertical-align:middle;"> +${reward.toLocaleString()}G`
@@ -3078,7 +3099,7 @@ const game = {
                     setTimeout(() => {
                         this.isActive = false;
                         showGameAlert(
-                            `✨ <b>전설의 손님 등록!</b> ✨<br><br>`+
+                            `${UI_ICON.spark} <b>전설의 손님 등록!</b><br><br>`+
                             `<b style="color:#ab47bc;font-size:1.2rem;">${nc.ch.name}</b><br>`+
                             `<span style="font-size:0.85rem;color:#777;">${nc.ch.title}</span><br><br>`+
                             `<span style="font-size:0.9rem;color:#444;">${nc.ch.story}</span><br><br>`+
@@ -3101,7 +3122,7 @@ const game = {
                     }
                 }
                 if(el) el.classList.add('leaving');
-                if(nc) this.showFloatingText(`📖 ${nc.ch.name} 등록! +${nc.bonus}G`, document.getElementById('cust-el'));
+                if(nc) this.showFloatingText(`${UI_ICON.book} ${nc.ch.name} 등록! +${nc.bonus}G`, document.getElementById('cust-el'));
                 this.scheduleNextTurn(400);
             };
             this.currentCust.solved = true;
@@ -3200,7 +3221,7 @@ const game = {
             // [오답인 경우]
             if(this.comboShield) {
                 this.comboShield = false; // 🛡️ 보호막 소모 — 콤보/피버 유지
-                this.showFloatingText("🛡️ 콤보 보호!", document.getElementById('cust-el'));
+                this.showFloatingText(`${UI_ICON.shield} 콤보 보호!`, document.getElementById('cust-el'));
                 this.handleFail(false);
             } else {
                 this.combo = 0;
@@ -3390,7 +3411,7 @@ const game = {
         document.getElementById('result-screen').classList.add('hidden');
         playSound('buy');
         setTimeout(() => {
-            showGameAlert("❤️ 부활 성공!<br>영업을 재개합니다.", () => {
+            showGameAlert(`${UI_ICON.heart} 부활 성공!<br>영업을 재개합니다.`, () => {
                 this.combo = 0;       // 콤보 끊기
                 this.updateHUD();
                 // [버그수정] 죽기 직전 손님(비활성 버튼·공개된 정답)을 버리고 항상 새 턴으로 재개
@@ -3435,12 +3456,12 @@ const game = {
             if(id === 'con_double') {
                 charge(); this.doubleNext = true;
                 this.saveData(); this.updateHUD(); refreshShop(); playSound('buy');
-                showGameAlert("✨ 다음 정답 점수가 <b>2배</b>가 됩니다!"); checkQuests(); return;
+                showGameAlert(`${UI_ICON.spark} 다음 정답 점수가 <b>2배</b>가 됩니다!`); checkQuests(); return;
             }
             if(id === 'con_shield') {
                 charge(); this.comboShield = true;
                 this.saveData(); this.updateHUD(); refreshShop(); playSound('buy');
-                showGameAlert("🛡️ <b>콤보 보호막</b> 장착!<br>한 번은 틀려도 콤보가 유지됩니다."); checkQuests(); return;
+                showGameAlert(`${UI_ICON.shield} <b>콤보 보호막</b> 장착!<br>한 번은 틀려도 콤보가 유지됩니다.`); checkQuests(); return;
             }
             return;
         }
@@ -3605,7 +3626,7 @@ const game = {
                 list.appendChild(el);
             } else {
                 const el = document.createElement('div'); el.className = 'shop-item sold-out';
-                el.innerHTML = `<div style="color:#aaa; font-weight:bold;">🎉 ${cat.toUpperCase()} 마스터 완료!</div>`;
+                el.innerHTML = `<div style="color:#aaa; font-weight:bold;">${UI_ICON.party} ${cat.toUpperCase()} 마스터 완료!</div>`;
                 list.appendChild(el);
             }
         }
@@ -3631,7 +3652,7 @@ const game = {
             ['m_roa','m_luna','m_sera'].forEach(mid => this.gainAffection(mid, 10));
         }
         else if (d.effect === 'life') {
-            if (this.lives >= 5) { showGameAlert("❤️ 체력이 이미 가득 찼어요. 아껴두세요!", null); return; }
+            if (this.lives >= 5) { showGameAlert(`${UI_ICON.heart} 체력이 이미 가득 찼어요. 아껴두세요!`, null); return; }
             this.lives = Math.min(5, this.lives + 1); this.updateHUD();
         }
         else if (d.effect === 'time') {
@@ -3844,7 +3865,7 @@ equipItem: function(category, level) {
                     cursor: pointer;
                     animation: breathe 1.5s infinite;
                 ">
-                🌅 다음 날 영업 시작
+                <span data-ic="sunrise"></span> 다음 날 영업 시작
             </button>
         `;
         
@@ -3871,7 +3892,7 @@ equipItem: function(category, level) {
                 const box = w.box || 1;
                 const dots = '●'.repeat(box) + '○'.repeat(Math.max(0, 4 - box));
                 const el = document.createElement('div'); el.className='wb-item';
-                el.innerHTML = `<div><span class="wb-word">${w.w}</span> <span class="wb-mean">${w.m}</span><div style="font-size:0.62rem;color:#7b1fa2;margin-top:2px;">복습 ${dots} (4번 맞히면 졸업)</div></div><div class="speaker-icon" onclick="speak('${w.w}')">🔊</div>`;
+                el.innerHTML = `<div><span class="wb-word">${w.w}</span> <span class="wb-mean">${w.m}</span><div style="font-size:0.62rem;color:#7b1fa2;margin-top:2px;">복습 ${dots} (4번 맞히면 졸업)</div></div><div class="speaker-icon" onclick="speak('${w.w}')">${UI_ICON.speaker}</div>`;
                 list.appendChild(el);
             });
         }
@@ -3967,7 +3988,7 @@ equipItem: function(category, level) {
                 const o = WORD_MAP[wkey] || ALL_WORD_MAP[wkey] || { w: wkey, m: '', s: '' };
                 const src = o.s ? `<div style="font-size:0.65rem; color:#a98e6a; margin-top:2px;">${o.s}</div>` : '';
                 const el = document.createElement('div'); el.className='wb-item';
-                el.innerHTML = `<div><span class="wb-word">${o.w}</span> <span class="wb-mean">${o.m}</span>${src}</div><div class="speaker-icon" onclick="speak('${o.w}')">🔊</div>`;
+                el.innerHTML = `<div><span class="wb-word">${o.w}</span> <span class="wb-mean">${o.m}</span>${src}</div><div class="speaker-icon" onclick="speak('${o.w}')">${UI_ICON.speaker}</div>`;
                 list.appendChild(el);
             });
         }
@@ -4058,7 +4079,7 @@ equipItem: function(category, level) {
         BgMusic.playTrack('result');
         if(this.gameMode === 'normal') this.saveData();
         
-        document.getElementById('result-title').innerText = "⏸️ 영업 중단";
+        document.getElementById('result-title').innerHTML = `${UI_ICON.pause} 영업 중단`;
         document.getElementById('result-msg').innerText = "저장되었습니다.";
         
         // 1. 먼저 결과 화면을 켭니다.
@@ -4080,8 +4101,8 @@ equipItem: function(category, level) {
         BgMusic.playJingle('defeat');
         setTimeout(() => BgMusic.playTrack('result'), 1200);
 
-        const title = this.gameMode === 'review' ? "🤕 복습 실패" : "❌ GAME OVER";
-        document.getElementById('result-title').innerText = title;
+        const title = this.gameMode === 'review' ? `${UI_ICON.injured} 복습 실패` : `${UI_ICON.xmark} GAME OVER`;
+        document.getElementById('result-title').innerHTML = title;
 
         if(this.gameMode === 'normal') {
             this.bestDay = Math.max(this.bestDay || 1, this.day); // 최고 기록 갱신(리셋돼도 유지)
@@ -4205,16 +4226,16 @@ equipItem: function(category, level) {
         const imgSrc = line.player ? ((localStorage.getItem('vb_gender')==='f') ? 'chars/barista_f.png' : 'chars/barista_m.png') : line.img;
         if(imgSrc){
             charEl.onload = function(){ charEl.style.display=''; emojiEl.style.display='none'; };
-            charEl.onerror = function(){ charEl.style.display='none'; emojiEl.style.display=''; emojiEl.textContent = line.s || '💬'; };
+            charEl.onerror = function(){ charEl.style.display='none'; emojiEl.style.display=''; emojiEl.innerHTML = UI_ICON.people; };
             charEl.src = imgSrc;
             if(charEl.complete && charEl.naturalWidth>0){ charEl.style.display=''; emojiEl.style.display='none'; }
-        } else if(line.s && !line.noChar){
+        } else if(!line.noChar){   // img/player 둘 다 없는 대사 — 사람 실루엣으로 폴백
             charEl.style.display='none'; charEl.removeAttribute('src');
-            emojiEl.style.display=''; emojiEl.textContent = line.s;
+            emojiEl.style.display=''; emojiEl.innerHTML = UI_ICON.people;
         } else {
             // 플레이어(나 사장) 등 — 캐릭터/이모지 없이 대화창만 (성별 미지정)
             charEl.style.display='none'; charEl.removeAttribute('src');
-            emojiEl.style.display='none'; emojiEl.textContent='';
+            emojiEl.style.display='none'; emojiEl.innerHTML='';
         }
         document.getElementById('story-speaker').innerText = line.name;
         document.getElementById('story-text').innerHTML = line.text;
@@ -4639,7 +4660,7 @@ if(typeof window.vbDeleteAccount!=='function'){ window.vbDeleteAccount=function(
     try{ await auth.createUserWithEmailAndPassword(em,pw); }catch(e){ loginErr(mapErr(e)); } };
   window.vbResetPw = async function(){ loginErr(''); const em=$('vbLoginEmail').value.trim();
     if(!em){ loginErr('이메일을 먼저 입력하세요'); return; }
-    try{ await auth.sendPasswordResetEmail(em); loginErr('재설정 메일을 보냈어요 ✉️'); }catch(e){ loginErr(mapErr(e)); } };
+    try{ await auth.sendPasswordResetEmail(em); loginErr('재설정 메일을 보냈어요'); }catch(e){ loginErr(mapErr(e)); } };
   window.vbSignOut = async function(){ try{ if(nativeAuth) await nativeAuth.signOut(); await auth.signOut(); }catch(e){} sessionStorage.removeItem('vb_synced'); sessionStorage.removeItem('vb_guest'); try{ localStorage.removeItem('vb_was_authed'); }catch(e){} location.reload(); };
   window.vbGuest = function(){ sessionStorage.setItem('vb_guest','1'); hideLogin(); };
   function mapErr(e){ const c=(e&&e.code)||''; const M={
@@ -4802,7 +4823,7 @@ function flashFX(kind) {
 </style>
 
 <div id="install-popup">
-    <h3 id="popup-title">📲 앱으로 설치하기</h3>
+    <h3 id="popup-title"><span data-ic="install"></span> 앱으로 설치하기</h3>
     <p id="popup-desc">
         더 넓은 화면으로 게임을 즐기려면<br>
         홈 화면에 추가해주세요!
@@ -4827,7 +4848,7 @@ function flashFX(kind) {
         if (isIOS) {
             // 사파리 브라우저일 때만
             if(userAgent.includes('safari') && !userAgent.includes('crios')) {
-                desc.innerHTML = `하단 <span style="font-size:1.5em">📤</span> 공유 버튼을 누르고<br><strong>'홈 화면에 추가'</strong>를 선택하세요!`;
+                desc.innerHTML = `하단 <span style="font-size:1.5em">${UI_ICON.share}</span> 공유 버튼을 누르고<br><strong>'홈 화면에 추가'</strong>를 선택하세요!`;
                 popup.style.display = 'block';
             }
         } else if (isAndroid) {
@@ -4890,7 +4911,7 @@ function flashFX(kind) {
     function showSheetRanking() {
         const board = document.getElementById('ranking-board');
         board.classList.remove('hidden');
-        board.innerHTML = '<div style="text-align:center; padding:20px;">랭킹 로딩 중...⏳</div>';
+        board.innerHTML = `<div style="text-align:center; padding:20px;">랭킹 로딩 중… ${UI_ICON.hourglass}</div>`;
         
         // 입력창 숨기기 — [버그수정] inline style 대신 classList 사용(showResultScreen이 classList로만 복구하므로)
         const inputArea = document.getElementById('input-area');
@@ -4899,7 +4920,7 @@ function flashFX(kind) {
         if(!window.vbDB) { board.innerHTML = '<div style="text-align:center;">인터넷 연결이 필요합니다.</div>'; return; }
         window.vbDB.collection('vb_ranking').orderBy('score','desc').limit(20).get()
         .then(snap => {
-            let html = '<h3 style="text-align:center; color:gold; margin-bottom:15px;">🏆 명예의 전당 🏆</h3>';
+            let html = `<h3 style="text-align:center; color:gold; margin-bottom:15px;">${UI_ICON.trophy} 명예의 전당</h3>`;
 
             if (snap.empty) {
                 html += '<div style="text-align:center;">아직 랭킹이 없습니다.</div>';
