@@ -423,7 +423,7 @@
 <div id="craft-screen" class="ex-overlay">
   <div class="cs-panel" style="max-width:700px; max-height:92%; overflow-y:auto; padding-bottom:calc(14px + env(safe-area-inset-bottom));">
     <div class="cs-title"><span data-ic="heal"></span> 조합소</div>
-    <div style="font-size:.82rem; color:#cdbf9e; margin-bottom:10px;">재료를 모아 특별 아이템을 만들어요. 마지막에 <b style="color:#ffd54f">스펠링 조합</b>을 완성해야 성공! (만든 건 카페 잡화점에서 사용)</div>
+    <div style="font-size:.82rem; color:#cdbf9e; margin-bottom:10px;">재료를 모아 특별 아이템을 만들어요. 마지막에 <b style="color:#ffd54f">스펠링 조합</b>을 완성해야 성공!<br>(만든 건 카페 잡화점에서 사용)</div>
     <div class="cm-label"><span data-ic="bag"></span> 보유 재료</div>
     <div id="craft-mats" class="cm-wrap"></div>
     <div id="craft-body"></div>
@@ -521,6 +521,8 @@
 // ============================================================
 
 // ===== 탐험 BGM =====
+// 네이티브(AppDelegate)가 백그라운드 전환 직전에 호출 — 최상위 const라 window.ExploreBgm은 없다.
+window.__vbReleaseAudio = function(){ try{ ExploreBgm.hardStop(); }catch(e){} };
 const ExploreBgm = {
   _tracks: {
     map:    'bgm/explore.mp3',
@@ -552,9 +554,33 @@ const ExploreBgm = {
     document.addEventListener('click', resumeOnInteraction, true);
     document.addEventListener('touchstart', resumeOnInteraction, true);
     document.addEventListener('visibilitychange', () => {
-      if(document.hidden) { if(this._audio) this._audio.pause(); }
-      else if(!this.isMuted && this._audio) this._audio.play().catch(()=>{});
+      if(document.hidden) { self.hardStop(); }
+      else { self.restore(); if(!self.isMuted && self._audio) self._audio.play().catch(()=>{}); }
     });
+    window.addEventListener('pagehide', () => { self.hardStop(); });
+    try {
+      const App = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
+      if(App) App.addListener('appStateChange', st => {
+        if(!st.isActive) { self.hardStop(); }
+        else { self.restore(); if(!self.isMuted && self._audio) self._audio.play().catch(()=>{}); }
+      });
+    } catch(e) {}
+  },
+  // ★ 미디어 세션 완전 해제 — pause()만으로는 audio가 src를 물고 있어 잠금화면에 '재생 중'이 남는다.
+  hardStop() {
+    const kill = a => { try { a.pause(); a.removeAttribute('src'); a.load(); } catch(e){} };
+    try { Object.values(this._pool).forEach(kill); } catch(e){}
+    if(this._audio) kill(this._audio);
+    this._released = true;
+  },
+  restore() {
+    if(!this._released) return;
+    this._released = false;
+    Object.entries(this._tracks).forEach(([k, src]) => {
+      const a = this._pool[k];
+      if(a && !a.getAttribute('src')) { a.src = src; a.loop = true; a.volume = 0.35; try{ a.load(); }catch(e){} }
+    });
+    if(this._current && this._pool[this._current]) this._audio = this._pool[this._current];
   },
   play(key) {
     if(!this._tracks[key]) return;
