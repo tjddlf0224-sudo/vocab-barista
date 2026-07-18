@@ -984,6 +984,24 @@
 .ach-card-body { flex: 1; min-width: 0; }
 .ach-card-name { font-size: 0.88rem; font-weight: bold; color: #3b2810; }
 .ach-card-desc { font-size: 0.73rem; color: #7a5c3a; margin-top: 1px; }
+.ach-card.ach-chain { cursor: pointer; }
+.ach-card.ach-chain:active { transform: scale(0.995); }
+.ach-card.expanded { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.ach-stage { float: right; font-size: 0.68rem; font-weight: bold; color: #8a6a3a; background: #f0e2c8; border-radius: 8px; padding: 1px 7px; }
+.ach-more { display: block; font-size: 0.6rem; color: #a08050; margin-top: 3px; font-weight: normal; }
+.ach-steps { display: none; margin: -4px 0 6px; padding: 6px 10px 8px; background: rgba(250,244,232,0.95);
+             border: 1.5px solid #e0d0b0; border-top: none; border-radius: 0 0 10px 10px; }
+.ach-steps.open { display: block; }
+.ach-step { display: flex; align-items: center; gap: 6px; padding: 4px 2px; font-size: 0.72rem; color: #a89478; }
+.ach-step + .ach-step { border-top: 1px dashed #e6d8bd; }
+.ach-step.got { color: #5a4028; }
+.ach-step.cur { color: #b8860b; font-weight: bold; }
+.ach-step-ic { width: 15px; display: flex; align-items: center; flex-shrink: 0; }
+.ach-step-ic svg { width: 13px; height: 13px; }
+.ach-step-nm { min-width: 74px; font-weight: bold; }
+.ach-step-ds { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: normal; font-size: 0.68rem; }
+.ach-step-rw { flex-shrink: 0; font-size: 0.66rem; color: #b08040; }
+.ach-step:not(.got):not(.cur) .ach-step-rw { opacity: 0.5; }
 .ach-prog-bar { height: 5px; background: #e8dcc8; border-radius: 3px; overflow: hidden; margin-top: 5px; }
 .ach-prog-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #c8a87a, #e8c86a); transition: width 0.6s; }
 .ach-prog-fill.fill-legendary { background: linear-gradient(90deg, #9b59b6, #e91e8c); }
@@ -4515,6 +4533,30 @@ equipItem: function(category, level) {
         this._achToastQueue = setTimeout(() => toast.classList.remove('ach-show'), 3200);
     },
 
+    // 같은 계열 업적은 한 장의 카드로 묶어 보여준다(30개 나열 → 11계열).
+    // 카드에는 '지금 도전 중인 단계'만 띄우고, 누르면 지나온 단계가 펼쳐진다.
+    _achChains: [
+        { cat:'학습',   ids:['a_master1','a_master10','a_master50','a_master100','a_master300'] },
+        { cat:'학습',   ids:['a_vip30','a_vip100'] },
+        { cat:'카페',   ids:['a_serve1','a_serve50','a_serve200','a_serve500'] },
+        { cat:'카페',   ids:['a_combo10','a_combo20'] },
+        { cat:'카페',   ids:['a_fever1','a_fever10'] },
+        { cat:'카페',   ids:['a_rank_staff','a_rank_mgr','a_rank_god'] },
+        { cat:'출석',   ids:['a_streak3','a_streak7','a_streak30'] },
+        { cat:'캐릭터', ids:['a_char5','a_char10','a_char_all'] },
+        { cat:'캐릭터', ids:['a_aff30','a_aff100'] },
+        { cat:'장식',   ids:['a_deco1','a_deco_all'] },
+        { cat:'탐험',   ids:['a_explore1','a_explore5'] },
+    ],
+
+    toggleAchChain: function(key) {
+        const el = document.getElementById('achsteps-' + key);
+        const card = document.getElementById('achcard-' + key);
+        if(!el) return;
+        const open = el.classList.toggle('open');
+        if(card) card.classList.toggle('expanded', open);
+    },
+
     openAchievements: function() {
         // 일시정지 화면에서 열면 게임 상태를 건드리지 않음(계속 하기로 정상 재개)
         if(!this.isPaused){ this.isActive = false; clearInterval(this.timer); }
@@ -4528,31 +4570,72 @@ equipItem: function(category, level) {
         const bycat = {};
         catOrder.forEach(c => { bycat[c] = []; });
         ACHIEVEMENTS.forEach(a => { if(bycat[a.cat]) bycat[a.cat].push(a); });
+        const byId = {}; ACHIEVEMENTS.forEach(a => { byId[a.id] = a; });
+        const chainsByCat = {};
+        this._achChains.forEach((ch, i) => {
+            const steps = ch.ids.map(id => byId[id]).filter(Boolean);
+            if(!steps.length) return;
+            (chainsByCat[ch.cat] = chainsByCat[ch.cat] || []).push({ key: 'c' + i, steps });
+        });
         list.innerHTML = '';
         catOrder.forEach(cat => {
-            const items = bycat[cat];
-            if(!items || !items.length) return;
+            const chains = chainsByCat[cat];
+            if(!chains || !chains.length) return;
             const label = document.createElement('div');
             label.className = 'ach-cat-label';
             label.textContent = '── ' + cat + ' ──';
             list.appendChild(label);
-            items.forEach(ach => {
-                const unlocked = this.unlockedAchievements.includes(ach.id);
-                let prog = 0; try { prog = ach.progress(); } catch(e) {}
-                const pct = Math.min(100, Math.floor(prog / ach.threshold * 100));
-                const gradeCls = 'ach-grade-' + ach.grade;
+
+            chains.forEach(chain => {
+                const steps = chain.steps;
+                const doneFlags = steps.map(a => this.unlockedAchievements.includes(a.id));
+                const doneCount = doneFlags.filter(Boolean).length;
+                const allDone = doneCount === steps.length;
+                // 지금 도전 중인 단계 = 아직 못 깬 첫 단계(전부 깼으면 마지막 단계를 대표로)
+                const curIdx = allDone ? steps.length - 1 : doneFlags.indexOf(false);
+                const cur = steps[curIdx];
+                let prog = 0; try { prog = cur.progress(); } catch(e) {}
+                const pct = Math.min(100, Math.floor(prog / cur.threshold * 100));
+                const gradeCls = 'ach-grade-' + cur.grade;
+
                 const card = document.createElement('div');
-                card.className = 'ach-card' + (unlocked ? ' ach-unlocked' : ' ach-locked') + (ach.grade === 'legendary' ? ' ach-legendary-card' : '');
+                card.id = 'achcard-' + chain.key;
+                card.className = 'ach-card ach-chain' + (allDone ? ' ach-unlocked' : (doneCount ? '' : ' ach-locked'))
+                               + (cur.grade === 'legendary' ? ' ach-legendary-card' : '');
+                card.setAttribute('onclick', "game.toggleAchChain('" + chain.key + "')");
+
+                // 지나온 단계 목록(펼침) — 달성한 건 이름·보상까지, 앞으로 올 건 흐리게
+                const stepsHtml = steps.map((a, i) => {
+                    const got = doneFlags[i];
+                    const isCur = (i === curIdx) && !allDone;
+                    return '<div class="ach-step' + (got ? ' got' : '') + (isCur ? ' cur' : '') + '">' +
+                             '<span class="ach-step-ic">' + (got ? UI_ICON.check : (isCur ? UI_ICON.arrow : UI_ICON.lock)) + '</span>' +
+                             '<span class="ach-step-nm">' + ((got || isCur) ? a.name : '???') + '</span>' +
+                             '<span class="ach-step-ds">' + ((got || isCur) ? a.desc : '') + '</span>' +
+                             '<span class="ach-step-rw">' + a.reward.gold + 'G</span>' +
+                           '</div>';
+                }).join('');
+
                 card.innerHTML =
-                    '<div class="ach-card-icon">' + ach.icon + '</div>' +
+                    '<div class="ach-card-icon">' + cur.icon + '</div>' +
                     '<div class="ach-card-body">' +
-                        '<div class="ach-card-name">' + ach.name + ' <span class="ach-grade-badge ' + gradeCls + '">' + (gradeNames[ach.grade] || ach.grade) + '</span></div>' +
-                        '<div class="ach-card-desc">' + (unlocked ? ach.desc : '???') + '</div>' +
-                        '<div class="ach-prog-bar"><div class="ach-prog-fill' + (ach.grade === 'legendary' ? ' fill-legendary' : '') + '" style="width:' + pct + '%"></div></div>' +
-                        '<div class="ach-prog-text">' + (unlocked ? UI_ICON.check+' 달성!' : prog + ' / ' + ach.threshold) + '</div>' +
+                        '<div class="ach-card-name">' + cur.name +
+                            ' <span class="ach-grade-badge ' + gradeCls + '">' + (gradeNames[cur.grade] || cur.grade) + '</span>' +
+                            '<span class="ach-stage">' + doneCount + '/' + steps.length + '</span>' +
+                        '</div>' +
+                        '<div class="ach-card-desc">' + (allDone ? cur.desc : (doneCount ? cur.desc : '???')) + '</div>' +
+                        '<div class="ach-prog-bar"><div class="ach-prog-fill' + (cur.grade === 'legendary' ? ' fill-legendary' : '') + '" style="width:' + (allDone ? 100 : pct) + '%"></div></div>' +
+                        '<div class="ach-prog-text">' + (allDone ? UI_ICON.check + ' 전부 달성!' : prog + ' / ' + cur.threshold) + '</div>' +
                     '</div>' +
-                    '<div class="ach-card-reward">' + UI_ICON.coin + ' ' + ach.reward.gold + 'G</div>';
+                    '<div class="ach-card-reward">' + UI_ICON.coin + ' ' + cur.reward.gold + 'G<span class="ach-more">' + (doneCount ? '지난 기록 ▾' : '단계 ▾') + '</span></div>';
+
+                const stepsBox = document.createElement('div');
+                stepsBox.className = 'ach-steps';
+                stepsBox.id = 'achsteps-' + chain.key;
+                stepsBox.innerHTML = stepsHtml;
+
                 list.appendChild(card);
+                list.appendChild(stepsBox);
             });
         });
         screen.classList.remove('hidden');
