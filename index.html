@@ -3838,7 +3838,7 @@ equipItem: function(category, level) {
             const petSizes = { p3:128, p4:104, p5:104 };
             const psize = petSizes[item.id] || 96;
             // 펫별 하강 오프셋 — 앵무새(p3)는 꼬리가 길어 발이 떠 보임 → 아래로 내려 발끝이 바 앞모서리에 닿게
-            const petDrop = { p3:-30 };
+            const petDrop = { p3:-30, p1:-14 };
             const pbottom = petDrop[item.id] || 0;
             cL.innerHTML += `<div class="deco-item" onclick="game.openSkinSelector('pet')" style="position:absolute; bottom:${pbottom}px; right:14px; z-index:12;" title="눌러서 교체">${sceneDeco(item.img, psize, 'deco-anim-pet')}</div>`;
         }
@@ -3848,7 +3848,10 @@ equipItem: function(category, level) {
             const item = SHOP_DB.wall[eq.wall - 1];
             const wide = ['w1','w2','w5'].includes(item.id);
             const size = wide ? 124 : 104;
-            wL.innerHTML += `<div class="deco-item" onclick="game.openSkinSelector('wall')" style="position:absolute; top:34%; left:84%; transform:translateX(-50%); z-index:1;" title="눌러서 교체">${sceneDeco(item.img, size)}</div>`;
+            // 벽 장식별 세로 위치 — 명화 액자(w4)는 조금 더 아래가 자연스럽다
+            const wallTop = { w4: 39 };
+            const wtop = wallTop[item.id] || 34;
+            wL.innerHTML += `<div class="deco-item" onclick="game.openSkinSelector('wall')" style="position:absolute; top:${wtop}%; left:84%; transform:translateX(-50%); z-index:1;" title="눌러서 교체">${sceneDeco(item.img, size)}</div>`;
         }
     },
 
