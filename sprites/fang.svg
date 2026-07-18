@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="fngg" x1="0.3" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#f2eeff"/><stop offset="0.45" stop-color="#a496c8"/><stop offset="1" stop-color="#40355c"/>
+    </linearGradient>
+    <radialGradient id="fnga" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#7a5fd0" stop-opacity="0.45"/><stop offset="1" stop-color="#7a5fd0" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="32" cy="55" rx="17" ry="4.5" fill="#000" opacity="0.18"/>
+  <circle cx="32" cy="30" r="30" fill="url(#fnga)"/>
+  <path d="M16 10 C 24 6, 40 6, 48 10 C 47 20, 44 30, 39 40 C 36 47, 33 52, 32 56 C 31 52, 28 47, 25 40 C 20 30, 17 20, 16 10 Z"
+        fill="url(#fngg)" stroke="#2c2444" stroke-width="2.8" stroke-linejoin="round"/>
+  <path d="M23 13 C 25 24, 29 35, 32 44" fill="none" stroke="#fff" stroke-width="2.6" opacity="0.55" stroke-linecap="round"/>
+  <path d="M41 14 C 40 25, 37 34, 34 42" fill="none" stroke="#40355c" stroke-width="1.6" opacity="0.45" stroke-linecap="round"/>
+  <path d="M16 10 C 24 14, 40 14, 48 10 C 47 15, 46 18, 45 21 C 38 24, 26 24, 19 21 C 18 18, 17 15, 16 10 Z" fill="#2c2444" opacity="0.28"/>
+</svg>
