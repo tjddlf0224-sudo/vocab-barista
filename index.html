@@ -1473,127 +1473,174 @@ const BGM_JINGLES = {
 // 네이티브(AppDelegate)가 백그라운드 전환 직전에 호출한다 — 최상위 const라 window.BgMusic은 없으므로 별도 노출.
 window.__vbReleaseAudio = function(){ try{ BgMusic.hardStop(); }catch(e){} };
 const BgMusic = {
+    // ★ Web Audio API 기반(5차). HTML5 <audio>를 쓰는 한 iOS가 잠금화면 Now Playing에
+    // 등록하는 걸 막을 수 없어서(WebContent 프로세스가 등록 → 앱에서 못 지움) 재생 방식을 바꿨다.
+    // AudioContext는 Now Playing을 등록하지 않는다(이 앱의 Sfx가 이미 그 방식이고 안 뜬다).
+    // 메모리: 디코딩된 PCM은 트랙당 ~10MB라 전부 올리지 않고 LRU 3개만 캐시한다.
     isMuted: false,
     _current: null,
-    _audio: null,
-    _pool: {},
-    _jingle: null,
+    _ctx: null,
+    _buf: {},          // key → AudioBuffer (LRU)
+    _lru: [],
+    _MAXBUF: 3,
+    _src: null,        // 현재 BGM AudioBufferSourceNode
+    _gain: null,
+    _jsrc: null,       // 징글 소스
+    _jgain: null,
+    _loading: null,    // 중복 로드 방지
+
+    _ac: function() {
+        if(!this._ctx) {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            if(!AC) return null;
+            this._ctx = new AC();
+        }
+        return this._ctx;
+    },
 
     init: function() {
         if(this._initialized) return;
         this._initialized = true;
-        Object.entries(BGM_TRACKS).forEach(([k, src]) => {
-            const a = new Audio(src);
-            a.loop = true; a.volume = 0.35;
-            this._pool[k] = a;
-        });
         const saved = localStorage.getItem('vb_bgm_mute');
         this.isMuted = (saved === 'true');
         this.updateBtn();
-        if(!this._lifecycleBound) {
-            this._lifecycleBound = true;
-            const self = this;
-            // 첫 인터랙션(클릭·터치)에 BGM 재생 — 브라우저 Autoplay 정책 대응
-            const resumeOnInteraction = () => {
-                if(!self.isMuted && self._audio && self._audio.paused) {
-                    self._audio.play().catch(()=>{});
-                }
-                document.removeEventListener('click', resumeOnInteraction, true);
-                document.removeEventListener('touchstart', resumeOnInteraction, true);
-                document.removeEventListener('keydown', resumeOnInteraction, true);
-            };
-            document.addEventListener('click', resumeOnInteraction, true);
-            document.addEventListener('touchstart', resumeOnInteraction, true);
-            document.addEventListener('keydown', resumeOnInteraction, true);
-            document.addEventListener('visibilitychange', () => {
-                // 백그라운드로 나가면 BGM+징글 모두 정지 — 소리가 남아있으면 네이티브가
-                // 오디오 세션을 못 내려 잠금화면에 '재생 중'이 남는다(AppDelegate에서 세션 비활성화).
-                if(document.hidden) { self.hardStop(); }
-                else {
-                    self.restore();
-                    if(!self.isMuted && !(typeof game !== 'undefined' && game && game.isPaused)) {
-                        if(self._audio) self._audio.play().catch(()=>{});
-                    }
-                }
-            });
-            window.addEventListener('pagehide', () => { self.hardStop(); });
-            window.addEventListener('beforeunload', () => { self.hardStop(); });
-            try {
-                const App = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
-                if(App) App.addListener('appStateChange', s => {
-                    if(!s.isActive) { self.hardStop(); }
-                    else { self.restore(); if(!self.isMuted && self._audio) self._audio.play().catch(()=>{}); }
-                });
-            } catch(e) {}
-        }
+        if(this._lifecycleBound) return;
+        this._lifecycleBound = true;
+        const self = this;
+        // iOS/브라우저 정책상 AudioContext는 사용자 제스처 후에만 소리가 난다
+        const resumeOnInteraction = () => {
+            const ctx = self._ac();
+            if(ctx && ctx.state === 'suspended') ctx.resume().catch(()=>{});
+            if(!self.isMuted && self._current && !self._src) self.playTrack(self._current);
+            document.removeEventListener('click', resumeOnInteraction, true);
+            document.removeEventListener('touchstart', resumeOnInteraction, true);
+            document.removeEventListener('keydown', resumeOnInteraction, true);
+        };
+        document.addEventListener('click', resumeOnInteraction, true);
+        document.addEventListener('touchstart', resumeOnInteraction, true);
+        document.addEventListener('keydown', resumeOnInteraction, true);
+
+        document.addEventListener('visibilitychange', () => {
+            if(document.hidden) self.hardStop();
+            else self.restore();
+        });
+        window.addEventListener('pagehide', () => self.hardStop());
+        window.addEventListener('beforeunload', () => self.hardStop());
+        try {
+            const App = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
+            if(App) App.addListener('appStateChange', st => { if(!st.isActive) self.hardStop(); else self.restore(); });
+        } catch(e) {}
     },
 
-    // ★ 미디어 세션 완전 해제. pause()만으로는 audio 요소가 src를 물고 있어서
-    // iOS가 '재생 가능한 미디어'로 보고 잠금화면에 제목·길이·진행바를 남긴다.
-    // (스크린샷의 -0:31이 그 증거 — 트랙 길이를 알고 있다는 뜻)
-    // src를 비우고 load()해야 요소가 미디어를 놓는다.
-    hardStop: function() {
-        this.stopJingle();
-        const kill = a => { try { a.pause(); a.removeAttribute('src'); a.load(); } catch(e){} };
-        try { Object.values(this._pool).forEach(kill); } catch(e){}
-        if(this._audio) kill(this._audio);
-        this._released = true;
+    // 버퍼 로드(lazy) — 같은 키를 동시에 여러 번 요청해도 한 번만 받는다
+    _load: function(url, key) {
+        if(this._buf[key]) { this._touch(key); return Promise.resolve(this._buf[key]); }
+        const ctx = this._ac();
+        if(!ctx) return Promise.reject(new Error('no AudioContext'));
+        return fetch(url)
+            .then(r => r.arrayBuffer())
+            .then(ab => new Promise((res, rej) => {
+                // Safari는 콜백형만 지원하던 시절이 있어 양쪽 다 대응
+                const p = ctx.decodeAudioData(ab, res, rej);
+                if(p && p.then) p.then(res).catch(rej);
+            }))
+            .then(buf => { this._put(key, buf); return buf; });
     },
-    // 복귀 시 src 복원(해제된 상태에서만)
-    restore: function() {
-        if(!this._released) return;
-        this._released = false;
-        Object.entries(BGM_TRACKS).forEach(([k, src]) => {
-            const a = this._pool[k];
-            if(a && !a.getAttribute('src')) { a.src = src; a.loop = true; a.volume = 0.35; try{ a.load(); }catch(e){} }
-        });
-        if(this._current && this._pool[this._current]) this._audio = this._pool[this._current];
+    _put: function(key, buf) {
+        this._buf[key] = buf; this._touch(key);
+        while(this._lru.length > this._MAXBUF) {
+            const drop = this._lru.shift();
+            if(drop !== this._current) delete this._buf[drop];
+            else this._lru.push(drop);   // 재생 중인 건 버리지 않는다
+        }
+    },
+    _touch: function(key) {
+        const i = this._lru.indexOf(key);
+        if(i >= 0) this._lru.splice(i, 1);
+        this._lru.push(key);
     },
 
     playTrack: function(key) {
         if(!BGM_TRACKS[key]) return;
-        if(this._current === key && this._audio && !this._audio.paused) return;
-        if(this._audio) { this._audio.pause(); this._audio.currentTime = 0; }
         this._current = key;
-        this._audio = this._pool[key] || new Audio(BGM_TRACKS[key]);
-        this._audio.loop = true; this._audio.volume = 0.35;
-        this._pool[key] = this._audio;
-        if(!this.isMuted) this._audio.play().catch(()=>{});
+        if(this.isMuted) return;
+        const ctx = this._ac();
+        if(!ctx) return;
+        if(ctx.state === 'suspended') ctx.resume().catch(()=>{});
+        const token = ++this._playToken;
+        this._load(BGM_TRACKS[key], key).then(buf => {
+            if(token !== this._playToken || this.isMuted) return;   // 그 사이 다른 트랙으로 바뀜
+            this._stopSrc();
+            const src = ctx.createBufferSource();
+            src.buffer = buf; src.loop = true;
+            const g = ctx.createGain(); g.gain.value = 0.35;
+            src.connect(g); g.connect(ctx.destination);
+            try { src.start(0); } catch(e) {}
+            this._src = src; this._gain = g;
+        }).catch(()=>{});
     },
+    _playToken: 0,
 
-    // 오디오 요소가 미디어를 '놓게' 한다. pause()만 하고 참조를 끊으면 src를 문 채
-    // 살아남아(orphan) iOS가 재생 가능한 미디어로 보고 잠금화면 Now Playing을 유지한다.
-    _killAudio: function(a){ if(!a) return; try{ a.pause(); a.removeAttribute('src'); a.load(); }catch(e){} },
+    _stopSrc: function() {
+        if(this._src) { try{ this._src.stop(); }catch(e){} try{ this._src.disconnect(); }catch(e){} this._src = null; }
+        if(this._gain) { try{ this._gain.disconnect(); }catch(e){} this._gain = null; }
+    },
+    _stopJingle: function() {
+        if(this._jsrc) { try{ this._jsrc.stop(); }catch(e){} try{ this._jsrc.disconnect(); }catch(e){} this._jsrc = null; }
+        if(this._jgain) { try{ this._jgain.disconnect(); }catch(e){} this._jgain = null; }
+    },
 
     playJingle: function(key) {
         if(!BGM_JINGLES[key] || this.isMuted) return;
-        if(this._jingle) { this._killAudio(this._jingle); this._jingle = null; }
-        if(this._audio) this._audio.volume = 0.12;
-        const j = new Audio(BGM_JINGLES[key]);
-        j.volume = 0.7; this._jingle = j;
-        j.play().catch(()=>{});
-        j.addEventListener('ended', () => {
-            if(this._audio) this._audio.volume = 0.35;
-            // 재생이 끝나면 즉시 파괴. null로 참조만 끊으면 src를 문 요소가 영영 남는다.
-            this._killAudio(j);
-            if(this._jingle === j) this._jingle = null;
-        }, { once: true });
+        const ctx = this._ac();
+        if(!ctx) return;
+        if(ctx.state === 'suspended') ctx.resume().catch(()=>{});
+        this._stopJingle();
+        if(this._gain) this._gain.gain.value = 0.12;      // BGM을 잠시 낮춘다
+        this._load(BGM_JINGLES[key], 'j_' + key).then(buf => {
+            if(this.isMuted) return;
+            const src = ctx.createBufferSource();
+            src.buffer = buf;
+            const g = ctx.createGain(); g.gain.value = 0.7;
+            src.connect(g); g.connect(ctx.destination);
+            src.onended = () => { if(this._gain) this._gain.gain.value = 0.35; if(this._jsrc === src) this._stopJingle(); };
+            try { src.start(0); } catch(e) {}
+            this._jsrc = src; this._jgain = g;
+        }).catch(()=>{ if(this._gain) this._gain.gain.value = 0.35; });
     },
 
-    // 징글 즉시 정지(백그라운드 진입 시) — pause만으로는 미디어 세션이 안 풀린다
-    stopJingle: function(){
-        if(this._jingle){ this._killAudio(this._jingle); this._jingle = null; }
-        if(this._audio) this._audio.volume = 0.35;
+    stopJingle: function() {
+        this._stopJingle();
+        if(this._gain) this._gain.gain.value = 0.35;
+    },
+
+    // 백그라운드 진입: 소리를 끊고 오디오 컨텍스트를 재운다.
+    // <audio>와 달리 붙들고 있는 미디어 리소스가 없어 잠금화면에 남을 것이 없다.
+    hardStop: function() {
+        this._stopJingle();
+        this._stopSrc();
+        const ctx = this._ctx;
+        if(ctx && ctx.state === 'running') { try { ctx.suspend(); } catch(e) {} }
+        this._released = true;
+    },
+    restore: function() {
+        if(!this._released) return;
+        this._released = false;
+        const ctx = this._ctx;
+        if(ctx && ctx.state === 'suspended') ctx.resume().catch(()=>{});
+        if(!this.isMuted && this._current && !(typeof game !== 'undefined' && game && game.isPaused)) {
+            this.playTrack(this._current);
+        }
     },
 
     play: function() {
-        if(this.isMuted || !this._audio) return;
-        this._audio.play().catch(()=>{});
+        if(this.isMuted) return;
+        if(this._current) this.playTrack(this._current);
     },
 
     stop: function() {
-        if(this._audio) this._audio.pause();
-        if(this._jingle) { this._killAudio(this._jingle); this._jingle = null; }
+        this._stopJingle();
+        this._stopSrc();
     },
 
     toggle: function() {
@@ -1606,7 +1653,7 @@ const BgMusic = {
     updateBtn: function() {
         // [정리] 구 UI 잔재 — #bgm-btn·#bgm-pause-btn 마크업은 이 문서에 없다(dead code).
         // 실제 사운드 아이콘은 game.updateSoundIcon()이 #sound-toggle에 SVG로 그린다.
-    }
+    },
 };
 
 // ==========================================

@@ -524,73 +524,109 @@
 // 네이티브(AppDelegate)가 백그라운드 전환 직전에 호출 — 최상위 const라 window.ExploreBgm은 없다.
 window.__vbReleaseAudio = function(){ try{ ExploreBgm.hardStop(); }catch(e){} };
 const ExploreBgm = {
+  // ★ Web Audio API 기반(index.html의 BgMusic과 같은 이유·같은 방식).
+  // <audio>는 iOS 잠금화면 Now Playing에 등록돼 앱을 꺼도 남는다. AudioContext는 안 남는다.
   _tracks: {
     map:    'bgm/explore.mp3',
     battle: 'bgm/battle.mp3',
     boss:   'bgm/boss.mp3',
     craft:  'bgm/craft.mp3',
   },
-  _pool: {}, _audio: null, _current: null,
   isMuted: false,
+  _current: null,
+  _ctx: null, _buf: {}, _lru: [], _MAXBUF: 3,
+  _src: null, _gain: null, _playToken: 0, _released: false,
+
+  _ac() {
+    if(!this._ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return null;
+      this._ctx = new AC();
+    }
+    return this._ctx;
+  },
+  _touch(k){ const i=this._lru.indexOf(k); if(i>=0) this._lru.splice(i,1); this._lru.push(k); },
+  _put(k,buf){
+    this._buf[k]=buf; this._touch(k);
+    while(this._lru.length > this._MAXBUF){
+      const d=this._lru.shift();
+      if(d !== this._current) delete this._buf[d]; else this._lru.push(d);
+    }
+  },
+  _load(url,key){
+    if(this._buf[key]){ this._touch(key); return Promise.resolve(this._buf[key]); }
+    const ctx=this._ac(); if(!ctx) return Promise.reject(new Error('no AudioContext'));
+    return fetch(url).then(r=>r.arrayBuffer()).then(ab=>new Promise((res,rej)=>{
+      const p=ctx.decodeAudioData(ab,res,rej); if(p&&p.then) p.then(res).catch(rej);
+    })).then(buf=>{ this._put(key,buf); return buf; });
+  },
+  _stopSrc(){
+    if(this._src){ try{this._src.stop();}catch(e){} try{this._src.disconnect();}catch(e){} this._src=null; }
+    if(this._gain){ try{this._gain.disconnect();}catch(e){} this._gain=null; }
+  },
+
   init() {
     const saved = localStorage.getItem('vb_bgm_mute');
     this.isMuted = (saved === 'true');
-    Object.entries(this._tracks).forEach(([k,src]) => {
-      const a = new Audio(src); a.loop = true; a.volume = 0.35;
-      this._pool[k] = a;
-    });
-    // 첫 인터랙션(클릭·터치)에 BGM 재생 — 브라우저 Autoplay 정책 대응
-    this._audio = this._pool['map'];
     this._current = 'map';
-    if(!this.isMuted) this._audio.play().catch(()=>{});
     const self = this;
+    if(!this.isMuted) this.play('map');
+    // AudioContext는 사용자 제스처 후에만 소리가 난다
     const resumeOnInteraction = () => {
-      if(!self.isMuted && self._audio && self._audio.paused) {
-        self._audio.play().catch(()=>{});
-      }
+      const ctx = self._ac();
+      if(ctx && ctx.state === 'suspended') ctx.resume().catch(()=>{});
+      if(!self.isMuted && self._current && !self._src) self.play(self._current);
       document.removeEventListener('click', resumeOnInteraction, true);
       document.removeEventListener('touchstart', resumeOnInteraction, true);
     };
     document.addEventListener('click', resumeOnInteraction, true);
     document.addEventListener('touchstart', resumeOnInteraction, true);
     document.addEventListener('visibilitychange', () => {
-      if(document.hidden) { self.hardStop(); }
-      else { self.restore(); if(!self.isMuted && self._audio) self._audio.play().catch(()=>{}); }
+      if(document.hidden) self.hardStop(); else self.restore();
     });
-    window.addEventListener('pagehide', () => { self.hardStop(); });
+    window.addEventListener('pagehide', () => self.hardStop());
     try {
       const App = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
-      if(App) App.addListener('appStateChange', st => {
-        if(!st.isActive) { self.hardStop(); }
-        else { self.restore(); if(!self.isMuted && self._audio) self._audio.play().catch(()=>{}); }
-      });
+      if(App) App.addListener('appStateChange', st => { if(!st.isActive) self.hardStop(); else self.restore(); });
     } catch(e) {}
   },
-  // ★ 미디어 세션 완전 해제 — pause()만으로는 audio가 src를 물고 있어 잠금화면에 '재생 중'이 남는다.
+
+  play(key) {
+    if(!this._tracks[key]) return;
+    if(this._current === key && this._src) return;
+    this._current = key;
+    if(this.isMuted) return;
+    const ctx = this._ac(); if(!ctx) return;
+    if(ctx.state === 'suspended') ctx.resume().catch(()=>{});
+    const token = ++this._playToken;
+    this._load(this._tracks[key], key).then(buf => {
+      if(token !== this._playToken || this.isMuted) return;
+      this._stopSrc();
+      const src = ctx.createBufferSource();
+      src.buffer = buf; src.loop = true;
+      const g = ctx.createGain(); g.gain.value = 0.35;
+      src.connect(g); g.connect(ctx.destination);
+      try { src.start(0); } catch(e) {}
+      this._src = src; this._gain = g;
+    }).catch(()=>{});
+  },
+
+  // 백그라운드: 소리를 끊고 컨텍스트를 재운다(붙들 미디어 리소스가 없다)
   hardStop() {
-    const kill = a => { try { a.pause(); a.removeAttribute('src'); a.load(); } catch(e){} };
-    try { Object.values(this._pool).forEach(kill); } catch(e){}
-    if(this._audio) kill(this._audio);
+    this._stopSrc();
+    const ctx = this._ctx;
+    if(ctx && ctx.state === 'running'){ try{ ctx.suspend(); }catch(e){} }
     this._released = true;
   },
   restore() {
     if(!this._released) return;
     this._released = false;
-    Object.entries(this._tracks).forEach(([k, src]) => {
-      const a = this._pool[k];
-      if(a && !a.getAttribute('src')) { a.src = src; a.loop = true; a.volume = 0.35; try{ a.load(); }catch(e){} }
-    });
-    if(this._current && this._pool[this._current]) this._audio = this._pool[this._current];
+    const ctx = this._ctx;
+    if(ctx && ctx.state === 'suspended') ctx.resume().catch(()=>{});
+    if(!this.isMuted && this._current) this.play(this._current);
   },
-  play(key) {
-    if(!this._tracks[key]) return;
-    if(this._current === key && this._audio && !this._audio.paused) return;
-    if(this._audio) { this._audio.pause(); this._audio.currentTime = 0; }
-    this._current = key;
-    this._audio = this._pool[key];
-    if(!this.isMuted) this._audio.play().catch(()=>{});
-  },
-  stop() { if(this._audio) this._audio.pause(); }
+
+  stop() { this._stopSrc(); },
 };
 
 const CAFE_KEY='vb_save_v7', EXPLORE_KEY='vb_explore_v1';
@@ -1286,17 +1322,20 @@ const World = {
     for(let y=0;y<HT;y++)for(let x=0;x<WT;x++){ if(!this.explored[y][x])continue; ctx.fillStyle=this._mmColor(x,y); ctx.fillRect(x,y,1,1); }
     const dot=(x,y,c)=>{ if(x<0||y<0||x>=WT||y>=HT||!this.explored[y][x])return; ctx.fillStyle=c; ctx.fillRect(x,y,1,1); };
     const seen=(x,y)=>x>=0&&y>=0&&x<WT&&y<HT&&this.explored[y][x];
-    const blk=(x,y,c,r)=>{ ctx.fillStyle=c; for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){ const xx=x+dx,yy=y+dy; if(xx>=0&&yy>=0&&xx<WT&&yy<HT) ctx.fillRect(xx,yy,1,1); } };
-    if(this.gate) dot(this.gate.x,HT-1,'#ffcf4d');
-    if(this.portal) dot(this.portal.x,0,'#b46bff');
-    for(const n of (this.nodes||[])) if(!n.taken) dot(n.x,n.y,'#ffe066');
+    // 마커 블록 — check=true면 미탐험 타일엔 안 그린다(안개 규칙 유지)
+    const blk=(x,y,c,r,check)=>{ if(check && !seen(x,y))return; ctx.fillStyle=c; for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){ const xx=x+dx,yy=y+dy; if(xx>=0&&yy>=0&&xx<WT&&yy<HT) ctx.fillRect(xx,yy,1,1); } };
+    // 게이트·포털 — 어두운 테두리 + 밝은 코어로 눈에 띄게(1px dot → 5x5 블록)
+    if(this.gate){ blk(this.gate.x,HT-1,'#2a1f06',2,true); blk(this.gate.x,HT-1,'#ffcf4d',1,true); }
+    if(this.portal){ blk(this.portal.x,0,'#180a2a',2,true); blk(this.portal.x,0,'#c88bff',1,true); }
+    // 재료 노드 — 어두운 3x3 테두리 + 밝은 코어(1px → 3x3, 여러 개라 과하지 않게)
+    for(const n of (this.nodes||[])) if(!n.taken){ blk(n.x,n.y,'#403008',1,true); dot(n.x,n.y,'#ffe066'); }
     // 어둠의 상인은 미니맵에 표시하지 않음(진짜 숨겨진 이벤트) — 직접 발견해야 함
-    if(this.forge && seen(this.forge.x,this.forge.y)){ blk(this.forge.x,this.forge.y,'#3a2410',2); blk(this.forge.x,this.forge.y,'#ffb03a',1); } // 대장간은 유용한 랜드마크라 표시
+    if(this.forge && seen(this.forge.x,this.forge.y)){ blk(this.forge.x,this.forge.y,'#3a2410',3); blk(this.forge.x,this.forge.y,'#ffb03a',2); } // 대장간은 유용한 랜드마크라 표시
     // 퀘스트 NPC — 발견 시 크고 선명하게(어두운 테두리+빨강 코어)
-    for(const np of (this.npcs||[])){ if(!seen(np.x,np.y))continue; blk(np.x,np.y,'#20060a',2); blk(np.x,np.y,'#ff4d4d',1); }
+    for(const np of (this.npcs||[])){ if(!seen(np.x,np.y))continue; blk(np.x,np.y,'#20060a',3); blk(np.x,np.y,'#ff4d4d',2); }
     // 내 캐릭터 — 항상 가장 눈에 띄게(어두운 테두리 + 밝은 청록 코어)
     const px=Math.round(this.px), py=Math.round(this.py);
-    blk(px,py,'#00131c',2); blk(px,py,'#39e6ff',1);
+    blk(px,py,'#00131c',3); blk(px,py,'#39e6ff',2);
     this._miniDirty=false;
     const badge=document.getElementById('mm-badge'); if(badge){ const done=(Explore.state.maps||{})[Explore.state.map.zone];
       badge.textContent = done?'완성':(Math.round(this.exploredCount/(WT*HT)*100)+'%'); badge.classList.toggle('done', !!done); } },
