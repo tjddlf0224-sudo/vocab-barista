@@ -1366,7 +1366,7 @@
     
     <div class="shop-container inventory-list" id="inventory-list-item"></div>
     
-    <button class="btn-mini" onclick="document.getElementById('inventory-screen-item').classList.add('hidden')" style="margin-top:20px;">닫기</button>
+    <button class="btn-mini" onclick="game.closeSkinSelector()" style="margin-top:20px;">닫기</button>
 </div>
 
     <div class="overlay hidden" id="wordbook-screen">
@@ -3811,13 +3811,18 @@ equipItem: function(category, level) {
     // playSound가 있다면 실행
     if(typeof playSound === 'function') playSound('buy'); 
     
-    // [수정] 인벤토리 창 닫기: inventory-screen -> inventory-screen-item
-    document.getElementById('inventory-screen-item').classList.add('hidden');
-    
-    // 게임 재개
-    this.isActive = true;
-    if(this.currentCust && !this.currentCust.solved) this.startTimer();
+    // 창 닫기 + 게임 재개(닫기 버튼과 동일 경로)
+    this.closeSkinSelector();
 },
+
+    // 교체창 닫기 — 반드시 게임을 재개한다. (버그: 닫기 버튼이 hidden만 하고 재개를 안 해
+    // isActive=false·타이머 정지 상태로 남아 시간도 안 흐르고 보기(단어)도 안 눌렸다)
+    closeSkinSelector: function() {
+        const modal = document.getElementById('inventory-screen-item');
+        if(modal){ modal.classList.add('hidden'); modal.style.display = ''; }
+        this.isActive = true;
+        if(this.currentCust && !this.currentCust.solved) this.startTimer();
+    },
 
     // [신규 추가!] 교체 메뉴 (스킨 선택창) 열기
     openSkinSelector: function(category) {
