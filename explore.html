@@ -681,7 +681,9 @@ const Explore = {
     const c=SaveBridge.loadCafe();
     this.cafe={ wallet:c.wallet||0, myWords:Array.isArray(c.myWords)?c.myWords:[], turnCount:c.turnCount||0,
                 collectedChars:Array.isArray(c.collectedChars)?c.collectedChars:[],
-                craftedItems:(c.craftedItems&&typeof c.craftedItems==='object')?c.craftedItems:{} };
+                craftedItems:(c.craftedItems&&typeof c.craftedItems==='object')?c.craftedItems:{},
+                // ★ 동행 채용 판정(isRecruited)이 호감도를 본다 — 이걸 빠뜨려 호감도 MAX여도 항상 잠겨 있었다.
+                affection:(c.affection&&typeof c.affection==='object')?c.affection:{} };
     this.state=SaveBridge.loadExplore();
     if(!this.isRecruited(this.state.companion)) this.state.companion='none';  // 미채용 동행은 기본으로
     Sfx.init();
