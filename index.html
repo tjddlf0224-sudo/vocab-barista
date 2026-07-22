@@ -2306,6 +2306,13 @@ const DEMITAS_SCENES = [
 const DEMITAS_THRESHOLDS = [2500, 8000, 20000, 40000]; // 각 막 해금 누적점수
 DEMITAS_SCENES[2].introCg = 'assets/art/cg_dmitasse_vault.jpg'; DEMITAS_SCENES[2].introCaption = '봉인고 — 백 년간 모아 가둔 말들이 잠든 곳.';
 
+// ===== 리코 케미 씬 (2인) — 로아 무시·루나 쫄음·세라 팬심·순자여사 손주 =====
+const RICO_CHEMISTRY = {
+  roa: [ { who:'q_rico', text:"로아 선배! 오늘 제 라떼 어때요? 밤새 연습했어요.", face:"chars/face_rico_hype.png" }, { who:"m_roa", text:"(한 모금 마시고, 말없이 잔을 내려놓고 나간다)" }, { who:'q_rico', text:"...평가가 너무 깊어서 방금 한 수 배웠어. 무슨 뜻인지는 모르겠지만.", face:"chars/face_rico_fail.png" } ],
+  luna: [ { who:'q_rico', text:"루, 루나 님... 궁금한 게 있는데요. 100년 전에도 커피가 있었어요?", face:"chars/face_rico_hype.png" }, { who:"m_luna", text:"그때도 넌 이렇게 시끄러웠을 것 같은데." }, { who:'q_rico', text:"저 그땐 태어나지도 않았는데요...! 어, 근데 왠지 죄송합니다.", face:"chars/face_rico_fail.png" } ],
+  sera: [ { who:'q_rico', text:"저... 혹시... 설마... 세, 세라 님?! 저 데뷔 때부터 팬이에요, 앨범 초판 세 장을—", face:"chars/face_rico_hype.png" }, { who:"m_sera", text:"(쉿, 하고 손가락을 입에 갖다 댄다)" }, { who:'q_rico', text:"...소울메이트. 아니, 비밀 꼭 지킬게요. 진짜로요.", face:"chars/face_rico_hype.png" } ],
+  grandma: [ { who:'q_rico', text:"순자 여사님! 오늘은 제가 자리까지 모실게요. 조심조심— (무릎을 테이블 모서리에 쿵)", face:"chars/face_rico_hype.png" }, { who:"c_grandma", text:"아이고, 내가 널 모셔야겠다. 커피 흘리지 말고 얌전히 앉아 있어라." }, { who:'q_rico', text:"네... 할머니.", face:"chars/face_rico_fail.png" } ]
+};
 const RICO_LINES = {
   daily: [
     { text:"이번엔 진짜 될 것 같아. ...어, 이 말 하면 꼭 안 되던데. 오늘은 다르겠지, 아마.", face:"chars/face_rico_hype.png" },
@@ -2950,15 +2957,24 @@ const game = {
         return true;
     },
     playRicoCameo: function(done){
-        var cuts, r = Math.random();
-        if(r < 0.12 && !this._ricoSincereSeen){ cuts = RICO_LINES.sincere; this._ricoSincereSeen = true; }
-        else if(r < 0.42){ cuts = RICO_LINES.rival[Math.floor(Math.random()*RICO_LINES.rival.length)]; }
+        var cuts, r = Math.random(), self = this;
+        // 케미 씬 후보: 오늘 방문+이름 아는 메인, 순자여사는 상시
+        var today = this.todayStr(), partners = [];
+        if(this.mainSeenDay){
+            if(mainNameKnown('m_roa')  && this.mainSeenDay['m_roa']===today)  partners.push('roa');
+            if(mainNameKnown('m_luna') && this.mainSeenDay['m_luna']===today) partners.push('luna');
+            if(mainNameKnown('m_sera') && this.mainSeenDay['m_sera']===today) partners.push('sera');
+        }
+        partners.push('grandma');
+        if(r < 0.26 && partners.length){ cuts = RICO_CHEMISTRY[partners[Math.floor(Math.random()*partners.length)]]; }
+        else if(r < 0.38 && !this._ricoSincereSeen){ cuts = RICO_LINES.sincere; this._ricoSincereSeen = true; }
+        else if(r < 0.62){ cuts = RICO_LINES.rival[Math.floor(Math.random()*RICO_LINES.rival.length)]; }
         else { cuts = [ RICO_LINES.daily[Math.floor(Math.random()*RICO_LINES.daily.length)] ]; }
-        var i = 0, self = this;
+        var i = 0;
         var next = function(){
             if(i >= cuts.length){ if(done) done(); return; }
             var c = cuts[i++];
-            self.showDialogue('q_rico', c.text, { duration: 99999, face: c.face, onDismiss: next });
+            self.showDialogue(c.who || 'q_rico', c.text, { duration: 99999, face: c.face, onDismiss: next });
         };
         next();
     },
