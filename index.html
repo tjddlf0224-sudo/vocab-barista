@@ -199,6 +199,9 @@
         .customer { position: relative; display: flex; flex-direction: column; align-items: center; transition: 0.3s; animation: popIn 0.4s; max-height: 100%; overflow: hidden; }
         .customer.leaving { transform: translateX(300px); opacity: 0; }
         .bubble { flex-shrink: 0; position: relative; background: white; border: 3px solid #333; border-radius: 20px; padding: 15px; margin-bottom: 15px; font-size: 1.3rem; text-align: center; min-width: 180px; box-shadow: 4px 4px 0 rgba(0,0,0,0.1); }
+        .cust-speech { max-width: 80%; margin: 0 auto 8px; background: #fff8ee; border: 2px solid #e0cdb0; border-radius: 16px; padding: 6px 13px; font-size: 0.86rem; color: #6b5336; text-align: center; line-height: 1.4; box-shadow: 2px 2px 0 rgba(0,0,0,0.06); }
+        .cust-speech i { color: #a58c6a; font-size: 0.8rem; }
+        .cust-speech:empty { display: none; }
         /* [신규] 말풍선 발음 버튼 — 항상 노출, speak() 재사용으로 현재 단어 발음 */
         .bubble-speak-btn { position: absolute; top: -12px; right: -12px; width: 30px; height: 30px; border-radius: 50%; background: var(--gold); border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.3); font-size: 0.95rem; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; pointer-events: auto; }
         .bubble-speak-btn:active { transform: scale(0.9); }
@@ -1970,6 +1973,7 @@ function selectDifficulty(mode) {
     game.difficulty = mode; // [버그수정] 난이도 저장 → 점수 계산(Easy100/Normal150/Hard200)에 반영
     document.getElementById('difficulty-screen').classList.add('hidden');
     game.start(false);
+    game.updateCafeBg();
 }
 
 // ==========================================
@@ -2104,7 +2108,7 @@ const CHAR_DEX = [
       story:'"…나쁘지 않군. 하지만 진짜 실력은 단어로 증명하는 법이지. 자, 내 주문을 맞춰보게."',
       spec:{ skin:'#e9c39a', skinShade:'#d6ab7e', hair:'#e8e8ef', hairStyle:'long', shirt:'#2c3e50', shirtDark:'#1a252f', mood:'neutral', brow:'#9a9aa6',
         front:`<g><path d="M24 250 C24 200 50 176 100 176 C150 176 176 200 176 250 Z" fill="#37474f"/><rect x="70" y="176" width="60" height="74" fill="#eceff1" opacity=".9"/><path d="M70 176 L100 196 L130 176 Z" fill="#cfd8dc"/><circle cx="100" cy="214" r="9" fill="none" stroke="#8a6d3b" stroke-width="3"/><path d="M100 209 q4 5 0 10 q-4 -5 0 -10" fill="#8a6d3b"/><path d="M118 86 q14 -2 18 10" stroke="#cfa84a" stroke-width="3" fill="none"/></g>` },
-      faceScar:true },
+      },
     { id:'m_luna', name:'루나', kind:'main', rarity:'legendary', tags:['vip'], img:'chars/luna.png',
       title:'달빛 마녀 단골',
       desc:'보름달이 뜨는 밤에만 나타나는 신비로운 단골. 그녀의 주문은 늘 어렵지만, 맞히면 마법 같은 행운이 따라온다.',
@@ -2117,6 +2121,21 @@ const CHAR_DEX = [
       story:'"여기선… 그냥 손님이어도 괜찮은 거죠? 자, 제 주문 맞춰주실래요?"' },
 ];
 const CHAR_BY_ID = {}; CHAR_DEX.forEach(c => CHAR_BY_ID[c.id] = c);
+// ===== 일반 손님 성격 대사 (order:입장 · ok:정답 · miss:오답 · bye:작별) — 아바타 위 말풍선 =====
+const CUSTOMER_DIALOGUE = {
+    c_yujin: { order:["…살려주세요. 늘 마시던 걸로, 진하게.", "어제 새벽 세 시에 퇴근했어요. 이 한 잔에 오늘을 겁니다.", "말은 좀 이따가요. 아직 눈이 안 떠졌어요.", "출근길에 여기 불빛 보이면 그래도 좀 살 것 같아요.", "아이스로 주세요. 정신 좀 차리게요."], ok:["크— 이제 좀 사람 같네요. 감사합니다.", "이 맛이에요. 오늘 하루는 버티겠어요.", "역시 여기 오길 잘했다."], miss:["어… 그거 마시면 저 더 졸려요.", "사장님, 저 지금 카페인이 급해요. 다시 부탁해요.", "음, 땡. 한 번만 더요."], bye:["잘 마셨어요. 내일도 살아서 올게요."] },
+    c_minjun: { order:["안녕하세요. 오늘도 조용한 자리 하나면 됩니다.", "바쁘시면 천천히 주셔도 괜찮아요.", "늘 그렇듯 무난한 걸로 부탁드릴게요.", "창가 자리 비었나요? 책 좀 보려고요."], ok:["정확하시네요. 그래서 믿고 옵니다.", "깔끔합니다. 잘 마실게요.", "오늘도 빈틈이 없으시네요."], miss:["음, 제가 주문한 건 이게 아닌 것 같아요.", "괜찮습니다. 한 번만 다시 확인 부탁드려요.", "천천히 하셔도 돼요. 정확한 게 중요하니까요."] },
+    c_haein: { order:["사장님 안녕하세요. 저 시험 망해서 당 충전하러 왔어요.", "제일 단 걸로요. 지금 머리에 당이 급해서요.", "공부하다 잠깐 도망쳐 나왔어요. 비밀이에요.", "여기 와이파이가 좋아서 또 왔어요.", "오늘 추천 뭐예요? 한번 모험해볼래요."], ok:["오, 이거 제 취향이에요. 좀 살 것 같아요.", "역시 이 맛이지. 감사합니다.", "별점 다섯 개요. 리뷰 남길게요."], miss:["엥, 이건 제가 시킨 게 아닌데요.", "삐, 오답. 사장님 오늘 컨디션 어때요?", "괜찮아요, 다시 가보죠."], bye:["잘 먹었습니다. 저 이제 진짜 공부하러 가요, 아마도요."] },
+    c_doyun: { order:["…뭐, 늘 먹던 거.", "새로 나온 거 있어요? 요즘 느낌 나는 걸로.", "조용하네요. 좋다.", "음악 취향 괜찮으시네요. …그거 주세요."], ok:["오. …좋네요. <i>(엄지 척)</i>", "역시 여기. <i>(짧게 끄덕)</i>", "이건 좀 찍어둬야겠는데."], miss:["…이건 아닌 듯.", "흠. 다시요.", "뭐, 그럴 수도 있죠. <i>(심드렁)</i>"] },
+    c_grandma: { order:["아이고 사장님, 오늘도 수고가 많어. 나는 늘 먹던 걸로 한 잔.", "밥은 먹고 일하는 겨? 젊을 때 몸 챙겨야 혀.", "따끈한 걸로 주게. 날이 쌀쌀허니.", "우리 손주도 이런 델 좋아하는디."], ok:["그래그래, 이 맛이여. 손맛이 좋구먼.", "복 받을 겨. 장사 잘 되겄어.", "아이고 이뻐라. 자주 올게이."], miss:["어잉? 이건 내가 시킨 게 아닌디.", "천천히 혀도 돼. 늙은이 안 급햐.", "괜찮여 괜찮여, 사람이 그럴 수도 있지."], bye:["잘 마셨네. 감기 조심허고."] },
+    c_hipster: { order:["오늘 원두 뭐예요? 에티오피아면 좋겠는데.", "산미 살아있는 걸로요. 설탕은 빼고요.", "핸드드립 느낌 나는 거 있어요? 분위기가 중요하잖아요.", "플레이리스트 누가 골랐어요? 취향 통하네요."], ok:["오, 향이 살아있네요. 인정.", "이 밸런스, 사장님 좀 하시는데요.", "여기 단골 확정입니다."], miss:["음, 이건 제 취향은 아니라서요.", "바디감이 좀 아쉬운데, 다시 가볼까요?", "실패도 하나의 맛이죠. 재도전."] },
+    c_seoa: { order:["안녕하세요. 오늘도 이 자리에 앉아도 될까요?", "따뜻한 걸로요. 사장님이 골라주시면 늘 좋더라고요.", "여기 앉아 있으면 마음이 가라앉아서 좋아요.", "바쁘시죠? 저는 천천히 기다릴게요."], ok:["역시. 정성 들인 게 느껴져요.", "잘 마실게요. 마음이 좀 편해졌어요.", "이 맛, 기억해 둘게요."], miss:["어머, 이건 제가 부탁한 게 아닌 것 같아요.", "괜찮아요, 천천히요. 믿고 기다릴게요.", "조금 아쉽지만, 다시 한 번 부탁드려요."] },
+    c_cat: { order:["나비가 카운터에 폴짝 올라 도도하게 앉는다. \"냐옹.\"<br><i>(늘 먹던 거, 알지? 하는 눈빛)</i>", "\"…냐.\"<br><i>(생선맛 라떼는 없냐고 묻는 표정)</i>", "나비가 꼬리로 메뉴판을 툭 친다.<br><i>(추천은 됐고 빨리 달라는 눈치)</i>", "나비가 앞발을 핥다 말고 사장님을 빤히 본다.<br><i>(주문은 눈으로 끝냈다는 태도)</i>"], ok:["\"갸르릉.\"<br><i>(만족스러운지 눈을 지그시 감는다)</i>", "나비가 앞발로 사장님 손등을 톡 건드린다.<br><i>(합격이라는 뜻인 듯)</i>", "나비가 꼬리를 천천히 흔든다.<br><i>(이 정도면 봐준다는 눈치)</i>"], miss:["\"냐앙.\"<br><i>(홱 고개를 돌린다. 이게 아니라는 항의)</i>", "나비가 꼬리를 탁탁 친다.<br><i>(불만족. 다시 하라는 신호)</i>", "나비가 카운터에서 한 발 물러난다.<br><i>(실망했다는 무언의 시위)</i>"] },
+    c_dog: { order:["초코가 꼬리를 힘차게 흔든다. \"멍! 멍멍!\"<br><i>(오늘도 왔어요, 뭐든 좋아요)</i>", "\"왈!\"<br><i>(사장님만 보면 신이 나는 강아지)</i>", "초코가 앞발을 카운터에 올리고 눈을 반짝인다.<br><i>(간식… 아니 음료 주세요)</i>", "초코가 사장님 주위를 한 바퀴 돈다.<br><i>(빨리 주문하고 싶어 안달난 눈치)</i>"], ok:["\"멍멍! 왈왈!\"<br><i>(제자리에서 뱅글뱅글 돈다. 대만족)</i>", "초코가 사장님 손을 핥으려 든다.<br><i>(세상 최고라는 표현)</i>", "초코가 배를 보이고 벌러덩 눕는다.<br><i>(완전히 마음을 놓았다는 뜻)</i>"], miss:["초코가 고개를 갸웃 기울인다. \"…끼잉?\"<br><i>(이게 맞나요, 하는 순진한 표정)</i>", "\"왈…\"<br><i>(살짝 시무룩. 그래도 꼬리는 흔든다)</i>", "초코가 앞발로 카운터를 톡톡 친다.<br><i>(한 번 더 해봐요, 하는 재촉)</i>"] },
+    c_rush: { order:["빨리빨리요! 나 시간 없어요, 3초!", "줄이 왜 이렇게 길어— 아 됐고, 제일 빨리 나오는 거요!", "손 좀 빨리 움직여 봐요! 회의 늦었다고요!", "고민할 시간에 벌써 나왔어야죠! 얼른요!"], ok:["그래 이거지! 봐요, 하면 되잖아. …고마워요. <i>(후다닥)</i>", "오케이 통과! 역시 빠른 게 최고예요.", "이 속도예요. 다음에도 이렇게 부탁해요."], miss:["아 그거 아니라니까요! 시간 없다고요!", "땡! 다시요, 빨리요!", "으아 답답해— 침착하고 한 번 더요."], bye:["갑니다! 다음엔 더 빨리 부탁해요. <i>(문 쾅)</i>"] },
+    c_vip: { order:["좋은 저녁이오. 오늘은 철자 하나까지 완벽한 한 잔을 청하지.", "정성은 스펠링에서 드러나는 법이라오.", "서두를 것 없네. 품격은 정확함에서 나오니.", "자, 실력을 보여주시게. 한 글자도 틀림없이."], ok:["브라보. 한 치의 오차도 없군.", "완벽하오. 이런 곳이 이 거리의 자랑이지.", "훌륭해. 이 정도면 어디 내놓아도 되겠소."], miss:["이런, 철자 하나가 어긋났군. 신사는 다시 시도하는 법이오.", "아쉽소. 허나 실망은 이르지. 자, 다시.", "완벽으로 가는 길엔 오타도 있는 법. 침착하게."], bye:["오늘도 즐거웠소. 그대의 카페에 번영이 있기를. <i>(모자를 살짝 들어 인사)</i>"] }
+};
+function custLine(id, kind){ var d=CUSTOMER_DIALOGUE[id]; if(!d||!d[kind]||!d[kind].length) return ''; var a=d[kind]; return a[Math.floor(Math.random()*a.length)]; }
 
 // ===== 수집 카드(난이도 마스터 보상) — 기존 캐릭터의 '다른 버전' 일러스트 =====
 // 난이도(easy/normal/hard)의 단어를 모두 졸업하면 그 티어 3장이 한 번에 해금된다.
@@ -2129,7 +2148,7 @@ const CARD_DEX = [
     { id:'seoa_v3', tier:'easy',   charId:'c_seoa', name:'서아 · 카페 알바',   img:'chars/seoa_v3.png',
       desc:'앞치마를 두르고 트레이를 든 서아. "오늘은 제가 도와드릴게요!"' },
     { id:'roa_v2',  tier:'easy',   charId:'m_roa',  name:'로아 · 캐주얼',     img:'chars/roa_v2.png',
-      desc:'검을 내려놓은 로아의 오프 듀티. "…이런 날도 나쁘지 않군."' },
+      desc:'앞치마를 벗은 로아의 오프 듀티. "…이런 날도 나쁘지 않군."' },
     // Normal — 격식과 계절
     { id:'seoa_v2', tier:'normal', charId:'c_seoa', name:'서아 · 한복',       img:'chars/seoa_v2.png',
       desc:'고운 한복을 차려입은 서아. "명절이라 한번 입어봤어요. 어때요?"' },
@@ -2150,102 +2169,76 @@ CARD_DEX.forEach(c => { (CARDS_BY_TIER[c.tier] || (CARDS_BY_TIER[c.tier]=[])).pu
 
 // ===== 호감도(메인 캐릭터 유대) — 손님으로 응대할수록 쌓이고, 막 해금 시 스토리+보상 =====
 const AFFECTION_MAX = 100;
-const AFFECTION_TIERS = [30, 60, 100];        // 막 해금 호감도
-const AFFECTION_REWARD = [500, 1500, 5000];   // 막 해금 보상(G)
+const AFFECTION_TIERS = [20, 40, 60, 80, 100];       // 5막 해금 호감도
+const AFFECTION_REWARD = [300, 700, 1500, 3000, 5000]; // 막 해금 보상(G)
 const AFFECTION_STORY = {
     m_roa: [
-        '로아가 말없이 잔을 비우고 천천히 고개를 끄덕였다.<br>"…제법이군. 며칠 더 지켜보지."',
-        '단골이 된 로아가 처음으로 옅게 웃었다.<br>"자네 커피엔 단어가 살아 있어. 떠돌던 내가 머물고 싶어질 만큼."',
-        { m:'로아가 낡은 비법 노트를 카운터에 올려두었다.<br>"이 카페가 내 긴 여정의 끝이 될 줄이야. …좋은 맞수를 뒀군, 사장."',
-          f:'로아가 낡은 비법 노트를 카운터에 올려두고, 잠시 자네를 바라보았다.<br>"긴 여정의 끝에 자네가 있을 줄이야. …이제, 떠나고 싶지 않군."' }
+        "앞치마를 어깨에 걸친 낯선 남자가 커피를 한 모금 마시고 멈췄다.<br>\"…나쁘진 않군.\" 그는 무심하게, 그러나 다시 찾아오기 시작했다.",
+        "리코가 그를 알아보고 소란을 피우자, 로아가 마지못해 이름을 밝혔다.<br>\"로아야. 이렇게 알려질 줄은 몰랐고.\"",
+        "로아가 처음으로 자기 이야기를 꺼냈다. 세 번 우승하고 맛을 잃었다는 것.<br>\"여기 커피는 완벽하진 않아. 그런데 맛이 나.\"",
+        "그라인드 하임에서 4승을 위해 돌아오라는 전갈이 왔다. 로아가 처음으로 흔들린다.<br>\"가기 싫어. 근데 안 가기도 그래.\"",
+        { m:"로아가 부름을 거절하고 골목에 남았다. 앞치마를 스스로 목에 두르며.<br>\"이제는 맛을 느끼면서 내리고 싶어. …내일 또 겨루지.\"",
+          f:"로아가 부름을 거절하고 골목에 남았다. 남은 커피를 반쯤 내밀며.<br>\"혼자 마시는 건 이제 그만하려고. 내일도, 같은 시간에 올게.\"" }
     ],
     m_luna: [
-        '보름달 아래, 루나가 잔 너머로 속삭였다.<br>"네 단어엔 달빛이 깃들어 있구나. 흥미로워."',
-        '루나가 오래된 마법책을 살며시 펼쳐 보였다.<br>"잊힌 단어를 되살리는 복습의 마법… 너에게만 알려주지."',
-        '루나가 달무리 속에서 부드럽게 미소 지었다.<br>"보름이 아닌 밤에도… 너를 보러 오게 됐어."'
+        "조명이 반 톤 내려앉고, 나이를 알 수 없는 손님이 뜨거운 라떼를 시켰다.<br>\"따뜻한 거, 오랜만이네.\"",
+        "\"루나. 그게 내 이름이야.\" 사장이 '달'이라는 뜻을 옛말로 되짚어주자,<br>그녀가 백 년 만에 처음으로 옅게 웃었다.",
+        "되찾은 단어들과 함께 백 년 전 꿈이 돌아왔다. 기억 백 년 치를 봉인에 바친 대가를.<br>\"얼굴은 안 떠오르는데, 그리운 건 남았어.\"",
+        "\"너희는 늙잖아. 나만 남고.\" 정 붙일수록 잃을 게 두려운 마음을 처음 꺼냈다.<br>\"무서워도 발이 여기로 오더라.\"",
+        { m:"마지막 조각이 돌아왔다. 봉인 직전 나눠 마신 커피의 맛과 그 얼굴이.<br>\"다시 기억하는 것도 나쁘지 않네. …요즘이 제일 빨리 가.\"",
+          f:"마지막 조각이 돌아왔다.<br>\"이번엔 배웅 말고 곁에 있을래. 네가 늙어가는 걸 끝까지 보고 싶어.\"" }
     ],
     m_sera: [
-        '변장한 세라가 구석 자리에 살그머니 앉았다.<br>"여기선 아무도 절 아이돌로 안 봐서… 그냥 손님이라 좋아요."',
-        '세라가 카페를 SNS에 올렸다. "제 최애 단어 카페"<br>덕분에 새 손님이 부쩍 늘었다!',
-        { m:'세라가 무대 의상 대신 앞치마를 집어 들고 살짝 볼을 붉혔다.<br>"여기가… 제 진짜 무대예요. 사장님 곁이라면요. 계속 와도 되죠?"',
-          f:'세라가 무대 의상 대신 앞치마를 집어 들었다.<br>"여기가… 제 진짜 \'집\'이에요. 사장님은 제 최고의 팬이자 친구예요!"' }
+        "모자를 눌러쓴 손님이 아이돌임을 들키자 극구 부인했다.<br>\"사람 잘못 보셨어요. 저 그냥 손님이에요.\"",
+        "\"…세라예요. 근데 여기선 그냥 손님이고 싶어요.\"<br>무대 밖의 자신을 처음으로 내보였다.",
+        "아무도 없는 골목에서 그냥 좋아서 부르던 노래가 자기 원점이었다고 털어놨다.<br>\"그때는 틀려도 괜찮았어요.\"",
+        "\"지금 행복해요?\" 평생 처음 받아본 질문에 세라가 답하지 못했다.<br>훈련된 무대 웃음이 처음으로 무너졌다.",
+        { m:"세라가 사장 앞에서 스스로 모자를 벗었다.<br>\"이게 진짜 제 얼굴이에요. …하나도 안 무섭네요. 돌아올 데가 여기 같아요.\"",
+          f:"세라가 모자를 벗고 다섯 살의 노래를 다시 불렀다.<br>\"틀렸다. 근데 아무렇지도 않네. …우리 이제 베프예요.\"" }
     ]
 };
 
 // ===== 메인 캐릭터 방문 대사 — 일일(그날 첫 등장)/호감 단계별 인사/응대 후 작별 =====
 // 호감 단계: low(<30) · mid(30~59) · high(>=60). 캐릭터 개성·말투 살린 오리지널 대사.
+// ===== 유대 막 해금 CG (있는 막만 표시) · 경로 assets/art =====
+const AFFECTION_CG = {
+    m_roa:  { 3:'assets/art/cg_roa_act3_burnt_tongue.jpg', 5:'assets/art/cg_roa_act5_own_apron.jpg' },
+    m_luna: { 3:'assets/art/cg_luna_guardian_war.jpg',     5:'assets/art/cg_luna_act5_memory.jpg' },
+    m_sera: { 3:'assets/art/cg_sera_five_year_song.jpg',   4:'assets/art/cg_sera_act4_happiness.jpg' },
+};
+function affCg(id, actNum){ return (AFFECTION_CG[id]||{})[actNum] || ''; }
+
+// ===== 대사 표정 스왑 (친밀 시 미소 · 오답 위로 시 부드럽게) =====
+const MAIN_FACE = {
+    m_roa:  { smile:'chars/face_roa_smile.png',  soft:'chars/face_roa_smile.png' },
+    m_luna: { smile:'chars/face_luna_smile.png', soft:'chars/face_luna_serene.png' },
+    m_sera: { smile:'chars/face_sera_real.png',  soft:'chars/face_sera_real.png' },
+};
+function faceFor(id, emo){ return (MAIN_FACE[id]||{})[emo] || ''; }
+
 const MAIN_DIALOGUE = {
     m_roa: {
-        daily: [
-            '"…또 왔군. 이 거리 끝에서 자네 원두 향이 나더군."',
-            '"오늘은 비가 오려나. 그런 날의 커피가 가장 깊지."',
-            '"왕실에서도 못 찾던 맛을, 이런 골목에서 만나다니."',
-            '"말은 됐네. 한 잔이면 충분해."',
-            '"여행 가방은 늘 문 앞에 둬. 언제 떠날지 모르니."',
-            '"…좋은 아침이군. 자네, 손이 정직해."'
-        ],
-        greet: {
-            low: [ '"실력부터 보지. 주문을 맞춰보게."', '"이름은 됐네. 커피로 말하지."', '"기대는 안 해. 증명해보게."' ],
-            mid: [ '"자네라면… 이번엔 좀 더 까다로운 걸로."', '"왔네. 늘 마시던 거, 알지?"', '"손님이 아니라 동료에게 묻듯 주문하지."' ],
-            high:{ m:[ '"자네 가게는 묘하게 발이 떨어지질 않아."', '"오늘 주문은 내 비법 한 줄. 잘 받아 적게."', '"좋은 맞수를 둔 기분이군. 자, 한 잔."' ],
-                   f:[ '"…자네 곁이라 그런가, 발이 떨어지질 않는군."', '"떠돌이 검객이 머물 이유가 생겼어. …자네 말이야."', '"이 한 잔을 자네와 나누려고 먼 길을 왔네."' ] }
-        },
-        served: {
-            low: [ '로아가 잔을 비우곤 짧게 끄덕였다. "…합격."', '"나쁘지 않아." 그는 그 말만 남기고 돌아섰다.' ],
-            mid: [ '"역시 자네군." 로아의 입꼬리가 살짝 올라갔다.', '"다음엔 더 어려운 걸 가져오지." 즐거운 듯한 목소리였다.' ],
-            high:{ m:[ '"완벽에 가까워. 좋은 맞수야." 로아가 처음으로 환히 웃었다.', '"또 오겠네. 자네 커피 때문에." 그가 가방을 내려놓았다.' ],
-                   f:[ '"…자네 곁이면, 여정을 멈춰도 좋겠어." 로아가 나직이 웃었다.', '"이 미소, 자네에게만 보이는 거야." 그가 슬며시 가방을 내려놓았다.' ] }
-        }
+        daily: ["왔어.", "오늘 원두 바꿨어?", "추출 시간 늘렸구나. 맛이 달라.", "손님 없네. 이 골목은 조용해서 좋아.", "주문할게. 짧게.", "커피 향 따라왔어. 이유는 그거면 충분하지.", "오늘은 말 없이 마셔도 돼?", "걸으면서 단어 외워. 몸이 먼저 기억하거든.", "이 자리 편해. 그냥 둬.", "또 왔어.", "어젯밤 비 소리에 잠 못 잤어. 진하게 부탁해.", "'Persist' — 버틴다는 말. 오늘 외웠어. 어울리는 하루였고.", "이상하게 여기로 발이 먼저 와.", "원두 산지 바꿨어? 미세하게 달라.", "'Loyal' — 변함없다는 뜻. 오래 잊고 있던 말이야.", "아침엔 여기 혼자더라. 그 시간이 좋아.", "다른 카페도 많이 다녔어. 여기만한 데는 없더군.", "오늘 날씨 괜찮네. 별말은 아니고.", "오늘은 좀 일찍 왔어.", "'Anchor' — 닻이라는 말. 여기 오면 마음이 좀 가라앉거든.", "꿈에서 여기 카운터에 서 있었어. 이상한 꿈이야.", "오늘은 마음이 편해. 이유는 굳이 안 찾을래.", "며칠 비웠는데 여기는 그대로더라. 다행이야.", "'Warm' — 따뜻하다는 말. 요즘 자주 쓰게 돼.", "여기만한 원두 없어. 이건 확실해.", "기분 좋아. 왜인지 알 것 같은데, 말로는 안 할래.", "왔어. 오늘은 뭐 가르쳐 줄 거야?"],
+        greet: { low:["실력 보지. 주문해봐.", "기대는 안 해. 일단 해봐.", "이름은 됐고. 커피로 하지.", "짧게. 뭐 마실 거야?", "바리스타는 보는 눈이 있거든. 단어도 그래."], mid:["이번엔 좀 어렵게 가지.", "왔네. 늘 마시던 거 알지?", "동료한테 묻듯이 편하게 해.", "실력 늘었어. 더 어려운 걸로.", "한 번에 맞춰봐. 자네라면."], high:{ m:["좋은 상대 만난 기분이야. 시작하지.", "오늘은 안 봐줘. 제대로 받아.", "틀려도 여기선 뭐라 안 해. 편하게.", "자네 실력, 어디까지 왔나 보자.", "한 잔 걸까. 지는 쪽이 내일 원두 사기."], f:["오늘은 발이 안 떼어지네. …커피나 내려줘.", "오늘은 좀 앉았다 갈까. 자, 한 잔.", "멀리서 온 게 아깝지 않아.", "일하는 모습 보러 왔어. 커피 내리는 손이 정직하거든.", "옆에서 조용히 마실게. 신경 쓰지 말고."] } },
+        served: { low:["\"합격.\" 잔을 내려놓으며 끄덕였다.", "\"나쁘지 않아.\" 그게 전부였다.", "\"한 수 배웠어.\" 향을 맡으며 나갔다.", "\"다음엔 더 어렵게 해봐.\""], mid:["\"역시 자네야.\" 입꼬리가 살짝 올라갔다.", "\"내일 또 와도 돼?\"", "\"이 맛, 그리울 것 같아.\" 문가에서 돌아보며.", "\"다음엔 더 어려운 거 가져오지.\""], high:{ m:["\"완벽에 가까워. 분하지만 인정할게.\"", "\"오늘은 내가 한 수 접지.\" 잔을 비우고 일어섰다.", "\"내일 또 겨루자.\" 문 앞에서 돌아보며.", "\"고마워. 오늘도.\" 짧지만 진심이었다."], f:["\"또 와야겠어.\" 문 앞에서 잠깐 돌아보며.", "\"…잘 마셨어.\" 잔을 조심스럽게 내려놓았다.", "\"오늘 하루 좋았어. 이유는 알 것 같아.\" 낮게 말하고 나갔다.", "\"고마워.\" 그게 전부였는데 충분했다."] } }
     },
     m_luna: {
-        daily: [
-            '"보름달이 곱구나. 그래서 또 너를 찾아왔단다."',
-            '"백 년을 살아도 이 향만은 질리질 않아."',
-            '"인간의 밤은 어찌 이리 짧은지… 그래도 곁에 있으마."',
-            '"별이 좋은 밤이야. 주문 하나 들어주겠니?"',
-            '"네 가게의 불빛은 멀리서도 따뜻하더구나."',
-            '"늙지 않는 건 외로운 일이란다. …오늘은 덜 외롭네."'
-        ],
-        greet: {
-            low: [ '"낯선 손이로구나. 어디 솜씨를 보자꾸나."', '"마녀의 주문은 쉽지 않아. 각오는 되었니?"', '"후훗… 너무 떨지 마렴. 천천히 답하면 돼."' ],
-            mid: [ '"이젠 네 손이 익숙하구나. 자, 오늘의 주문이야."', '"네게라면 조금 어려운 마법을 청해도 되겠지."', '"달빛이 네 잔에 잘 어울려. 부탁 하나 하마."' ],
-            high:[ '"보름이 아니어도… 네가 그리워 와버렸단다."', '"내 긴 시간 속, 네가 가장 환한 밤이야."', '"오래된 주문을 하나 나눠주마. 잘 들으렴."' ]
-        },
-        served: {
-            low: [ '루나가 만족스레 눈을 감았다. "제법이구나."', '"달이 너를 어여삐 보겠어." 그녀가 속삭였다.' ],
-            mid: [ '"역시 너야." 루나의 미소에 달빛이 어렸다.', '"이 맛이 그리워 또 올 것 같구나."' ],
-            high:[ '"네 곁의 시간만은… 짧지 않았으면 해." 루나가 나직이 말했다.', '"고맙다. 백 년 만에 머물고 싶은 곳을 찾았어."' ]
-        }
+        daily: ["달 보러 나왔다가 불빛 보고 들어왔어.", "뜨거운 걸로. 요샌 다들 차게 마시더라.", "백 년을 마셨는데 이 향은 아직 안 질려.", "밤이 왜 이리 짧아. 눈 감았다 뜨면 아침이야.", "이 골목, 백 년 전이랑 비슷해. 사람만 다 바뀌었고.", "오늘은 혼자 있기 싫었어. 이유는 없어.", "달이 구름에 가렸네. 사라진 건 아니고.", "오늘 뽑은 단어가 'Endure'래. 견딘다는 뜻. …나 얘기 같네.", "문 열려 있길래 들어왔어.", "주문 하나 받아줘.", "또 왔어.", "어젯밤에 기억 하나 더 돌아왔어. 숲 이름이었어.", "오늘은 향이 유독 세게 나더라. 내가 기다렸나 봐.", "'Cherish' — 아낀다는 말. 오늘 이 단어가 마음에 들어.", "애들 노는 소리 들었어. 백 년 전이랑 똑같아서 잠깐 멈췄어.", "여기 불빛 있으면 골목 걷는 게 덜 심심해.", "오늘은 기억이 좀 선명해. 나쁘지 않아.", "꽃이 작년 그 자리에 또 폈어. 꽃은 기억이 길더라.", "잠이 없어서 달은 매일 봐. 그 정돈 특권이지.", "내일이 조금 기대돼. 어제까진 없던 기분이야.", "오늘은 좀 일찍 왔어.", "기억이 또 돌아왔어. 아무래도 네 커피 때문인 것 같아.", "오늘 달 밝다. 좋은 날이야.", "백 년 중에 요즘이 제일 빨리 가. 지루하지가 않아서.", "꿈에 네가 나왔어. 산 사람이 꿈에 나온 거 오랜만이야.", "마법 없이도 여긴 충분히 따뜻해.", "'Linger' — 자리를 안 뜨고 머문다는 말. 요즘 내가 그래.", "오래 산 것도 좋은 점이 생겼어. 계속 있어도 된다는 거.", "네 얼굴 보면 기억이 잘 돌아와. 이유는 나도 몰라.", "오늘 밤만은 달이 안 졌으면 좋겠어."],
+        greet: { low:["솜씨 좀 보자.", "천천히 해. 나 안 도망가.", "나는 백 년도 기다렸어. 이 정돈 얼마든지.", "단어에 힘이 있어. 오늘 그걸 보여줘봐.", "뜻만 말할게. 정확한 말은 네가 찾아."], mid:["손이 익숙해졌네. 오늘 주문이야.", "너라면 좀 어렵게 시켜도 되겠지.", "부탁 하나 할게.", "실력 올랐어. 더 어려운 걸로 줘.", "느긋하게 가. 달도 안 서둘러."], high:{ m:["오늘은 달보다 여기가 먼저 보이더라. 시작하자.", "긴 시간 살면서 이렇게 편한 상대 드물어. 주문 줄게.", "맞힐 거 아는데도 지켜보는 게 재밌어. 가자."], f:["오늘은 좀 일찍 왔어. …딱히 이유는 없고. 주문할게.", "네 옆은 시간이 잘 가. 그래서 자주 와. 시작하자.", "편한 데가 생겼어. 여기. 오늘도 부탁해."] } },
+        served: { low:["\"제법이야.\" 눈을 감으며.", "\"이 맛, 충분히 좋아.\" 잔을 내려놓으며.", "\"처음엔 다들 이래. 잘하고 있어.\"", "\"단어가 살아났어. 그거면 됐어.\""], mid:["\"역시 너야.\"", "\"이 맛 그리워서 또 오게 생겼어.\"", "\"고마워. 기억 한 조각 더 돌아온 것 같아.\" 나직이.", "\"단어가 제대로 울렸어. 기분 좋다.\""], high:{ m:["\"네 옆 시간은 유독 빨리 가. …그게 나쁘지 않아.\" 일어서며.", "\"또 올게. 맞수 하나쯤 있어야 재밌지.\"", "\"오늘 이 잔, 오래 기억할 것 같아.\""], f:["\"머물고 싶은 데 찾은 게 오랜만이야. 고마워.\" 나직이.", "\"또 올게. 네가 여기 있는 동안은.\" 살며시.", "\"이 커피, 오늘 밤 꿈에 나오겠어.\""] } }
     },
     m_sera: {
-        daily: [
-            '"안녕하세요! …아, 모자는 안 벗을게요. 비밀이에요, 쉿!"',
-            '"오늘 스케줄 몰래 빠져나왔어요. 헤헤."',
-            '"여기선 아무도 절 안 알아봐서 좋아요."',
-            '"무대보다 이 카운터가 더 떨려요. 왜죠?"',
-            '"사장님, 저 오늘 좀 지쳤어요. …한 잔 부탁해요."',
-            '"제 진짜 이름, 언젠가 알려드릴까 봐요!"'
-        ],
-        greet: {
-            low: [ '"저… 그냥 평범한 손님이에요. 주문할게요!"', '"여기 단어 카페 맞죠? 한번 해볼래요."', '"조금 긴장돼요. 잘 부탁드려요!"' ],
-            mid: [ '"사장님 보러 왔… 아니, 커피 마시러 왔어요!"', '"오늘도 저 알아봐 주실 거죠? 주문이요!"', '"여기 오면 마음이 놓여요. 자, 문제 주세요."' ],
-            high:{ m:[ '"무대 끝나자마자 달려왔어요. …사장님 보고 싶어서요."', '"여기가 제 진짜 \'집\' 같아요. …사장님이 있어서요, 헤헤."', '"사장님한테만은 변장 안 해도 될 것 같아요."' ],
-                   f:[ '"사장님 카페 오면 마음이 놓여요. 저 여기 완전 팬이에요!"', '"여기가 제 진짜 \'집\' 같아요. 사장님 덕분이에요!"', '"사장님한테만은 변장 안 해도 편해요. 좋은 친구 같아서요!"' ] }
-        },
-        served: {
-            low: [ '세라가 환하게 웃었다. "와, 역시 잘하시네요!"', '"또 와도 돼요? …농담 아니에요!" 그녀가 손을 흔들었다.' ],
-            mid: [ '"역시 사장님!" 세라의 눈이 반짝였다.', '"오늘 하루가 다 풀렸어요. 고마워요!"' ],
-            high:{ m:[ '"여기 있으면 외롭지 않아요." 세라가 살며시 볼을 붉혔다.', '"제 최고의 무대는 여기예요. 다음에 또 올게요!"' ],
-                   f:[ '"사장님이랑 있으면 든든해요!" 세라가 밝게 웃었다.', '"제 최고의 무대는 여기예요. 또 놀러 올게요!"' ] }
-        }
+        daily: ["안녕하세요. 모자는 그냥 쓰고 있을게요.", "스케줄 사이에 잠깐 빠져나왔어요.", "여긴 아무도 저를 몰라서 좋네요.", "카운터 앞이 무대보다 더 떨려요. 이상하죠.", "오늘 좀 지쳤어요. 한 잔 부탁해요.", "진짜 이름은 다음에 알려드릴게요.", "조용하고 아늑하네요. 이런 데 오랜만이에요.", "공연 끝나면 자꾸 여기가 생각나요.", "변장 티 많이 나요? 저는 완벽한 줄 알았는데.", "메뉴판 글씨 예쁘다.", "왔어요.", "인터뷰 하나 하고 왔는데, 여기 오니까 좀 풀리네요.", "'Comfort'... 편안함이란 뜻이래요. 이 카페가 딱 그거예요.", "어젯밤 꿈에 여기가 나왔어요. 신기하죠.", "팬 사인회에서 '진짜 세라는 어떤 사람이냐'고 묻던데, 대답을 못 했어요.", "5분만 일찍 끝났어도 더 앉아 있었을 텐데.", "사장님은 제가 피곤한 거 금방 알아채더라고요.", "제 노래에 'shelter'라는 말이 있어요. 비 피하는 곳, 안식처요. 딱 여기 같은.", "비 오는 날 여기 오면 마음이 놓여요.", "또 왔어요. 저 자주 오죠?", "오늘은 좀 일찍 왔어요.", "무대에서 웃는데 진짜 웃음이 나오더라고요. 오랜만에.", "매일 와도 돼요? ...농담 아니에요.", "가사 한 줄이 여기 앉아 있다가 완성됐어요.", "매니저한테 단골 카페 생겼다고 했어요. 어디냐곤 안 물어봐서 다행이었죠.", "요즘 그냥 세라로 있는 시간이 늘어난 것 같아요.", "무대 힘들 때 여기 커피 생각하면 좀 버텨져요.", "사장님 앞에선 변장 안 해도 되겠다 싶어요.", "여기 있을 때만큼은 그냥 세라예요.", "'행복'이 이런 건가, 요즘 가끔 생각해요."],
+        greet: { low:["그냥 손님이에요. 주문 해볼게요.", "여기 단어 내주는 카페 맞죠? 해볼게요.", "조금 긴장되네요. 잘 부탁해요.", "어렵진 않겠죠?", "믿고 한번 해볼게요."], mid:["보러... 아니, 커피 마시러 왔어요.", "오늘도 잘 부탁해요.", "여기 오면 마음이 놓여요. 단어 주세요.", "오늘은 어떤 단어일까요.", "사장님 앞에선 이상하게 안 떨려요."], high:{ m:["무대 끝나고 바로 왔어요.", "여기 오면 집에 온 것 같아요.", "사장님한텐 변장 안 해도 되겠어요.", "오늘도 한 잔, 그리고 단어 하나요.", "어떤 단어든 괜찮아요. 여기니까요."], f:["내 친구 사장님! 단어 주세요.", "여기 오면 마음이 탁 놓여요.", "변장 안 하고 왔어요. 친구 사이에 뭘요.", "오늘도 잘 부탁해, 사장님.", "같이 풀어요. 우리 팀이잖아요."] } },
+        served: { low:["\"역시 잘 내리시네요.\" 세라가 웃었다.", "\"또 와도 되죠?\" 손을 살짝 흔들며.", "\"고마워요.\" 모자챙을 고쳐 쓰고 나갔다.", "\"다음엔 더 어려운 걸로 주세요.\" 씩씩하게."], mid:["\"이 맛이에요.\" 잔을 두 손으로 감쌌다.", "\"오늘 하루가 다 풀렸어요.\"", "\"또 올게요. 빠르면 내일.\" 밝게 웃으며 나갔다.", "\"덕분에 힘내서 무대 서요.\" 문가에서 돌아보며."], high:{ m:["\"여기 있으면 혼자란 생각이 안 들어요.\" 작게 웃었다.", "\"내일 또 올게요. 이젠 안 물어봐도 되죠?\"", "\"잘 마셨어요.\" 조용히 인사하고 나갔다.", "\"돌아갈 데가 여기 같아요.\" 문가에서 한 번 돌아보며."], f:["\"역시 내 친구.\" 어깨를 툭 치고 웃었다.", "\"또 놀러 올게. 다음엔 수다도 떨자.\"", "\"고마워.\" 짧게, 하지만 진심으로.", "\"내일 또 보자.\" 문가에서 손 흔들며."] } }
     }
 };
 
 // ===== 첫 만남 대사(#8) — 그 캐릭터를 처음 만난 순간에만. 이름은 아직 밝히지 않음(???) =====
 const MAIN_FIRSTMEET = {
-    m_roa:  '낡은 여행 가방을 든 손님이 문가에 멈춰 섰다. 검객 같은 눈매다.<br>"…이 골목 끝에서 좋은 원두 향이 나더군. 이름은 됐네. 실력부터 보지."',
-    m_luna: '보름달 아래, 검은 로브의 여인이 소리 없이 들어섰다.<br>"후훗… 재미있는 가게로구나. 내 주문을 맞혀 보렴. 이름은… 그 다음에 알려주마."',
-    m_sera: '모자를 깊이 눌러쓴 손님이 조심스레 문을 열었다.<br>"저… 여기 조용해서 좋네요. 저는 그냥… 평범한 손님이에요. (설마 못 알아보겠지…?)"'
+    m_roa: "앞치마를 어깨에 걸친 낯선 남자가 문가에 멈춰 섰다.<br>\"…이 골목 끝에서 좋은 원두 향이 나더군. 이름은 됐고. 실력부터 보지.\"",
+    m_luna: "조명이 반 톤 내려앉는다. 나이를 가늠할 수 없는 손님이 창밖 달을 오래 보다 돌아섰다.<br>\"라떼 하나. …뜨겁게. 요샌 다들 차게 마시더라. 이름은, 그 다음에.\"",
+    m_sera: "모자를 깊이 눌러쓴 손님이 조심스레 문을 열었다.<br>\"저… 여기 조용해서 좋네요. 저는 그냥 평범한 손님이에요.\""
 };
 
 // ===== 성별/이름 공개 헬퍼 =====
@@ -2258,26 +2251,19 @@ function affStoryLine(id, i){ var v=(AFFECTION_STORY[id]||[])[i]; if(v && typeof
 function mainNameKnown(id){ return ((game && game.charActs && game.charActs[id])||0) >= 2; }
 function mainDisplayName(ch){ if(ch && ch.kind==='main' && !mainNameKnown(ch.id)) return '???'; return ch ? ch.name : ''; }
 
+// ===== 캐릭터 교차 씬 (같은 날 2인+ 방문 트리거) — 셋 겹치면 D 우선 =====
+const CROSS_SCENES = [
+  { id:'D', need:['m_roa','m_luna','m_sera'], min:80, cuts:[ {who:"m_sera", text:"어… 오늘 셋이 다 있네요."}, {who:"m_luna", text:"당기는 날이 겹쳤나 봐."}, {who:"m_roa", text:"…그런가 보군."}, {who:"m_sera", text:"이 조용한 거, 편하다. 무대에선 이런 적이 없거든요."}, {who:"m_luna", text:"옛말로 'calm'. 잔잔함. …여기가 딱 그렇지."}, {who:"m_roa", text:"말 안 해도 되는 자리, 흔치 않아."}, {who:"m_sera", text:"우리 셋, 단골 표시 하나 만들래요? 달, 잔, 별. 다 어울리잖아요."}, {who:"m_luna", text:"달은 내가 가져가고."}, {who:"m_roa", text:"…잔은 뻔하지."}, {who:"m_sera", text:"그럼 별은 저. 완성."} ] },
+  { id:'C', need:['m_roa','m_sera'], min:60, cuts:[ {who:"m_sera", text:"아, 먼저 계셨네요."}, {who:"m_roa", text:"모자, 그렇게 푹 눌러쓰면 더 티 나."}, {who:"m_sera", text:"네?"}, {who:"m_roa", text:"숨으려고 애쓰는 티가 나거든. 그냥 있어. 그게 제일 안 들켜."}, {who:"m_sera", text:"…저 아세요?"}, {who:"m_roa", text:"이름은 몰라. 도망쳐 온 얼굴은 알아."}, {who:"m_roa", text:"나도 도망쳐 왔거든."}, {who:"m_roa", text:"잘 숨어."} ] },
+  { id:'B', need:['m_luna','m_sera'], min:40, cuts:[ {who:"m_sera", text:"루나 님… 여기 자주 오세요?"}, {who:"m_luna", text:"요새는. 넌 얼굴 가려도 소용없어."}, {who:"m_sera", text:"…들켰네요."}, {who:"m_luna", text:"얼굴로 안 게 아니야. 네 노래에 옛날 가락이 섞여 있더라."}, {who:"m_luna", text:"백 년 전 자장가랑 같은 뿌리야."}, {who:"m_sera", text:"그거… 여기서만은 비밀로 해주실 수 있어요?"}, {who:"m_luna", text:"걱정 마. 잊히는 게 뭔지 나도 잘 알아."}, {who:"m_luna", text:"…백 년을 잊혔었거든."}, {who:"m_luna", text:"그러니 너 하나 못 본 척, 어렵지 않아."} ] },
+  { id:'A', need:['m_roa','m_luna'], min:40, cuts:[ {who:"m_luna", text:"너도 왔네."}, {who:"m_roa", text:"…어."}, {who:"m_luna", text:"말 안 시켜서 좋다. 다들 뭘 그렇게 묻던데."}, {who:"m_roa", text:"물을 게 있어야 묻지."}, {who:"m_luna", text:"그 커피, 온도 낮췄지. 향이 더 오래 남네."}, {who:"m_roa", text:"…알아보는군."}, {who:"m_luna", text:"이런 조용함, 옛말로 'ease'라고 했어. 편안함. …요샌 귀한 거야."} ] },
+];
+
 // 오답/시간초과 때 메인 캐릭터 위로 한마디 (30% 확률로 등장)
 const MAIN_WRONG = {
-    m_roa: [
-        '"…틀렸군. 다시."',
-        '"서두르지 말게. 단어는 달아나지 않아."',
-        '"실수는 배움의 일부일 뿐이야."',
-        '"침착하게. 다시 한 번."'
-    ],
-    m_luna: [
-        '"호호… 달도 처음엔 차지 않는단다."',
-        '"괜찮아. 틀려도 별은 여전히 빛나지."',
-        '"이번엔 아니었구나. 다시 해봐."',
-        '"마법도 처음엔 다 틀리는 법이야."'
-    ],
-    m_sera: [
-        '"에이~ 괜찮아요! 다음엔 꼭이에요!"',
-        '"저도 노래 처음엔 틀렸어요. 파이팅!!"',
-        '"아직 기회 있어요! 할 수 있어요!!"',
-        '"같이 화이팅해요~!"'
-    ]
+    m_roa: ["\"틀렸어. 다시.\"", "\"서두르지 마. 단어는 안 도망가.\"", "\"실수는 과정의 일부야.\"", "\"침착하게. 다시 봐.\"", "\"커피랑 같아. 서두르면 쓴맛만 나.\"", "\"고개 들어. 다시 한 번.\"", "\"내가 첫 추출 백 번 실패했어. 백한 번째가 처음 맛있었고.\"", "\"이건 원래 어려운 거였어. 기죽지 마.\""],
+    m_luna: ["\"달도 처음엔 안 차. 천천히 가.\"", "\"이번엔 아니었어. 다시 가자.\"", "\"괜찮아. 한 번 틀렸다고 끝나는 거 아니야.\"", "\"서두르지 마. 달도 뜨는 데 시간 걸려.\"", "\"나도 백 년 동안 틀린 게 많아. 그래서 지금이 있는 거고.\"", "\"아직 이른 거야. 그뿐이야.\"", "\"고개 들어. 별은 위를 봐야 보이잖아.\""],
+    m_sera: ["\"괜찮아요. 여긴 틀려도 되는 데잖아요.\"", "\"저도 처음엔 다 틀렸어요, 진짜로.\"", "\"한 번 더 가요. 아직 기회 있어요.\"", "\"틀린 거 아무도 안 봐요. 저밖에 없는데요.\"", "\"천천히 해요. 급할 거 없어요.\"", "\"이거 맞히면 노래 한 소절 불러드릴게요.\"", "\"다시 하면 되죠. 그게 다예요.\""]
 };
 
 // ===== 업적 아이콘(SVG) — 이모지 대체. 등급색과 무관하게 아이템 고유색 유지 =====
@@ -2938,17 +2924,13 @@ const game = {
         // 메인 캐릭터(normal/vip 모두): 대화창 먼저 → 탭 후 타이머+focus 시작
         if(charObj && charObj.kind === 'main') {
             const greet = this.currentCust.greetLine;
-            if(greet) {
-                const isVip = (type === 'vip');
-                this.showDialogue(charObj.id, greet, {
-                    duration: 99999,
-                    onDismiss: () => {
-                        this.startTimer();
-                        // VIP: 자동으로 키보드 올리지 않음 — 문제를 읽고 입력창을 직접 탭하면 그때 올라옴
-                    }
-                });
-                return;
-            }
+            const doGreet = () => {
+                if(greet){ const _gf = (mainNameKnown(charObj.id) && this.affTier(charObj.id)==='high') ? faceFor(charObj.id,'smile') : ''; this.showDialogue(charObj.id, greet, { duration: 99999, face:_gf, onDismiss: () => { this.startTimer(); } }); }
+                else { this.startTimer(); }
+            };
+            const cross = this.getDueCrossScene(charObj.id);
+            if(cross){ this.playCrossScene(cross, doGreet); return; }
+            if(greet){ doGreet(); return; }
         }
         this.startTimer();
     },
@@ -3029,20 +3011,23 @@ const game = {
         let unlocked = 0;
         for(let i=0; i<AFFECTION_TIERS.length; i++){ if(aff >= AFFECTION_TIERS[i]) unlocked = i+1; }
         if(unlocked > seen) {
-            const actIdx = unlocked - 1;                 // 가장 최근 해금된 막
+            const actIdx = seen;                 // 다음 미열람 막 하나만 재생(건너뜀 방지 · 5막 마이그레이션 안전)
             if(!this.charActs) this.charActs = {};
-            this.charActs[id] = unlocked;
+            this.charActs[id] = seen + 1;
             const reward = AFFECTION_REWARD[actIdx] || 0;
             this.wallet += reward; this.updateHUD();
             const ch = CHAR_BY_ID[id];
             const story = affStoryLine(id, actIdx);
             BgMusic.playJingle(id.replace('m_', ''));
-            // 2막(호감 60) 해금 시 비로소 이름을 밝힌다(#10) — 첫만남 직후 공개 방지
+            // 2막(호감 40) 해금 시 비로소 이름을 밝힌다(#10) — 첫만남 직후 공개 방지
             const nameReveal = (actIdx===1 && ch && ch.kind==='main')
                 ? `<div style="font-size:0.92rem;color:#7b1fa2;margin-bottom:10px;">${UI_ICON.spark} 드디어 이름을 알려주었다 — <b>${ch.name}</b></div>` : '';
+            const cg = affCg(id, actIdx+1);
+            const cgHtml = cg ? `<img src="${cg}" alt="" style="width:100%;border-radius:14px;margin-bottom:12px;box-shadow:0 4px 14px rgba(0,0,0,0.22);display:block;">` : '';
             showGameAlert(
                 `${UI_ICON.hearts} <b>${ch?ch.name:''}</b>와의 유대 ${actIdx+1}막 해금!<br><br>`+
                 nameReveal+
+                cgHtml+
                 `<span style="font-size:0.92rem;color:#444;">${story}</span><br><br>`+
                 `<img src="sprites/coin.svg" style="width:16px;height:16px;vertical-align:middle;"> +${reward.toLocaleString()}G`
             );
@@ -3050,7 +3035,7 @@ const game = {
         }
     },
     // [대사] 호감 단계 판정 + 랜덤 선택 + 그날 첫 등장(일일) 판정
-    affTier: function(id){ const a=(this.affection&&this.affection[id])||0; return a>=AFFECTION_TIERS[1]?'high':(a>=AFFECTION_TIERS[0]?'mid':'low'); },
+    affTier: function(id){ const a=(this.affection&&this.affection[id])||0; return a>=60?'high':(a>=30?'mid':'low'); }, // 대사 밴드(3단): 유대 티어 수와 분리
     pickLine: function(arr){ return (arr&&arr.length)? arr[Math.floor(Math.random()*arr.length)] : ''; },
     todayStr: function(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); },
     // 메인 손님 등장 인사: 그날 그 캐릭터 첫 등장이면 일일 대사, 아니면 호감 단계별 인사
@@ -3075,6 +3060,36 @@ const game = {
         return this.pickLine(resolveGenderLines(d.greet[this.affTier(id)]));
     },
     // 메인 손님 응대 완료 후 작별 대사(호감 단계별·성별별)
+    // [교차 씬] 같은 날 2인+ 메인 방문 시 조건 충족하는 씬 반환(없으면 null)
+    getDueCrossScene: function(currentId){
+        if(!this.mainSeenDay) return null;
+        const today = this.todayStr();
+        if(!this.crossPlayed) this.crossPlayed = {};
+        for(let s=0; s<CROSS_SCENES.length; s++){
+            const sc = CROSS_SCENES[s];
+            if(sc.need.indexOf(currentId) < 0) continue;
+            if(this.crossPlayed[sc.id] === today) continue;
+            let ok = true;
+            for(let i=0;i<sc.need.length;i++){ const cid=sc.need[i];
+                if(this.mainSeenDay[cid] !== today){ ok=false; break; }
+                if(((this.affection&&this.affection[cid])||0) < sc.min){ ok=false; break; }
+            }
+            if(ok) return sc;
+        }
+        return null;
+    },
+    // [교차 씬] 컷들을 대화창 콜백 체이닝으로 연속 재생 후 onDone
+    playCrossScene: function(scene, onDone){
+        if(!this.crossPlayed) this.crossPlayed = {};
+        this.crossPlayed[scene.id] = this.todayStr(); this.saveData();
+        const cuts = scene.cuts || []; let i = 0; const self = this;
+        const next = function(){
+            if(i >= cuts.length){ if(onDone) onDone(); return; }
+            const cut = cuts[i++];
+            self.showDialogue(cut.who, cut.text, { duration: 99999, onDismiss: next });
+        };
+        next();
+    },
     mainFarewell: function(id){ const d = MAIN_DIALOGUE[id]; return d ? this.pickLine(resolveGenderLines(d.served[this.affTier(id)])) : ''; },
 
     // ===== 대화창 시스템 =====
@@ -3088,7 +3103,7 @@ const game = {
         const textEl = document.getElementById('dlg-text');
         if(!box || !nameTag || !textEl) return;
 
-        if(charLarge) charLarge.src = ch.img || '';
+        if(charLarge) charLarge.src = opts.face || ch.img || '';
         nameTag.textContent = mainDisplayName(ch);
         textEl.textContent = text.replace(/<[^>]+>/g, '').replace(/&[a-z]+;/gi, '');
         box.classList.add('dlg-active');
@@ -3222,7 +3237,8 @@ const game = {
                         // 정답 탭이 대화를 즉시 닫아버렸음. 인사 대사처럼 duration(최대 노출)+onDismiss(넘김) 단일 방식으로 통일.
                         // → 최대 3.5초 노출, 500ms 뒤 탭하면 즉시 넘김, 어느 쪽이든 nextTurn은 한 번만 실행.
                         const advance = () => { if(el) el.classList.add('leaving'); this.scheduleNextTurn(420); };
-                        this.showDialogue(cust.char.id, fw, { duration: 3500, onDismiss: advance });
+                        const _sf = (mainNameKnown(cust.char.id) && this.affTier(cust.char.id)==='high') ? faceFor(cust.char.id,'smile') : '';
+                        this.showDialogue(cust.char.id, fw, { duration: 3500, face:_sf, onDismiss: advance });
                         return;
                     }
                 }
@@ -3320,6 +3336,8 @@ const game = {
                 <div style="color:var(--green); font-weight:900; font-size:1.2rem;">${praise}</div>
                 <div style="color:#555; font-size:0.9rem; margin-top:5px;">"${this.currentCust.data.ex}"</div>
             `;
+            const _csOk = document.getElementById('cust-speech');
+            if(_csOk && this.currentCust.char && this.currentCust.char.kind !== 'main'){ const _l = custLine(this.currentCust.char.id, 'ok'); if(_l) _csOk.innerHTML = _l; }
             speak(this.currentCust.data.ex, afterSpeech);
 
         } else {
@@ -3443,9 +3461,14 @@ const game = {
             const wrongLines = MAIN_WRONG[this.currentCust.char.id];
             if(wrongLines) {
                 const line = wrongLines[Math.floor(Math.random() * wrongLines.length)];
-                setTimeout(() => this.showDialogue(this.currentCust.char.id, line, { duration: 2000 }), 300);
+                const _wf = faceFor(this.currentCust.char.id, 'soft');
+                setTimeout(() => this.showDialogue(this.currentCust.char.id, line, { duration: 2000, face:_wf }), 300);
             }
         }
+
+        // [손님 대사] 일반 손님 오답 반응
+        const _csMiss = document.getElementById('cust-speech');
+        if(_csMiss && this.currentCust.char && this.currentCust.char.kind !== 'main'){ const _lm = custLine(this.currentCust.char.id, 'miss'); if(_lm) _csMiss.innerHTML = _lm; }
 
         // 5. 퇴장 처리
         if(this.lives <= 0) setTimeout(() => this.gameOver(), 1500);
@@ -4144,7 +4167,7 @@ equipItem: function(category, level) {
                             `<div style="height:9px;background:#eee;border-radius:5px;overflow:hidden;margin:4px 0 2px;"><div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#ff8fc4,#e91e63);"></div></div>`;
                         const acts = AFFECTION_STORY[ch.id] || [];
                         for(let i=0;i<acts.length;i++){
-                            if(i < seen) extra += `<div style="font-size:0.8rem;color:#7b1fa2;font-style:italic;margin-top:6px;">${i+1}막 · ${affStoryLine(ch.id, i)}</div>`;
+                            if(i < seen){ const _cg = affCg(ch.id, i+1); extra += (_cg ? `<img src="${_cg}" alt="" style="width:100%;border-radius:10px;margin-top:8px;box-shadow:0 2px 8px rgba(0,0,0,0.18);display:block;">` : '') + `<div style="font-size:0.8rem;color:#7b1fa2;font-style:italic;margin-top:6px;">${i+1}막 · ${affStoryLine(ch.id, i)}</div>`; }
                             else { extra += `<div style="font-size:0.78rem;color:#aaa;margin-top:6px;">${UI_ICON.lock} ${i+1}막 — 호감도 ${AFFECTION_TIERS[i]} 필요</div>`; break; }
                         }
                     } else if(ch.story) {
@@ -4427,7 +4450,17 @@ equipItem: function(category, level) {
         }
     },
 
+    // [배경] 실시간 시간대별 카페 배경 (낮/저녁/밤·보름달)
+    updateCafeBg: function(){
+        var img = document.querySelector('#scene-bg .scene-photo'); if(!img) return;
+        var h = new Date().getHours();
+        var src = (h >= 20 || h < 5) ? 'assets/art/bg_cafe_night_moon.jpg'
+                : (h >= 17)          ? 'assets/art/bg_cafe_evening.jpg'
+                :                      'scenes/cafe_pastel.png';
+        if(img.getAttribute('src') !== src) img.src = src;
+    },
     renderScene: function() {
+        this.updateCafeBg();
         this.isTimeFrozen = false; // 새 손님 오면 시간 정지 해제
         this.dismissDialogSilent(); // [버그수정] 이전 대화창 닫되 넘김 콜백은 실행 안 함(손님 겹침 방지)
         
@@ -4469,8 +4502,10 @@ equipItem: function(category, level) {
             }
         }
 
+        let custSpeech = (ch && ch.kind==='main') ? '' : (c.char ? custLine(c.char.id, 'order') : '');
         document.getElementById('customer-area').innerHTML = `
             <div class="customer type-${c.type}" id="cust-el">
+                <div class="cust-speech" id="cust-speech">${custSpeech}</div>
                 <div class="bubble" id="bubble-el"><div>${txt}</div>${srcTag}</div>
                 ${nameTag}
                 ${c.timed ? `<div class="timer-bar-wrap"><div class="timer-fill" id="timer-bar"></div></div>`
@@ -4943,7 +4978,7 @@ BgMusic.playTrack('title');
 // [성능] 모든 이미지 미리 로드(손님 PNG·씬·장식) — 첫 등장 시 딜레이 방지(특히 웹 배포)
 (function preloadAllImages(){
     try {
-        const urls = new Set(['scenes/cafe_pastel.png','scenes/title.png','sprites/coin.svg']);
+        const urls = new Set(['scenes/cafe_pastel.png','assets/art/bg_cafe_evening.jpg','assets/art/bg_cafe_night_moon.jpg','scenes/title.png','sprites/coin.svg']);
         CHAR_DEX.forEach(c => { if(c.img) urls.add(c.img); });
         ['counter','wall','pet'].forEach(cat => (SHOP_DB[cat]||[]).forEach(it => { if(it.img) urls.add(it.img); }));
         urls.forEach(u => { const im = new Image(); im.src = u; });

@@ -804,6 +804,13 @@ const COMPANIONS = {
   sera: { name:'세라',  img:'chars/sera.png', battleImg:'chars/sera_back.png', charId:'m_sera' },
 };
 const COMP_ORDER = ['none','roa','luna','sera'];
+// ===== 탐험 동행 대사 (동행 캐릭터별) =====
+const COMP_DIALOGUE = {
+  roa: { start:["먼저 봐. 단어도 커피도 흐름이 있어.", "뒤는 맡겨.", "세 보이진 않아. 그래도 방심은 마."], win:["나쁘지 않았어.", "같이 하니 수월하군.", "\"잘했어.\" 어깨를 툭 쳤다."], lose:["물러나는 것도 전략이야.", "방어를 더 맡았어야 했어. 다음엔 그렇게 하지.", "지는 것도 배움이야. 일어나."], gather:["원두 보는 눈 있네.", "이 풀 향 특이해. 커피에 써보지."], level:["올랐군. 힘이 아니라 감각이 늘었어.", "성장이 느껴져."], boss:["큰 놈 나왔군. 당황하지 마.", "대회 결승도 이런 기분이었어. 같이 간다."], move:["이 숲 향 특이해. 커피에 쓸 만해.", "걸으면서 단어 외워. 몸이 먼저 기억하거든.", "침묵 괜찮아. 나도 이게 편해.", "발소리 고르네. 겁이 없어.", "이쪽이 빠르겠어.", "어려운 단어일수록 천천히 가. 급하면 놓쳐."] },
+  luna: { start:["옆에 있을게. 걱정 마.", "저 녀석, 왼쪽이 비었어.", "나 꽤 오래 살았어. 이 정돈 괜찮아."], win:["잘했어.", "\"역시 너야.\" 조용히 박수를 쳤다.", "이 숲에 소문나겠어. 좋은 쪽으로."], lose:["내가 더 막았어야 했는데. 미안.", "물러나는 것도 용기야.", "달도 기우는 날 있어. 내일 차오르면 돼."], gather:["이 향, 백 년 전 마을 어귀랑 비슷해.", "손 좋다."], level:["달이 차듯 크는구나.", "이 느낌, 기억해 둬."], boss:["오랜만에 큰 놈이네. 나도 좀 긴장돼.", "달빛 쓸 준비 됐어. 같이 가자."], move:["이 숲에 달 잘 보이는 자리 있어. 나중에 알려줄게.", "이 길 걸어본 것 같아. 나무만 바뀌었고.", "조용한 거 좋지. 나도 그래.", "걸으면서 단어 외워봐. 발소리에 박자가 붙어.", "달이 잘 보이네. 잠깐 멈춰도 돼.", "이 꽃, 오래전엔 달빛꽃이라고 불렀어."] },
+  sera: { start:["같이 가요. 옆에 있을게요.", "이것도 일종의 무대죠. 제가 맡을게요.", "긴장돼요? 저는 좀. 근데 사장님 있으니까 괜찮아요."], win:["이겼어요!", "우리 손발 잘 맞네요.", "봤어요? 방금 저 좀 멋있었죠."], lose:["괜찮아요? 제가 더 빨랐어야 했는데.", "다음엔 제가 앞에 설게요.", "지는 날도 있죠. 다음에 이겨요."], gather:["이거 신기하게 생겼다. 뭐예요?", "냄새 좋다. 이거 카페에 쓸 수 있어요?"], level:["레벨 올랐어요? 강해진 거죠.", "다음엔 뭐가 달라질지 궁금해요."], boss:["저게 보스예요? ...심호흡 한 번 하고요.", "무섭긴 한데, 사장님 옆이면 설 수 있어요."], move:["이 길 예쁘다.", "산책하는 기분이에요. 좋다.", "조용해서 좋네요. 카메라도 없고.", "골목에서 노래 부르던 데도 이런 데였어요.", "무대보다 이런 데가 더 편해요, 저는.", "지금 좀 행복한 것 같아요. 이런 거였구나."] }
+};
+function compSay(kind, prob){ var c=(window.Explore&&Explore.state&&Explore.state.companion)||'none'; if(c==='none'||!COMP_DIALOGUE[c]) return ''; var arr=COMP_DIALOGUE[c][kind]; if(!arr||!arr.length) return ''; var r=(window.World?World.rnd():Math.random()); if(prob!=null && r>=prob) return ''; var name=(COMPANIONS[c]||{}).name||''; var line=arr[Math.floor((window.World?World.rnd():Math.random())*arr.length)]; return '<br><span class="comp-say" style="opacity:.9;font-size:.92em"><b>'+name+'</b> '+line+'</span>'; }
 // ---------- 맵 치비(걷는 캐릭터) 동행별 색 ----------
 const CHIBI = {
   none: { skin:'#f1cfa6', hair:'#3a2a1e', shirt:'#6d4c41', legs:'#4e342e', toque:true, apron:true },
@@ -964,7 +971,11 @@ const QUEST_NPCS = [
       key:'syrup', base:10, step:3, reward:{goldBase:220, goldStep:40, exp:42} } },
 ];
 // ---------- 숨겨진 이벤트: 어둠의 상인 (영어 대결) ----------
-const DARK_MERCHANT = { name:'어둠의 상인', img:'chars/npc_merchant.png' };
+const DARK_MERCHANT = { name:'어둠의 상인', img:'chars/npc_merchant.png',
+  intro:["\"이런, 길 잃은 사장 나리 아니신가. 후후.<br>내 수수께끼 몇 개만 맞혀보게. 대가는… 섭섭잖게 쳐주지.\"", "\"단어 하나에 값이 붙는 거, 아나?<br>오늘은 제법 귀한 놈을 걸었네. 자신 있으면 앉게.\"", "\"겁먹을 것 없어. 나는 손님을 물지 않아.<br>…지갑만 살짝 가져갈 뿐이지. 후후후.\""],
+  lose:["\"허어… 졌네, 졌어. 깔끔하게 인정하지.<br>약속한 물건일세. 자, 가져가게.\"", "\"과연 소문대로군. 오늘 판은 자네 거야.<br>이깟 패배로 사라질 상인은 아니니, 또 보세.\"", "\"…쳇. 요즘 사장 나리들은 왜 이리 똑똑한지.<br>가져가게. 대신 다음엔 안 봐줘.\""],
+  win:["\"아깝군, 아까워. 딱 한 글자 차이였는데 말이야.<br>이 바닥은 그 한 글자에서 값이 갈려. 다음엔 좀 더 벼려 오게.\"", "\"이번 판은 내가 챙기겠네. 후후.<br>서운해 말게, 복수할 기회야 얼마든지 있으니.\""],
+  again:["\"또 왔군, 사장 나리. 반갑구먼.<br>이번엔 값을 좀 올렸네. 각오는 됐고?\"", "\"돌아올 줄 알았지. 그 표정, 아직 안 끝났다는 얼굴이군.<br>좋아, 다시 걸어보세.\""] };
 // ---------- 이미지 프리로더 ----------
 const Assets = {
   imgs:{},
@@ -1188,7 +1199,7 @@ const World = {
     Sfx.play('gather'); exHaptic('light');
     Explore.refreshHUD(); Explore.persist(); this.updateActionBtn();
     const w=this.pickWord();
-    this.toast(`<img class="mi" src="${mat.img}" alt=""> <b>${mat.name}</b> +1<br><span class="en">${w.w}</span> · <span class="ko">${w.m}</span>`);
+    this.toast(`<img class="mi" src="${mat.img}" alt=""> <b>${mat.name}</b> +1<br><span class="en">${w.w}</span> · <span class="ko">${w.m}</span>`+compSay('gather',0.4));
   },
   pickWord(){
     const due=(Explore.cafe.myWords||[]).filter(v=>(v.due||0)<=(Explore.cafe.turnCount||0));
@@ -1256,7 +1267,7 @@ const World = {
     this.px=this.start.x; this.py=this.start.y; // 도착은 해당 존 하단 시작점
     Explore.state.pos={x:this.px,y:this.py};
     this._portalArmed=true; this.updateZoneName(); this.updateActionBtn(); this.reveal(); this.drawMinimap(); Explore.persist();
-    const z=ZONES[zoneId]; this.toast(`${z.name}에 도착했어요!`);
+    const z=ZONES[zoneId]; this.toast(`${z.name}에 도착했어요!`+compSay('move'));
   },
   updateZoneName(){ const z=ZONES[Explore.state.map.zone]||ZONES.forest; const el=document.getElementById('zone-name'); if(el) el.textContent=z.name; const ic=document.getElementById('zone-ic'); if(ic) ic.innerHTML=z.icon||''; },
   _accum:0, _saveT:0,
@@ -1847,11 +1858,11 @@ const Battle = {
     this.setButtons(false);
     this.msg(m.isBoss ? `${UI_ICON.atk} <b>${m.name}</b> — 보스가 길을 막아섰다!` : `${UI_ICON.paw} 앗! 야생 <b>${m.name}</b>이(가) 나타났다!`);
     clearTimeout(this._introT);
-    this._introT=setTimeout(()=>{ battle.classList.remove('intro'); es.classList.remove('enter'); this.msg('무엇을 할까?'); this.setButtons(true); }, 1400); },
+    this._introT=setTimeout(()=>{ battle.classList.remove('intro'); es.classList.remove('enter'); this.msg('무엇을 할까?'+compSay((this.enemy&&this.enemy.isBoss)?'boss':'start')); this.setButtons(true); }, 1400); },
   // 메시지/아레나 탭 → 등장 연출이나 현재 대기를 빨리 넘김
   skipTap(){ const battle=document.getElementById('battle');
     if(battle.classList.contains('intro')){ clearTimeout(this._introT); battle.classList.remove('intro');
-      document.getElementById('e-sprite').classList.remove('enter'); this.msg('무엇을 할까?'); this.setButtons(true); return; }
+      document.getElementById('e-sprite').classList.remove('enter'); this.msg('무엇을 할까?'+compSay((this.enemy&&this.enemy.isBoss)?'boss':'start')); this.setButtons(true); return; }
     if(this._skip){ clearTimeout(this._skipT); const r=this._skip; this._skip=null; r(); } },
   setSelfSprite(){ const ckey=Explore.state.companion||'none'; const comp=COMPANIONS[ckey]; const ps=document.getElementById('p-self'); ps.className='sprite-self';
     let bi=comp&&(comp.battleImg||comp.img);
@@ -1982,7 +1993,7 @@ const Battle = {
     const ups=[]; while(Explore.state.exp>=expNeed(Explore.state.level)){ Explore.state.exp-=expNeed(Explore.state.level); Explore.state.level++;
       const st=Explore.state.stats; st.maxHp+=8; st.atk+=3; st.def+=2; st.hp=st.maxHp; ups.push(Explore.state.level); }
     if(ups.length){ txt+=`<br><span class="lvlup">${UI_ICON.party} 레벨 업! Lv ${ups[ups.length-1]} (HP·공·방 상승, 체력 회복)</span>`; setTimeout(()=>Sfx.play('levelup'),450); }
-    this.msg(txt); this.renderBars(); Explore.refreshHUD(); Explore.persist(); this.setButtons(false);
+    txt+=compSay('win'); if(ups.length) txt+=compSay('level'); this.msg(txt); this.renderBars(); Explore.refreshHUD(); Explore.persist(); this.setButtons(false);
     await this.wait(1500); this.close(); },   // 결과 잠깐 보여주고 자동으로 전투 종료(탭하면 즉시)
   // [광고] 전투 패배 시 리워드 광고로 그 자리 부활 제안(부활/포기 버튼)
   _askAdRevive(){ return new Promise(resolve=>{
@@ -2001,7 +2012,7 @@ const Battle = {
       this.msg(`${UI_ICON.hp} 부활! 다시 싸우자!`); this.renderBars(); Explore.refreshHUD(); Explore.persist();
       await this.wait(700); this.busy=false; this.setButtons(true); return; }
     // 거절/실패 → 기존 마을 부활
-    this.msg('정신을 잃었다… 카페 근처에서 깨어났다. (체력 회복)'); Explore.state.stats.hp=Math.max(1,Math.round(Explore.state.stats.maxHp*0.5));
+    this.msg('정신을 잃었다… 카페 근처에서 깨어났다. (체력 회복)'+compSay('lose')); Explore.state.stats.hp=Math.max(1,Math.round(Explore.state.stats.maxHp*0.5));
     // 마을 입구(시작점) 근처로 이동 — 쓰러진 자리에 그대로 두지 않음
     if(window.World && World.start){ World.px=World.start.x; World.py=World.start.y;
       Explore.state.pos={x:World.px,y:World.py}; if(World.updateActionBtn) World.updateActionBtn(); }
@@ -2079,6 +2090,7 @@ const Quest = {
 const DarkDuel = {
   q:0, score:0, total:5, rounds:[], answered:false,
   _rand(){ return window.World?World.rnd():Math.random(); },
+  _say(kind){ var a=DARK_MERCHANT[kind]; return (a&&a.length)? a[Math.floor(this._rand()*a.length)] : ''; },
   pool(){ let p=[]; if(window.wordData) p=[].concat(wordData.easy||[],wordData.normal||[],wordData.hard||[]);
     p=p.filter(w=>w&&w.w&&w.m);
     if(p.length<8) p=[{w:'coffee',m:'커피'},{w:'water',m:'물'},{w:'book',m:'책'},{w:'friend',m:'친구'},{w:'light',m:'빛'},{w:'music',m:'음악'},{w:'river',m:'강'},{w:'stone',m:'돌'}];
@@ -2091,8 +2103,8 @@ const DarkDuel = {
   meet(){ document.getElementById('dm-portrait').src=DARK_MERCHANT.portrait||DARK_MERCHANT.img; this.buildRounds(); this.q=0; this.score=0;
     document.getElementById('dark-duel').classList.add('show'); this.intro();
     if(window.ExploreBgm) try{ExploreBgm.play('boss');}catch(e){} },
-  intro(){ document.getElementById('dm-body').innerHTML=
-    `<div class="dm-say">"흐흐… 영어 실력을 시험해볼까?<br>${this.total}문제 중 <b>4개 이상</b> 맞히면 큰 보상을 주지.<br>도전하겠나?"</div>
+  intro(){ var _beaten=!!((Explore.state.events||{}).darkMerchant); var _say=this._say(_beaten?'again':'intro'); document.getElementById('dm-body').innerHTML=
+    `<div class="dm-say">${_say}<br><small style="opacity:.8">${this.total}문제 중 <b>4개 이상</b> 맞히면 큰 보상!</small></div>
      <div class="dm-acts"><button class="q-btn ok" onclick="DarkDuel.begin()">${UI_ICON.atk} 대결한다</button><button class="q-btn ghost" onclick="DarkDuel.close()">도망친다</button></div>`; },
   begin(){ this.q=0; this.score=0; this.render(); },
   render(){ const body=document.getElementById('dm-body'); if(this.q>=this.rounds.length) return this.finish();
@@ -2110,9 +2122,9 @@ const DarkDuel = {
       if(!Explore.state.events)Explore.state.events={}; Explore.state.events.darkMerchant='beaten';
       const rwtxt=Explore.grantReward(reward);
       if(window.Sfx)Sfx.play('levelup'); if(window.exHaptic)exHaptic('success');
-      body.innerHTML=`<div class="dm-say win">"크윽… 졌다, 인정하지."<br>${this.score}/${this.total} 정답!<br><span class="lvlup">${rwtxt}</span>${first?'<br><small>(첫 승리 특별 보상!)</small>':''}</div>
+      body.innerHTML=`<div class="dm-say win">${this._say('lose')}<br>${this.score}/${this.total} 정답!<br><span class="lvlup">${rwtxt}</span>${first?'<br><small>(첫 승리 특별 보상!)</small>':''}</div>
         <div class="dm-acts"><button class="q-btn ok" onclick="DarkDuel.close()">보상 받기</button></div>`; }
-    else { body.innerHTML=`<div class="dm-say">"흐흐, 아직 멀었군. (${this.score}/${this.total})<br>실력을 갈고닦아 다시 오게."</div>
+    else { body.innerHTML=`<div class="dm-say">${this._say('win')}<br>(${this.score}/${this.total})</div>
         <div class="dm-acts"><button class="q-btn ghost" onclick="DarkDuel.retry()">다시 도전</button><button class="q-btn ghost" onclick="DarkDuel.close()">물러간다</button></div>`; } },
   retry(){ this.buildRounds(); this.q=0; this.score=0; this.render(); },
   close(){ document.getElementById('dark-duel').classList.remove('show'); if(window.ExploreBgm)try{ExploreBgm.play('map');}catch(e){} if(window.World)World.updateActionBtn(); },
