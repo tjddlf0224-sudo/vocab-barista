@@ -569,6 +569,13 @@ body.fever-mode #fever-fx { opacity:1; }
 @keyframes gfxBurst { 0%{opacity:0; transform:translate(-50%,50%) scale(.5);} 22%{opacity:.95;} 100%{opacity:0; transform:translate(-50%,50%) scale(1.22);} }
 .game-fx.fx-heart { width:34%; bottom:34%; animation:gfxHeart 1.05s ease-out forwards; }
 @keyframes gfxHeart { 0%{opacity:0; transform:translate(-50%,50%) scale(.6);} 20%{opacity:1;} 100%{opacity:0; transform:translate(-50%,-45%) scale(1.02);} }
+/* [신규 fx] 주문 시 아로마 김(steam) · 피버 개시 추출 붓기(pour) · 봉인고 컷신 봉인 파열(seal) */
+.game-fx.fx-steam { width:24%; bottom:47%; opacity:.9; animation:gfxSteam 1.15s ease-out forwards; }
+@keyframes gfxSteam { 0%{opacity:0; transform:translate(-50%,55%) scale(.7);} 28%{opacity:.82;} 100%{opacity:0; transform:translate(-50%,-8%) scale(1.06);} }
+.game-fx.fx-pour { width:46%; bottom:24%; mix-blend-mode:screen; animation:gfxPour .9s ease-out forwards; }
+@keyframes gfxPour { 0%{opacity:0; transform:translate(-50%,42%) scale(.82);} 32%{opacity:1;} 100%{opacity:0; transform:translate(-50%,52%) scale(1.16);} }
+.game-fx.fx-seal { width:56%; bottom:33%; mix-blend-mode:screen; animation:gfxSeal .95s ease-out forwards; }
+@keyframes gfxSeal { 0%{opacity:0; transform:translate(-50%,50%) scale(.6);} 18%{opacity:1; transform:translate(-50%,50%) scale(1.05);} 100%{opacity:0; transform:translate(-50%,50%) scale(1.35);} }
 .fever-mode #fever-overlay { opacity:1; animation:feverWash .55s linear infinite alternate; }
 @keyframes feverWash {
     0%   { background:radial-gradient(circle at 28% 38%, rgba(255,110,200,.22), transparent 60%), radial-gradient(circle at 72% 62%, rgba(90,210,255,.18), transparent 60%); box-shadow:inset 0 0 38px rgba(255,110,200,.26); }
@@ -2241,11 +2248,38 @@ const AFFECTION_STORY = {
 // 호감 단계: low(<30) · mid(30~59) · high(>=60). 캐릭터 개성·말투 살린 오리지널 대사.
 // ===== 유대 막 해금 CG (있는 막만 표시) · 경로 assets/art =====
 const AFFECTION_CG = {
-    m_roa:  { 3:'assets/art/cg_roa_act3_burnt_tongue.jpg', 5:'assets/art/cg_roa_act5_own_apron.jpg' },
-    m_luna: { 3:'assets/art/cg_luna_guardian_war.jpg',     5:'assets/art/cg_luna_act5_memory.jpg' },
-    m_sera: { 3:'assets/art/cg_sera_five_year_song.jpg',   4:'assets/art/cg_sera_act4_happiness.jpg' },
+    m_roa:  { 2:'assets/art/cg_roa_grandprix.jpg',     3:'assets/art/cg_roa_act3_burnt_tongue.jpg', 5:'assets/art/cg_roa_act5_own_apron.jpg' },
+    m_luna: { 3:'assets/art/cg_luna_guardian_war.jpg', 4:'assets/art/cg_luna_empty_chair.jpg',      5:'assets/art/cg_luna_act5_memory.jpg' },
+    m_sera: { 1:'assets/art/cg_sera_disguise.jpg',     3:'assets/art/cg_sera_five_year_song.jpg',   4:'assets/art/cg_sera_act4_happiness.jpg' },
 };
 function affCg(id, actNum){ return (AFFECTION_CG[id]||{})[actNum] || ''; }
+
+// ===== 유대 5막 다회차 대화 씬 (해금 시 여러 컷 재생 → CG → 보상) · 성별 분기 tail 포함 =====
+const AFFECTION_SCENES = {
+  m_roa: [
+    {c:[{w:"m_roa",t:"추출 온도, 낮췄지?"},{w:"boss",t:"요즘 조금씩 바꿔보고 있어요."},{w:"m_roa",t:"그렇군."},{w:"m_roa",t:"(한 모금 더) …나쁘진 않군."},{w:"m_roa",t:"또 올게."}]},
+    {c:[{w:"q_rico",t:"자, 잠깐만. 그, 그라인드 하임의 로아?! 라테 그랑프리 3연속—"},{w:"m_roa",t:"…시끄러워."},{w:"m_roa",t:"(내게) 로아야. 이름. 이렇게 알려질 줄은 몰랐고."},{w:"boss",t:"물어보려던 참이었어요."},{w:"m_roa",t:"알아. 안 물어봐서 편했어."},{w:"boss",t:"왜 이런 골목에 계세요?"},{w:"m_roa",t:"…그건 커피 몇 잔 더 팔면 말해줄게."}]},
+    {c:[{w:"boss",t:"무슨 생각 해요?"},{w:"m_roa",t:"커피 대회 세 번 우승했어. 근데 세 번째 우승하고부터 맛이 안 느껴졌어."},{w:"boss",t:"맛이… 아예요?"},{w:"m_roa",t:"우승하고 마신 축배도 맹물 같더군. 스승은 '기술만 완벽하면 된다'고 했고."},{w:"m_roa",t:"그날 앞치마 벗었어."},{w:"m_roa",t:"(내 커피를 한 모금) 근데 여기 커피는… 완벽하진 않아. 그런데 맛이 나."},{w:"m_roa",t:"한 잔 더."}]},
+    {c:[{w:"m_roa",t:"그라인드 하임에서 사람 보내왔어."},{w:"boss",t:"스승 분이요?"},{w:"m_roa",t:"스승이 아프대. 그 카페 이름으로 4승 나가달라는 거야."},{w:"m_roa",t:"가기 싫어. 근데 안 가기도 그래."},{w:"m_roa",t:"처음으로 선택이 어려워."},{w:"boss",t:"여기 있어요. 결정은 나중에 해도 되잖아요."},{w:"m_roa",t:"…그 말, 가볍게 한 거 아니지?"},{w:"boss",t:"네."},{w:"m_roa",t:"알겠어."},{w:"m_roa",t:"커피나 줘."}]},
+    {c:[{w:"m_roa",t:"그라인드 하임엔 안 갔어."},{w:"boss",t:"괜찮겠어요?"},{w:"m_roa",t:"스승한텐 연락했어. 다른 사람 세우라고."},{w:"m_roa",t:"우승컵은 세 개면 충분해. 이제는 맛을 느끼면서 내리고 싶어."},{w:"m_roa",t:"(앞치마를 집어 스스로 두르며) 이건 내가 두르는 거야. 누가 씌운 게 아니라."},{w:"m_roa",t:"…여기 있어도 돼?"}],m:[{w:"boss",t:"언제든."},{w:"m_roa",t:"좋아. 대신 안 봐줘."},{w:"m_roa",t:"자네 커피, 내가 이겨야 직성이 풀리거든."},{w:"m_roa",t:"(잔을 비우고) 내일 또 겨루지."}],f:[{w:"boss",t:"언제든."},{w:"m_roa",t:"…그래. (남은 커피를 반쯤 내밀며) 반은 자네 거. 혼자 마시는 건 이제 그만하려고."},{w:"m_roa",t:"내일도, 같은 시간에 올게."}]},
+  ],
+  m_luna: [
+    {c:[{w:"m_luna",t:"여기서 달이 이렇게 잘 보이는 줄 몰랐어."},{w:"boss",t:"그 자리가 제일 잘 보여요."},{w:"m_luna",t:"백 년을 봐도 안 질려. 달이 꽤 성실한 편이거든."},{w:"m_luna",t:"라떼 하나. …뜨겁게. 요샌 다들 차게 마시더라. 이상한 시대야."},{w:"m_luna",t:"…고마워. (한 모금) 따뜻한 거, 오랜만이네."},{w:"m_luna",t:"또 와도 돼?"}]},
+    {c:[{w:"m_luna",t:"루나. 그게 내 이름이야."},{w:"boss",t:"'Luna' — 옛말로 달이잖아요."},{w:"m_luna",t:"(잠깐 멈춘다) …알아보는 사람 오랜만이네."},{w:"boss",t:"달에서 따온 이름이에요?"},{w:"m_luna",t:"글쎄. 너무 오래돼서 나도 가끔 헷갈려."},{w:"m_luna",t:"이름 제대로 불린 거, 백 년 만이야."},{w:"m_luna",t:"(옅게 웃는다) 웃을 생각 없었는데. 이상하네."}]},
+    {c:[{w:"boss",t:"오늘 좀 지쳐 보여요."},{w:"m_luna",t:"꿈을 꿨어. 백 년 만에."},{w:"boss",t:"좋은 꿈이요?"},{w:"m_luna",t:"아니. 전쟁이 끝나던 밤이었어."},{w:"m_luna",t:"그 어둠을 가두려면 봉인이 필요했어. 봉인엔 대가가 따르고."},{w:"m_luna",t:"나는 가진 것 중에 제일 값진 걸 내놨어."},{w:"boss",t:"그게 뭐였는데요?"},{w:"m_luna",t:"기억. 백 년 치."},{w:"m_luna",t:"깨보니 아무것도 안 남았더라. 사람도, 마을도, 이름도."},{w:"m_luna",t:"이상하지. 얼굴은 안 떠오르는데 그리운 건 남았어."},{w:"boss",t:"그만큼 소중했던 거 아닐까요."},{w:"m_luna",t:"…그렇게 들으니 좀 낫네."},{w:"m_luna",t:"미안한데, 며칠 안 올지도 몰라. 기억이 돌아올 때마다 좀… 아파서."}]},
+    {c:[{w:"m_luna",t:"솔직히 말해도 돼?"},{w:"boss",t:"네."},{w:"m_luna",t:"여기 오는 게 가끔 무서워."},{w:"boss",t:"왜요?"},{w:"m_luna",t:"너희는 늙잖아. 나만 남고."},{w:"m_luna",t:"정 붙이면 늘 내가 배웅하는 쪽이야. 매번."},{w:"m_luna",t:"그래서 이름도 늦게 알려준 거야. 멀리 두려고."},{w:"boss",t:"근데 지금 여기 있잖아요."},{w:"m_luna",t:"…그러네. 무서워도 발이 여기로 오더라. 어쩌겠어."},{w:"boss",t:"무서우면 무서운 채로 와요. 문 열어둘게요."},{w:"m_luna",t:"그런 말 오랜만에 들어."},{w:"m_luna",t:"계속 와도 되는 거지?"},{w:"boss",t:"언제든요."},{w:"m_luna",t:"고마워."}]},
+    {c:[{w:"m_luna",t:"마지막 조각이 돌아왔어."},{w:"boss",t:"어떤 기억이요?"},{w:"m_luna",t:"봉인 직전에 뭘 마셨는지. 커피였어. 누가 내려준 커피."},{w:"m_luna",t:"얼굴이 이제야 떠올라. …네 커피랑 맛이 겹쳐서, 계속 여기로 왔나 봐."},{w:"m_luna",t:"잊는 게 무서웠는데. 다시 기억하는 것도 나쁘지 않네."}],m:[{w:"m_luna",t:"백 년 중에 요즘이 제일 빨리 가."},{w:"boss",t:"저도요."},{w:"m_luna",t:"…그거면 됐어. 잘됐네."}],f:[{w:"m_luna",t:"처음으로 바라는 게 생겼어."},{w:"boss",t:"뭔데요?"},{w:"m_luna",t:"네가 늙어가는 걸, 곁에서 끝까지 보는 거."},{w:"m_luna",t:"(담담히) 슬픈 얘기 아니야. 이번엔 배웅 말고, 곁에 있겠단 뜻이야."}]},
+  ],
+  m_sera: [
+    {c:[{w:"m_sera",t:"저... 혹시 저 아세요?"},{w:"boss",t:"글쎄요. 처음 뵙는 것 같은데요."},{w:"m_sera",t:"(모자챙을 슬쩍 내리며) 다행이다."},{w:"m_sera",t:"요즘 다들 아는 척을 해서요. 여긴 안 그러네요."},{w:"boss",t:"그냥 손님이신데요."},{w:"m_sera",t:"네. 그냥 손님. ...그 말 오랜만이에요."}]},
+    {c:[{w:"m_sera",t:"지금 저 말고 손님 없죠?"},{w:"boss",t:"네, 지금은요."},{w:"m_sera",t:"그럼 말할게요. 저 세라예요. 진짜 이름이요."},{w:"boss",t:"세라."},{w:"m_sera",t:"...이름이 그렇게 불리는 거였구나."},{w:"m_sera",t:"다들 '아이돌 세라', '거기 세라' 그러거든요. 그냥 이름으로 불린 건 오랜만이에요."},{w:"boss",t:"앞으로도 세라라고 부를게요."},{w:"m_sera",t:"(잔을 두 손으로 감싸며) ...네. 그렇게 해주세요."}]},
+    {c:[{w:"m_sera",t:"저 처음 노래한 게 다섯 살이에요. 골목에서 혼자."},{w:"boss",t:"지금이랑 달라요?"},{w:"m_sera",t:"그땐 틀린다는 게 뭔지도 몰랐어요. 그냥 좋아서 불렀거든요."},{w:"m_sera",t:"지금은 한 음만 틀려도 큰일 나요. 만 명이 보니까."},{w:"m_sera",t:"제 노래에 'wander'라는 말이 있어요. 여기저기 떠돈다는 뜻이에요."},{w:"m_sera",t:"뜻도 모르고 불렀거든요. 근데 그 골목 헤매던 다섯 살 저 같더라고요."},{w:"boss",t:"지금도 노래 좋아해요?"},{w:"m_sera",t:"(작게) 좋은데 무섭기도 해요. 여기서만 그냥 좋아요."}]},
+    {c:[{w:"m_sera",t:"(밝게) 사장님! 오늘 라떼 완전 기대돼요, 저 SNS에 올려서 태그—"},{w:"m_sera",t:"(문득 멈칫) ...아. 또 이러네요, 나. 여기선 안 그래도 되는데."},{w:"boss",t:"세라. 지금 행복해요?"},{w:"m_sera",t:"네, 당연히— (말이 끊긴다)"},{w:"m_sera",t:"...어? 이상하다. 대답이 안 나와요."},{w:"m_sera",t:"그 질문 처음 받아봐요. 다들 '행복하죠?' 하고 답을 정해주거든요."},{w:"boss",t:"천천히 생각해도 돼요."},{w:"m_sera",t:"(한참 뒤) 모르겠어요. 근데 여기 이렇게 앉아 있는 지금은... 좀 알 것 같기도 하고."}]},
+    {c:[{w:"m_sera",t:"저 모자 안 썼어요. 눈치챘어요?"},{w:"boss",t:"네. 처음이네요."},{w:"m_sera",t:"여기선 벗어도 될 것 같아서요."},{w:"m_sera",t:"데뷔하고 진짜 제 얼굴 보여준 데가 없었어요. 다들 무대 위 세라만 아니까."},{w:"m_sera",t:"근데 사장님은 처음부터 그냥 세라로 봤잖아요. 이름도 직업도 모르고."},{w:"m_sera",t:"(창가 의자에 앉아, 다섯 살 그 골목의 노래를 아주 작게 흥얼거린다.)"},{w:"m_sera",t:"(멈추고 웃으며) ...방금 음 틀렸다. 근데 하나도 안 무섭네."}],m:[{w:"m_sera",t:"여기 오면 숨이 쉬어져요. 집이란 게 이런 느낌인가 봐요."},{w:"m_sera",t:"앞으로도 와도 되죠? 오래오래요."},{w:"boss",t:"언제든지요."},{w:"m_sera",t:"(식어가는 잔을 감싸 쥐며) ...다행이다. 여기 있어서."}],f:[{w:"m_sera",t:"사장님, 저 진짜 친구 없는 거 알아요?"},{w:"m_sera",t:"무대 밖에서 그냥 수다 떨 수 있는 사람. 사장님이 처음이에요."},{w:"boss",t:"저도 세라 같은 친구는 처음이에요."},{w:"m_sera",t:"(무대 웃음이 아닌, 환하게) 우리 이제 베프인 거예요. 무르기 없기."}]},
+  ],
+};
+// 성별 분기 tail 합쳐 컷 배열 반환({who,text} 형태로 정규화)
+function affScene(id, actIdx){ var a=(AFFECTION_SCENES[id]||[])[actIdx]; if(!a) return null; var tail=(vbGender()==='f'?a.f:a.m)||[]; return a.c.concat(tail).map(function(x){return {who:x.w,text:x.t};}); }
 
 // ===== 대사 표정 스왑 (친밀 시 미소 · 오답 위로 시 부드럽게) =====
 const MAIN_FACE = {
@@ -2305,6 +2339,7 @@ const DEMITAS_SCENES = [
 ];
 const DEMITAS_THRESHOLDS = [2500, 8000, 20000, 40000]; // 각 막 해금 누적점수
 DEMITAS_SCENES[2].introCg = 'assets/art/cg_dmitasse_vault.jpg'; DEMITAS_SCENES[2].introCaption = '봉인고 — 백 년간 모아 가둔 말들이 잠든 곳.';
+DEMITAS_SCENES[2].fx = 'assets/art/fx_seal1.png'; DEMITAS_SCENES[2].fxKind = 'seal'; // 봉인고 개봉 — 봉인 파열 이펙트
 
 // ===== 리코 케미 씬 (2인) — 로아 무시·루나 쫄음·세라 팬심·순자여사 손주 =====
 const RICO_CHEMISTRY = {
@@ -2930,6 +2965,7 @@ const game = {
         CHAR_BY_ID['boss'].img = (vbGender()==='f' ? 'chars/barista_f.png' : 'chars/barista_m.png');
         var self = this;
         var runDialogue = function(){
+            if(scene.fx){ self.playFx(scene.fx, scene.fxKind || 'burst'); } // 컷신 개시 이펙트(예: 봉인 파열)
             var cuts = scene.cuts, i = 0;
             var finish = function(){
                 if(scene.cg){ showCutsceneCG(scene.cg, scene.caption||'', done); }
@@ -3110,6 +3146,7 @@ const game = {
         this.currentCust = { data: wordObj, type: type, maxTime: baseTime, timeLeft: baseTime, avatar: custAvatar,
                              char: charObj, timed: timed, isReview: isReview, reviewRef: isReview ? wordObj : null };
         this.renderScene();
+        this.playFx('assets/art/fx_steam1.png', 'steam'); // 새 손님 주문 등장 시 아로마 김
 
         // 메인 캐릭터(normal/vip 모두): 대화창 먼저 → 탭 후 타이머+focus 시작
         if(charObj && charObj.kind === 'main') {
@@ -3145,6 +3182,7 @@ const game = {
         
         // 화면 효과
         document.body.classList.add('fever-mode');
+        this.playFx('assets/art/fx_pour1.png', 'pour'); // 피버 개시 — 황금 추출 붓기 연출
         const feverMsg = document.getElementById('fever-msg');
         if(feverMsg) feverMsg.style.opacity = '1';
 
@@ -3227,7 +3265,11 @@ const game = {
                 `<span style="font-size:0.92rem;color:#444;">${story}</span><br><br>`+
                 `<img src="sprites/coin.svg" style="width:16px;height:16px;vertical-align:middle;"> +${reward.toLocaleString()}G`
             );
-            if(cg) showCutsceneCG(cg, '', _actModal); else _actModal();
+            // 다회차 대화 씬 → CG → 보상 모달. 씬 없으면 CG만, 그것도 없으면 모달만.
+            const scene = affScene(id, actIdx);
+            if(scene && scene.length){ this.playCutscene({ cuts: scene, cg: cg }, _actModal); }
+            else if(cg){ showCutsceneCG(cg, '', _actModal); }
+            else { _actModal(); }
             this.saveData();
         }
     },
@@ -3390,6 +3432,8 @@ const game = {
         if(val.toLowerCase() === this.currentCust.data.w.toLowerCase()) {
             clearInterval(this.timer); playSound('correct'); haptic('light');
             totalCorrectCount++; // [신규] 학습 통계용 누적 정답 수
+            // [첫 잔] 게임 통틀어 최초의 정답 응대면 시네마틱 예약(정식 신규 유저만 — 기존 저장 유저는 totalServed>0라 스킵)
+            if(totalServedCount === 0 && !localStorage.getItem('vb_first_cup')) this._firstCupPending = true;
 
             // 콤보 로직
             if (!this.combo) this.combo = 0;
@@ -3443,6 +3487,14 @@ const game = {
                 }
                 if(el) el.classList.add('leaving');
                 if(nc) this.showFloatingText(`${UI_ICON.book} ${nc.ch.name} 등록! +${nc.bonus}G`, document.getElementById('cust-el'));
+                // [첫 잔] 최초 응대 시네마틱 — 1회만, 이후 영구 저장
+                if(this._firstCupPending){
+                    this._firstCupPending = false;
+                    try{ localStorage.setItem('vb_first_cup','1'); }catch(e){}
+                    const _self = this;
+                    showCutsceneCG('assets/art/cg_first_cup_yujin.jpg', '첫 잔을 내렸다.', () => _self.scheduleNextTurn(400));
+                    return;
+                }
                 this.scheduleNextTurn(400);
             };
             this.currentCust.solved = true;

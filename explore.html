@@ -357,6 +357,16 @@
   .dm-opt.wrong{ background:#8d2f38; border-color:#d85b66; color:#fff; }
   #battle.intro .binfo, #battle.intro .b-cmds{ opacity:0; pointer-events:none; }
   .lvlup{ color:#ffd54f; }
+  /* ===== 시네마틱 CG 오버레이 (어둠의 상인 결투 인트로 등) ===== */
+  #ex-cutscene{ position:fixed; inset:0; z-index:900; background:#000; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity .45s ease; }
+  #ex-cutscene.csc-show{ opacity:1; pointer-events:auto; }
+  #ex-cutscene.csc-hidden{ display:none; }
+  #ex-cutscene .csc-blur{ position:absolute; inset:-8%; background-size:cover; background-position:center; filter:blur(26px) brightness(.38); transform:scale(1.12); }
+  #ex-cutscene .csc-img{ position:relative; width:100%; max-height:100%; object-fit:contain; box-shadow:0 0 44px rgba(0,0,0,.55); animation:excscZoom 6.5s ease-out both; }
+  @keyframes excscZoom{ from{ transform:scale(1.05); } to{ transform:scale(1); } }
+  #ex-cutscene .csc-caption{ position:absolute; left:0; right:0; bottom:0; padding:64px 26px calc(38px + env(safe-area-inset-bottom)); background:linear-gradient(transparent, rgba(0,0,0,.86)); color:#fff; font-size:1.05rem; font-weight:700; line-height:1.5; text-align:center; text-shadow:0 2px 10px rgba(0,0,0,.85); font-family:'Jua','Nunito',sans-serif; }
+  #ex-cutscene .csc-hint{ position:absolute; right:18px; bottom:calc(14px + env(safe-area-inset-bottom)); color:rgba(255,255,255,.72); font-size:.82rem; animation:excscBlink 1.4s ease-in-out infinite; }
+  @keyframes excscBlink{ 0%,100%{opacity:.35;} 50%{opacity:.9;} }
 </style>
 </head>
 <body>
@@ -463,6 +473,9 @@
     <div class="dm-body" id="dm-body"></div>
   </div>
 </div>
+
+<!-- 시네마틱 CG 오버레이 -->
+<div id="ex-cutscene" class="csc-hidden"><div class="csc-blur"></div><img class="csc-img" src="" alt=""><div class="csc-caption"></div><div class="csc-hint">탭하여 계속 ▼</div></div>
 
 <!-- 전체 지도 뷰 -->
 <div id="map-view" class="ex-overlay">
@@ -2087,6 +2100,24 @@ const Quest = {
 // ============================================================
 //  숨겨진 이벤트: 어둠의 상인 영어 대결
 // ============================================================
+// 시네마틱 CG 오버레이 재생 (탭하여 넘김) — index.html showCutsceneCG의 explore판
+function showExCutsceneCG(src, caption, onDone){
+  var el = document.getElementById('ex-cutscene');
+  if(!el){ if(onDone) onDone(); return; }
+  el.querySelector('.csc-blur').style.backgroundImage = "url('"+src+"')";
+  el.querySelector('.csc-img').src = src;
+  var cap = el.querySelector('.csc-caption');
+  cap.textContent = caption || ''; cap.style.display = caption ? '' : 'none';
+  el.classList.remove('csc-hidden'); void el.offsetWidth; el.classList.add('csc-show');
+  var closed = false;
+  var done = function(){
+    if(closed) return; closed = true;
+    el.removeEventListener('click', done);
+    el.classList.remove('csc-show');
+    setTimeout(function(){ el.classList.add('csc-hidden'); el.querySelector('.csc-img').src=''; if(onDone) onDone(); }, 420);
+  };
+  setTimeout(function(){ el.addEventListener('click', done); }, 500);
+}
 const DarkDuel = {
   q:0, score:0, total:5, rounds:[], answered:false,
   _rand(){ return window.World?World.rnd():Math.random(); },
@@ -2100,13 +2131,16 @@ const DarkDuel = {
     for(let i=0;i<this.total && i<p.length;i++){ const ans=p[i]; const opts=[ans.m]; let g=0;
       while(opts.length<4 && g<300){ g++; const c=p[Math.floor(this._rand()*p.length)]; if(c.m!==ans.m && !opts.includes(c.m)) opts.push(c.m); }
       this._shuffle(opts); this.rounds.push({ w:ans.w, m:ans.m, opts }); } },
-  meet(){ document.getElementById('dm-portrait').src=DARK_MERCHANT.portrait||DARK_MERCHANT.img; this.buildRounds(); this.q=0; this.score=0;
+  meet(){ document.getElementById('dm-portrait').src=DARK_MERCHANT.portrait||DARK_MERCHANT.img; this.buildRounds(); this.q=0; this.score=0; this._cgShown=false;
     document.getElementById('dark-duel').classList.add('show'); this.intro();
     if(window.ExploreBgm) try{ExploreBgm.play('boss');}catch(e){} },
   intro(){ var _beaten=!!((Explore.state.events||{}).darkMerchant); var _say=this._say(_beaten?'again':'intro'); document.getElementById('dm-body').innerHTML=
     `<div class="dm-say">${_say}<br><small style="opacity:.8">${this.total}문제 중 <b>4개 이상</b> 맞히면 큰 보상!</small></div>
      <div class="dm-acts"><button class="q-btn ok" onclick="DarkDuel.begin()">${UI_ICON.atk} 대결한다</button><button class="q-btn ghost" onclick="DarkDuel.close()">도망친다</button></div>`; },
-  begin(){ this.q=0; this.score=0; this.render(); },
+  begin(){ this.q=0; this.score=0;
+    // 결투 개시 시네마틱 CG (한 번만 — 재도전 시엔 생략)
+    if(!this._cgShown){ this._cgShown=true; var self=this; showExCutsceneCG('assets/art/cg_dark_merchant_duel.jpg', '어둠의 상인이 잔을 내밀었다.', function(){ self.render(); }); }
+    else this.render(); },
   render(){ const body=document.getElementById('dm-body'); if(this.q>=this.rounds.length) return this.finish();
     const r=this.rounds[this.q]; this.answered=false;
     body.innerHTML=`<div class="dm-prog">${this.q+1} / ${this.total} · 점수 ${this.score}</div>
