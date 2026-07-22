@@ -2121,6 +2121,7 @@ const CHAR_DEX = [
       story:'"여기선… 그냥 손님이어도 괜찮은 거죠? 자, 제 주문 맞춰주실래요?"' },
 ];
 const CHAR_BY_ID = {}; CHAR_DEX.forEach(c => CHAR_BY_ID[c.id] = c);
+CHAR_BY_ID['q_rico'] = { id:'q_rico', name:'리코', kind:'npc', img:'chars/npc_rico_talk.png' };
 // ===== 일반 손님 성격 대사 (order:입장 · ok:정답 · miss:오답 · bye:작별) — 아바타 위 말풍선 =====
 const CUSTOMER_DIALOGUE = {
     c_yujin: { order:["…살려주세요. 늘 마시던 걸로, 진하게.", "어제 새벽 세 시에 퇴근했어요. 이 한 잔에 오늘을 겁니다.", "말은 좀 이따가요. 아직 눈이 안 떠졌어요.", "출근길에 여기 불빛 보이면 그래도 좀 살 것 같아요.", "아이스로 주세요. 정신 좀 차리게요."], ok:["크— 이제 좀 사람 같네요. 감사합니다.", "이 맛이에요. 오늘 하루는 버티겠어요.", "역시 여기 오길 잘했다."], miss:["어… 그거 마시면 저 더 졸려요.", "사장님, 저 지금 카페인이 급해요. 다시 부탁해요.", "음, 땡. 한 번만 더요."], bye:["잘 마셨어요. 내일도 살아서 올게요."] },
@@ -2215,6 +2216,36 @@ const MAIN_FACE = {
     m_sera: { smile:'chars/face_sera_real.png',  soft:'chars/face_sera_real.png' },
 };
 function faceFor(id, emo){ return (MAIN_FACE[id]||{})[emo] || ''; }
+
+// ===== 리코 카페 등장 (개그 릴리프 · npc_rico_talk 전신 + 표정) =====
+const RICO_LINES = {
+  daily: [
+    { text:"이번엔 진짜 될 것 같아. ...어, 이 말 하면 꼭 안 되던데. 오늘은 다르겠지, 아마.", face:"chars/face_rico_hype.png" },
+    { text:"신메뉴 완성했어. 이름하여 '대폭발 라떼'! ...천장 좀 봐. 이름값은 확실히 하지?", face:"chars/face_rico_fail.png" },
+    { text:"방금 사장이 나 보고 \"어\" 그랬어. 딱 그 \"어\" 한 마디에 응원이 담겨 있었어. 나 느낌으로 알아.", face:"chars/face_rico_hype.png" },
+    { text:"원두 흘린 거 주워줬어? 나를 위해서? ...소울메이트! 우리 진짜 통하는 거 있다니까.", face:"chars/face_rico_hype.png" },
+    { text:"오늘 옛말 하나 배웠어. 'brave' — 용감하다는 뜻. 내 도전정신이랑 딱이지? 공책에 적었어. B-R-A-V... 어, 그 다음 뭐였지.", face:"chars/face_rico_hype.png" },
+    { text:"라떼 그랑프리 또 신청했어. 트로피 놓을 자리까지 봐뒀다니까. ...그 자리, 아직도 그대로 비어있어.", face:"chars/face_rico_hype.png" },
+    { text:"어제보다 우유 딱 한 방울 덜 흘렸어. 이게 성장이지. 내년쯤엔 아예 안 흘릴 듯.", face:"chars/face_rico_hype.png" },
+    { text:"'천둥의 카푸치노' 한 모금 볼래? ...아 됐다, 방금 나도 마시고 정신이 번쩍 들었어. 너무 짜.", face:"chars/face_rico_fail.png" },
+    { text:"사장, 나 오늘 컨디션 최고야. 손 봐, 하나도 안 떨— (텀블러 떨어뜨림) ...방금 건 리듬 탄 거야.", face:"chars/face_rico_fail.png" },
+    { text:"앞치마에 얼룩 또 하나 늘었네. 이건 훈장이야. 도전한 사람만 받는 거.", face:"chars/face_rico_hype.png" },
+    { text:"나 방금 엄청난 거 깨달았어 — 아이스랑 핫이 동시에 되는 컵! ...어 왜 다들 조용해. 나 또 방해했구나.", face:"chars/face_rico_fail.png" },
+    { text:"사장 커피 마시면 \"오늘 하루 잘 넘겼다\" 소리가 들려. ...어우 진지했다. 취소, 신메뉴 만들러 간다!", face:"chars/face_rico_hype.png" }
+  ],
+  rival: [
+    [ { text:"사장! 오늘은 라떼 아트 대결이다. 누가 하트를 예쁘게 그리나. 준비, 시-", face:"chars/face_rico_hype.png" }, { text:"...하트가 내 얼굴에 그려졌어. 이것도 예술이지?", face:"chars/face_rico_fail.png" }, { text:"사장은 아직 손도 안 댔네. ...무효! 다시 하자.", face:"chars/face_rico_fail.png" } ],
+    [ { text:"이번엔 속도 승부. 에스프레소 누가 빨리 내리나. 셋 세면 시작— 셋!", face:"chars/face_rico_hype.png" }, { text:"...'셋'부터였나 '하나'부터였나. 헷갈려서 내 손이 멈췄어.", face:"chars/face_rico_fail.png" }, { text:"빠르다... 역시 사장이야. 졌는데 기분은 왜 좋지?", face:"chars/face_rico_hype.png" } ],
+    [ { text:"진짜 승부는 지금부터야. 내 '깨어나는 용의 모카' 대 사장이 만든 거 아무거나. 심사는 저 손님이—", face:"chars/face_rico_hype.png" }, { text:"너무 매웠나. 이름이 '용'이라 진짜 불을 뿜을 뻔했네.", face:"chars/face_rico_fail.png" }, { text:"사장 이겼다, 인정. ...근데 다음 메뉴 이름은 벌써 정했어. '두 번째 용'.", face:"chars/face_rico_hype.png" } ]
+  ],
+  sincere: [
+    { text:"사장. 나 사실 알아. 재능 어중간한 거. 화려하지도, 타고나지도 않았어.", face:"chars/face_rico_sincere.png" },
+    { text:"근데 커피 처음 마셨을 때, 그 한 잔이 '오늘 하루 잘 넘겼어' 하고 말 걸어주는 것 같더라고.", face:"chars/face_rico_sincere.png" },
+    { text:"그래서 바리스타 하는 거야. 잘하려고가 아니라 — 누군가한테 그 한마디 건네고 싶어서.", face:"chars/face_rico_sincere.png" },
+    { text:"사장 커피가 딱 그래. 그래서 나 계속 여기 오는 거고.", face:"chars/face_rico_sincere.png" },
+    { text:"...어우 왜 이렇게 진지해졌지?! 방금 거 취소! 못 들은 걸로 해. 나 신메뉴 만들러 간다!", face:"chars/face_rico_hype.png" }
+  ]
+};
 
 const MAIN_DIALOGUE = {
     m_roa: {
@@ -2790,10 +2821,35 @@ const game = {
         }
     },
 
-    nextTurn: function() {
+    // [리코] 손님 사이 낮은 확률 개그 등장 (하루 중반·쿨다운·정상모드만)
+    maybeRicoCameo: function(){
+        this._sinceRico = (this._sinceRico||0) + 1;
+        if(this.gameMode !== 'normal') return false;
+        var dc = this.dailyCount||0; if(dc < 2 || dc >= 9) return false;
+        if(this._sinceRico < 6) return false;
+        if(Math.random() >= 0.22) return false;
+        this._sinceRico = 0;
+        this.playRicoCameo(() => this.nextTurn(true));
+        return true;
+    },
+    playRicoCameo: function(done){
+        var cuts, r = Math.random();
+        if(r < 0.12 && !this._ricoSincereSeen){ cuts = RICO_LINES.sincere; this._ricoSincereSeen = true; }
+        else if(r < 0.42){ cuts = RICO_LINES.rival[Math.floor(Math.random()*RICO_LINES.rival.length)]; }
+        else { cuts = [ RICO_LINES.daily[Math.floor(Math.random()*RICO_LINES.daily.length)] ]; }
+        var i = 0, self = this;
+        var next = function(){
+            if(i >= cuts.length){ if(done) done(); return; }
+            var c = cuts[i++];
+            self.showDialogue('q_rico', c.text, { duration: 99999, face: c.face, onDismiss: next });
+        };
+        next();
+    },
+    nextTurn: function(skipRico) {
         // [버그수정] 진입 즉시 대기중인 다음-턴 예약을 취소 — 중복 스폰(손님 2명 연속) 방지
         if(this._nextTurnTO) { clearTimeout(this._nextTurnTO); this._nextTurnTO = null; }
         if(!this.isActive || this.isPaused) return;
+        if(!skipRico && this.maybeRicoCameo()) return;
 
         this.turnCount = (this.turnCount || 0) + 1; // [SRS] 턴 카운터
 
