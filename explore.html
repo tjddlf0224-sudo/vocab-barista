@@ -291,6 +291,15 @@
   /* ===== 캐릭터별 스킬 이펙트 ===== */
   .b-skillfx{ position:absolute; inset:0; z-index:5; pointer-events:none; overflow:hidden; }
   .b-skillfx > *{ position:absolute; }
+  /* [영단어 글리프] 스킬 이펙트에 섞여 위로 떠오르는 옛말(라떼하임=영어가 마법). 티어↑=개수↑ */
+  .sfx-word{ left:var(--lx,50%); bottom:36%; transform:translateX(-50%); font-family:'Times New Roman',Georgia,serif;
+    font-weight:800; font-size:16px; letter-spacing:1.5px; color:var(--wc,#fff); white-space:nowrap;
+    text-shadow:0 0 9px var(--wc,#fff), 0 0 3px rgba(255,255,255,.9); opacity:0; mix-blend-mode:screen;
+    animation:sfxWord 1.05s ease-out forwards; animation-delay:var(--dl,0s); }
+  @keyframes sfxWord{ 0%{opacity:0; transform:translate(-50%,12px) scale(.7)} 22%{opacity:.9} 100%{opacity:0; transform:translate(-50%,-50px) scale(1.08)} }
+  /* 스킬 버튼 티어 별 */
+  .sk-tier{ color:#ffd76a; font-size:.72em; letter-spacing:0; text-shadow:0 0 4px rgba(255,180,60,.6); }
+  @media (prefers-reduced-motion: reduce){ .sfx-word{ animation-duration:.01s } }
   /* 커피(기본): 에스프레소 폭발 */
   .sc-ring{ left:68%; top:33%; width:20px; height:20px; margin:-10px; border-radius:50%; border:6px solid #6f4a2f; box-shadow:0 0 16px #b9793e; transform:scale(0); animation:scRing .5s ease-out forwards; }
   @keyframes scRing{ 0%{transform:scale(0);opacity:1} 100%{transform:scale(9);opacity:0;border-width:1px} }
@@ -654,7 +663,8 @@ const SaveBridge = {
       equip:Object.assign({weapon:null,armor:null},ex.equip||{}),
       materials:ex.materials||{}, items:ex.items||[], companion:ex.companion||'none',
       map:ex.map||{zone:'forest'}, pos:ex.pos||null, steps:ex.steps||0,
-      quests:ex.quests||{}, questN:ex.questN||{}, events:ex.events||{}, explored:ex.explored||{}, maps:ex.maps||{} }; },
+      quests:ex.quests||{}, questN:ex.questN||{}, events:ex.events||{}, explored:ex.explored||{}, maps:ex.maps||{},
+      skillTier:(ex.skillTier&&typeof ex.skillTier==='object')?ex.skillTier:{} }; },  // 동행별 스킬 진화 티어(0~3)
   saveExplore(s){ localStorage.setItem(EXPLORE_KEY,JSON.stringify(s)); },
 };
 
@@ -1794,11 +1804,18 @@ const ZONES = {
   deepwood: { name:'깊은 숲', icon:'<svg class="uic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.5 15.2A7.2 7.2 0 0 1 9 6.4a7.4 7.4 0 1 0 8.5 8.8z" fill="#c9b6ee" stroke="#6b4aa0" stroke-width="1.2" stroke-linejoin="round"/></svg>', minLv:6, lvMax:11, diff:1.4,  tint:'rgba(14,16,52,0.52)',    monsters:['shadowwolf','wisp','crow'], boss:'golem', prev:'forest',   treeOrange:0.7 },
 };
 // 동행별 고유 스킬 (게이지 가득 차면 사용)
+// [스킬 4단 진화] 티어명(저작권 안전·커피/울림 네이티브). 쓸수록 랜덤 승급, 내려가지 않음.
+const SKILL_TIERS = ['첫 방울','블렌드','시그니처','울림']; // First Drop → Blend → Signature → Resonance
+// mult/hits/heal은 티어(0~3) 인덱스 배열. words=이펙트에 빛으로 섞이는 대표 옛말(라떼하임=영어가 마법).
 const SKILLS = {
-  none: { name:'에스프레소 샷', icon:'☕', mult:2.2, color:'#ff8a3d', fx:'coffee' },
-  roa:  { name:'시그니처 일격', icon:'⚔️', mult:2.6, noMiss:true, alwaysCrit:true, color:'#ffd54f', fx:'slash' },
-  luna: { name:'달빛 세례',     icon:'🌙', mult:2.0, ignoreDef:true, color:'#b46bff', fx:'moon' },
-  sera: { name:'스타라이트 쇼', icon:'⭐', mult:1.8, heal:0.3, color:'#ff8fc4', fx:'star' },
+  none: { name:'첫 향 한 모금', en:'First Sip', color:'#ff8a3d', fx:'coffee',
+          mult:[2.2,2.5,2.8,3.2], hits:[1,1,2,3], words:['BREW','SIP','ROAST','AROMA','WARM'] },
+  roa:  { name:'결 가르기', en:'Cutting Edge', color:'#ffd54f', fx:'slash', noMiss:true, alwaysCrit:true,
+          mult:[2.6,2.9,3.2,3.6], hits:[1,1,2,3], words:['EDGE','PRECISE','CLEAN','SHARP','EXACT'] },
+  luna: { name:'달빛 잔물결', en:'Moonwash', color:'#b46bff', fx:'moon', ignoreDef:true,
+          mult:[2.0,2.3,2.6,3.0], hits:[1,1,2,3], words:['MOON','TIDE','CALM','SILVER','REMEMBER'] },
+  sera: { name:'별빛 앙코르', en:'Starlight Encore', color:'#ff8fc4', fx:'star',
+          mult:[1.8,2.0,2.3,2.6], hits:[1,1,2,3], heal:[0.30,0.33,0.36,0.40], words:['SHINE','STAR','ENCORE','STAGE','SPARK'] },
 };
 
 // ===== UI 아이콘(SVG) — 이모지 대체. 게임 아트톤(굵은 외곽선 없는 플랫)에 맞춘 인라인 SVG =====
@@ -1948,44 +1965,84 @@ const Battle = {
     const fill=document.getElementById('skill-fill'); if(fill) fill.style.height=Math.min(100,this.gauge/this.GMAX*100)+'%';
     sb.disabled=!(this._canAct&&ready); sb.classList.toggle('ready', ready&&!!this._canAct); },
   addGauge(n){ const g=1+((Explore.vocabPower&&Explore.vocabPower().gaugePct)||0); this.gauge=Math.min(this.GMAX,(this.gauge||0)+n*g); this.refreshSkill(); }, // 울림 게이지속도%(현재 0)
-  setSkillLabel(){ const sk=SKILLS[Explore.state.companion||'none']||SKILLS.none; document.getElementById('skill-lb').textContent=sk.name; },  /* [버튼] 스킬 아이콘은 고정 별 SVG 유지, 이름만 동적 갱신 */
-  skillFlash(sk){ const f=document.getElementById('b-flash'); if(!f)return; f.style.background='radial-gradient(circle, '+(sk.color||'#fff')+'cc, transparent 72%)'; f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); },
+  // [스킬 진화] 동행별 티어 조회 / 쓸수록 랜덤 승급(내려가지 않음, 최대 3=울림)
+  skillTierOf(ck){ const st=Explore.state.skillTier; return (st&&st[ck])||0; },
+  tryPromote(ck){ if(!Explore.state.skillTier) Explore.state.skillTier={};
+    const t=Explore.state.skillTier[ck]||0;
+    if(t<3 && this._rand()<0.18){ Explore.state.skillTier[ck]=t+1; SaveBridge.saveExplore(Explore.state); return t+1; }
+    return -1; },
+  setSkillLabel(){ const ck=Explore.state.companion||'none'; const sk=SKILLS[ck]||SKILLS.none; const t=this.skillTierOf(ck);
+    const lb=document.getElementById('skill-lb'); if(lb) lb.innerHTML=sk.name+' <span class="sk-tier">'+('★'.repeat(t+1))+'</span>'; },  /* 이름 + 티어 별(★~★★★★) */
+  skillFlash(sk, tier){ const f=document.getElementById('b-flash'); if(!f)return; const t=tier||0;
+    f.style.background='radial-gradient(circle, '+(sk.color||'#fff')+'cc, transparent '+(72+t*5)+'%)'; // 티어↑=밝은 코어 확대
+    f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); },
   // [스킬 연출] 캐릭터별 고유 이펙트 — b-skillfx 레이어에 테마별 파티클/애니 주입
-  playSkillFx(key){
+  playSkillFx(key, tier, sk){
     const host=document.getElementById('b-skillfx'); if(!host) return;
-    host.className='b-skillfx sfx-'+key; host.innerHTML='';
+    const t=tier||0; const tf=1+t*0.35;  // 티어↑ = 파티클 수 증가
+    host.className='b-skillfx sfx-'+key+' sfx-t'+t; host.innerHTML='';
     const R=(a,b)=>a+this._rand()*(b-a);
+    const N=(base)=>Math.round(base*tf);
     const mk=(cls,vars)=>{ const d=document.createElement('div'); d.className=cls;
       if(vars) for(const k in vars) d.style.setProperty(k, vars[k]); host.appendChild(d); return d; };
     if(key==='coffee'){
       mk('sc-ring'); mk('sc-steam');
-      for(let i=0;i<11;i++){ const a=R(0,6.28), s=R(45,165); mk('sc-drop',{'--dx':(Math.cos(a)*s).toFixed(0)+'px','--dy':(Math.sin(a)*s-18).toFixed(0)+'px','--dl':R(0,0.12).toFixed(2)+'s'}); }
+      for(let i=0;i<N(11);i++){ const a=R(0,6.28), s=R(45,165); mk('sc-drop',{'--dx':(Math.cos(a)*s).toFixed(0)+'px','--dy':(Math.sin(a)*s-18).toFixed(0)+'px','--dl':R(0,0.12).toFixed(2)+'s'}); }
     } else if(key==='slash'){
       mk('ss-flash');
       for(let i=0;i<3;i++) mk('ss-arc',{'--dl':(i*0.11).toFixed(2)+'s','--rot':(-42+i*20)+'deg'});
-      for(let i=0;i<15;i++){ const a=R(0,6.28), s=R(30,120); mk('ss-spark',{'--dx':(Math.cos(a)*s).toFixed(0)+'px','--dy':(Math.sin(a)*s).toFixed(0)+'px','--dl':R(0,0.28).toFixed(2)+'s'}); }
+      for(let i=0;i<N(15);i++){ const a=R(0,6.28), s=R(30,120); mk('ss-spark',{'--dx':(Math.cos(a)*s).toFixed(0)+'px','--dy':(Math.sin(a)*s).toFixed(0)+'px','--dl':R(0,0.28).toFixed(2)+'s'}); }
     } else if(key==='moon'){
       mk('sm-glow'); mk('sm-ring'); mk('sm-moon');
-      for(let i=0;i<16;i++){ mk('sm-spark',{'--lx':R(6,94).toFixed(0)+'%','--dl':R(0,0.5).toFixed(2)+'s','--sz':R(4,10).toFixed(0)+'px'}); }
+      for(let i=0;i<N(16);i++){ mk('sm-spark',{'--lx':R(6,94).toFixed(0)+'%','--dl':R(0,0.5).toFixed(2)+'s','--sz':R(4,10).toFixed(0)+'px'}); }
     } else if(key==='star'){
       mk('st-flash'); mk('st-burst'); mk('st-heal');
-      for(let i=0;i<18;i++){ mk('st-fall',{'--lx':R(4,96).toFixed(0)+'%','--dl':R(0,0.55).toFixed(2)+'s','--sz':R(9,18).toFixed(0)+'px','--hue':(this._rand()<0.5?'#ffd36b':'#ff8fc4')}); }
+      for(let i=0;i<N(18);i++){ mk('st-fall',{'--lx':R(4,96).toFixed(0)+'%','--dl':R(0,0.55).toFixed(2)+'s','--sz':R(9,18).toFixed(0)+'px','--hue':(this._rand()<0.5?'#ffd36b':'#ff8fc4')}); }
     }
-    clearTimeout(this._sfxT); this._sfxT=setTimeout(()=>{ host.className='b-skillfx'; host.innerHTML=''; }, 1250);
+    // [영단어 글리프] 라떼하임=영어가 마법. 티어↑=섞이는 옛말 수↑(1→2→3→5). 위로 떠오르며 페이드.
+    const words=(sk&&sk.words)||null;
+    if(words&&words.length){
+      const nW=[1,2,3,5][t]||1; const color=(sk&&sk.color)||'#fff'; const used=[];
+      for(let i=0;i<nW;i++){
+        let word=words[Math.floor(this._rand()*words.length)]; let g=0;
+        while(used.indexOf(word)>=0 && g++<8) word=words[Math.floor(this._rand()*words.length)];
+        used.push(word);
+        const el=mk('sfx-word',{'--lx':R(22,78).toFixed(0)+'%','--dl':R(0,0.38).toFixed(2)+'s','--wc':color});
+        el.textContent=word;
+      }
+    }
+    clearTimeout(this._sfxT); this._sfxT=setTimeout(()=>{ host.className='b-skillfx'; host.innerHTML=''; }, 1350);
   },
   async useSkill(){ if(this.busy||!this.active||this.gauge<this.GMAX)return; this.busy=true; this.setButtons(false);
     const _ck=Explore.state.companion||'none'; const sk=SKILLS[_ck]||SKILLS.none; const p=this.pStat();
+    const tier=this.skillTierOf(_ck);
+    const mult=(sk.mult&&sk.mult[tier]!=null)?sk.mult[tier]:(Array.isArray(sk.mult)?sk.mult[0]:sk.mult)||2.2;
+    const hits=(sk.hits&&sk.hits[tier])||1;
     const ps=document.getElementById('p-self'), es=document.getElementById('e-sprite');
-    this.msg(`${UI_ICON[SKILL_ICON[_ck]]||''} <b>${sk.name}</b>!`); this.skillFlash(sk); this.playSkillFx(sk.fx||'coffee'); ps.classList.add('lunge'); await this.wait(230);
-    const def=sk.ignoreDef?0:this.enemy.def; let b=p.atk*sk.mult-def*0.5; b*=0.95+this._rand()*0.2;
-    const crit=sk.alwaysCrit||this._rand()<0.2; if(crit)b*=1.6; const dmg=Math.max(1,Math.round(b));
-    this.eHp-=dmg; es.classList.add('hit'); this.shake(); this.hitFx('e-sprite', false);
-    Sfx.play(crit?'crit':'hit'); exHaptic('heavy');
-    this.pop('e','-'+dmg+(crit?'!':''),crit?'crit':null);
-    let m=`${sk.name}! ${this.enemy.name}에게 <b>${dmg}</b> 피해!${crit?' 치명타!':''}`;
-    if(sk.heal){ const h=Math.round(p.maxHp*sk.heal); Explore.state.stats.hp=Math.min(p.maxHp,p.hp+h); m+=`<br>${UI_ICON.spark} 체력 ${h} 회복!`; Explore.refreshHUD(); }
-    this.msg(m); this.renderBars(); await this.wait(750); es.classList.remove('hit'); ps.classList.remove('lunge');
+    this.msg(`${UI_ICON[SKILL_ICON[_ck]]||''} <b>${sk.name}</b> · ${SKILL_TIERS[tier]||''}!`);
+    this.skillFlash(sk, tier); this.playSkillFx(sk.fx||'coffee', tier, sk); ps.classList.add('lunge'); await this.wait(230);
+    // 총딜: 배율 + 다단히트 보너스(×1.2/히트초과). 크리엔 울림 크리 보너스도 반영(플레이어 스킬).
+    const def=sk.ignoreDef?0:this.enemy.def; let base=p.atk*mult-def*0.5; base*=0.95+this._rand()*0.2; base*=(1+0.2*(hits-1));
+    const crit=sk.alwaysCrit||this._rand()<(0.2+((p.vocab&&p.vocab.critBonus)||0)); if(crit)base*=1.6;
+    const total=Math.max(1,Math.round(base));
+    // 히트 분할 애니메이션(다단히트 손맛)
+    let dealt=0;
+    for(let h=0; h<hits; h++){
+      const isLast=(h===hits-1); const dmg=isLast?(total-dealt):Math.round(total/hits); dealt+=dmg;
+      this.eHp-=dmg; es.classList.add('hit'); this.shake(); this.hitFx('e-sprite', crit);
+      Sfx.play(crit?'crit':'hit'); exHaptic('heavy'); this.pop('e','-'+dmg+(crit?'!':''),crit?'crit':null); this.renderBars();
+      if(!isLast){ await this.wait(180); es.classList.remove('hit'); }
+      if(this.eHp<=0) break;
+    }
+    let m=`${sk.name}! ${this.enemy.name}에게 <b>${total}</b> 피해!${crit?' 치명타!':''}${hits>1?` (${hits}연타)`:''}`;
+    if(sk.heal){ const hpR=(sk.heal[tier]!=null?sk.heal[tier]:(Array.isArray(sk.heal)?sk.heal[0]:sk.heal)); const h=Math.round(p.maxHp*hpR);
+      Explore.state.stats.hp=Math.min(p.maxHp,p.hp+h); m+=`<br>${UI_ICON.spark} 체력 ${h} 회복!`; Explore.refreshHUD(); }
+    this.msg(m); this.renderBars(); await this.wait(650); es.classList.remove('hit'); ps.classList.remove('lunge');
     this.gauge=0; this.refreshSkill();
+    // [진화] 쓸수록 랜덤 승급 → 연출 + 라벨 갱신
+    const promoted=this.tryPromote(_ck);
+    if(promoted>=0){ this.setSkillLabel(); this.skillFlash(sk, promoted);
+      this.msg(`${UI_ICON.spark} <b>결이 한 겹 깊어졌다 — ${SKILL_TIERS[promoted]}!</b>`); exHaptic('success'); await this.wait(1000); }
     if(this.eHp<=0) return this.win(); await this.enemyTurn(); },
   msg(h){ document.getElementById('b-msg').innerHTML=h; },
   shake(){ const a=document.getElementById('b-arena'); a.classList.remove('shake'); void a.offsetWidth; a.classList.add('shake'); setTimeout(()=>a.classList.remove('shake'),300); },
