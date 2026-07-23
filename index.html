@@ -2812,6 +2812,7 @@ const game = {
             this.craftedItems = (data.craftedItems && typeof data.craftedItems==='object') ? data.craftedItems : {}; // 탐험 조합 아이템(공유)
             this.feverCount = data.feverCount || 0;
             this.exploreVisits = data.exploreVisits || 0;
+            this.demitasStage = data.demitasStage || 0;   // [버그수정] 드미타스 컷신 진행도 복원
             this.unlockedAchievements = Array.isArray(data.unlockedAchievements) ? data.unlockedAchievements : [];
             if(data.stats) {
                 totalServedCount = data.stats.totalServed || 0;
@@ -2827,6 +2828,7 @@ const game = {
             this.currentEquip = { counter: 0, wall: 0, pet: 0 };
             this.feverCount = 0;
             this.exploreVisits = 0;
+            this.demitasStage = 0;
             this.unlockedAchievements = [];
         }
 
@@ -2904,6 +2906,7 @@ const game = {
             craftedItems: this.craftedItems || {},
             feverCount: this.feverCount || 0,
             exploreVisits: this.exploreVisits || 0,
+            demitasStage: this.demitasStage || 0,   // [버그수정] 드미타스 컷신 진행도 — 저장 안 하면 매 세션 이미 본 막이 재발동
             unlockedAchievements: this.unlockedAchievements || []
         };
         localStorage.setItem('vb_save_v7', JSON.stringify(data));
@@ -3592,17 +3595,8 @@ const game = {
             speak(this.currentCust.data.ex, afterSpeech);
 
         } else {
-            // [오답인 경우]
-            if(this.comboShield) {
-                this.comboShield = false; // 🛡️ 보호막 소모 — 콤보/피버 유지
-                this.showFloatingText(`${UI_ICON.shield} 콤보 보호!`, document.getElementById('cust-el'));
-                this.handleFail(false);
-            } else {
-                this.combo = 0;
-                this.endFever();
-                hideComboUI();
-                this.handleFail(false);
-            }
+            // [오답인 경우] 콤보/실드/피버 처리는 handleFail로 통일됨(시간초과 경로와 동일 처리)
+            this.handleFail(false);
         }
     },
 
@@ -3649,7 +3643,18 @@ const game = {
         flashFX('bad'); // [이펙트] 오답 화면 플래시
         totalWrongCount++; // [신규] 학습 통계용 누적 오답 수
         this.lives--; this.updateHUD();
-        
+
+        // [버그수정] 콤보/피버/실드 처리를 여기서 통일 — 예전엔 오답 경로(checkAnswer)에만 있고
+        //   시간초과 경로(startTimer→handleFail(true))엔 없어서 '시간초과가 오답보다 유리'(콤보·피버 유지)했다.
+        if(this.comboShield) {
+            this.comboShield = false; // 🛡️ 보호막 소모 — 콤보/피버 유지
+            this.showFloatingText(`${UI_ICON.shield} 콤보 보호!`, document.getElementById('cust-el'));
+        } else {
+            this.combo = 0;
+            this.endFever();
+            hideComboUI();
+        }
+
         // 1. (기존 유지) 일반 손님일 때 버튼 정답 표시
         if (this.currentCust.type !== 'vip') {
             const buttons = document.querySelectorAll('.cup-btn');
@@ -5089,19 +5094,24 @@ if(typeof window.vbDeleteAccount!=='function'){ window.vbDeleteAccount=function(
   if(typeof firebase==='undefined' || !window.vbAuth){ hideLogin(); return; }
   const auth = window.vbAuth;
   // ---- 클라우드 저장/복원: vb_users/{uid} ----
+  // [데이터보호] 반환값을 상태로 구분한다. 'error'(읽기 실패)를 정상 false와 뭉개면
+  //   재설치+일시 네트워크 오류 시 빈 로컬을 클라우드에 덮어써 백업을 영구 소실시킬 수 있다.
+  //   'loaded'=클라우드가 최신→적용 · 'local-newer'=로컬 유지 · 'new-account'=문서없음(최초) · 'no-db' · 'error'=덮어쓰기 금지
   async function loadCloud(uid){
-    if(!window.vbDB) return false;
+    if(!window.vbDB) return 'no-db';
     try{
       const doc = await window.vbDB.collection('vb_users').doc(uid).get();
-      if(!doc.exists) return false;
+      if(!doc.exists) return 'new-account';
       const d = doc.data()||{}; const cloudTs = d.ts||0, localTs = +(localStorage.getItem('vb_cloud_ts')||0);
-      if(cloudTs <= localTs) return false;   // 로컬이 최신이면 유지
+      if(cloudTs <= localTs) return 'local-newer';   // 로컬이 최신이면 유지
       const data = d.data||{}; SYNC_KEYS.forEach(k=>{ if(data[k]!=null) localStorage.setItem(k, data[k]); });
-      localStorage.setItem('vb_cloud_ts', String(cloudTs)); return true;
-    }catch(e){ console.warn('cloud load 실패', e); return false; }
+      localStorage.setItem('vb_cloud_ts', String(cloudTs)); return 'loaded';
+    }catch(e){ console.warn('cloud load 실패(덮어쓰기 보류)', e); return 'error'; }
   }
   async function saveCloud(){
     const u = auth.currentUser; if(!u || !window.vbDB) return;
+    // [데이터보호] 안전한 최초 동기화가 확정(vb_synced)되기 전엔 클라우드에 쓰지 않는다 — 읽기 실패 시 백업 덮어쓰기 방지.
+    if(sessionStorage.getItem('vb_synced')!=='1') return;
     try{ const ts = Date.now(), data={}; SYNC_KEYS.forEach(k=>{ const v=localStorage.getItem(k); if(v!=null) data[k]=v; });
       await window.vbDB.collection('vb_users').doc(u.uid).set({ data, ts, email:u.email||'', updatedAt: ts }, {merge:true});
       localStorage.setItem('vb_cloud_ts', String(ts));
@@ -5148,8 +5158,13 @@ if(typeof window.vbDeleteAccount!=='function'){ window.vbDeleteAccount=function(
     if(user){
       try{ localStorage.setItem('vb_was_authed','1'); }catch(e){}  // 다음 실행 때 로그인창 조기숨김용
       if(sessionStorage.getItem('vb_synced')==='1'){ hideLogin(); return; }
-      const changed = await loadCloud(user.uid); sessionStorage.setItem('vb_synced','1');
-      if(changed){ location.reload(); return; }
+      const res = await loadCloud(user.uid);
+      if(res === 'error'){
+        // [데이터보호] 클라우드 읽기 실패 — 동기화를 확정하지 않고(saveCloud도 차단됨) 로컬로 진행, 다음 실행에 재시도.
+        hideLogin(); return;
+      }
+      sessionStorage.setItem('vb_synced','1');   // 안전 상태 확정 → 이제부터 saveCloud 허용
+      if(res === 'loaded'){ location.reload(); return; }
       hideLogin(); saveCloud();
     } else {
       if(window.__vbDeleting) return;   // 계정 삭제 진행 중이면 로그인 화면/동기화 플래그를 건드리지 않음
