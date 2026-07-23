@@ -243,8 +243,8 @@
 /* [CG 도감] */
 #cgdex-grid { width:100%; max-width:460px; max-height:60vh; overflow-y:auto; padding:2px 6px 10px; }
 .cgdex-cat { color:#ffd54f; font-family:'Jua',sans-serif; font-size:0.9rem; text-align:left; margin:12px 2px 6px; }
-.cgdex-row { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
-.cgdex-cell { position:relative; aspect-ratio:3/4; border-radius:11px; overflow:hidden; border:2px solid rgba(255,202,40,.35); background:rgba(93,64,55,.14); box-shadow:0 3px 0 rgba(0,0,0,.14); cursor:pointer; transition:transform .1s; }
+.cgdex-row { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+.cgdex-cell { position:relative; aspect-ratio:16/9; border-radius:11px; overflow:hidden; border:2px solid rgba(255,202,40,.35); background:rgba(93,64,55,.14); box-shadow:0 3px 0 rgba(0,0,0,.14); cursor:pointer; transition:transform .1s; }
 .cgdex-cell:active { transform:scale(.95); }
 .cgdex-cell img { width:100%; height:100%; object-fit:cover; object-position:center; display:block; }
 .cgdex-cell.locked { background:#2a2018; border-color:#3e2f22; cursor:default; }
@@ -1424,7 +1424,7 @@ body.fever-mode #fever-fx { opacity:1; }
             <button class="dex-tab active" id="dex-tab-word" onclick="game.switchDexTab('word')"><svg class="bic" viewBox="0 0 24 24"><path d="M4 4.5h6.2A1.8 1.8 0 0 1 12 6.3v13a1.5 1.5 0 0 0-1.5-1.3H4z" fill="currentColor"/><path d="M20 4.5h-6.2A1.8 1.8 0 0 0 12 6.3v13a1.5 1.5 0 0 1 1.5-1.3H20z" fill="currentColor" opacity=".7"/></svg> 단어</button>
             <button class="dex-tab" id="dex-tab-char" onclick="game.switchDexTab('char')"><svg class="bic" viewBox="0 0 24 24"><circle cx="8.6" cy="8.4" r="3.1" fill="currentColor"/><path d="M3.4 19a5.2 5.2 0 0 1 10.4 0z" fill="currentColor"/><circle cx="16.6" cy="9.4" r="2.5" fill="currentColor" opacity=".7"/><path d="M13 19a4.4 4.4 0 0 1 8 0z" fill="currentColor" opacity=".7"/></svg> 손님</button>
             <button class="dex-tab" id="dex-tab-card" onclick="game.switchDexTab('card')"><svg class="bic" viewBox="0 0 24 24"><rect x="3.2" y="6" width="12" height="15" rx="2" transform="rotate(-9 9.2 13.5)" fill="currentColor" opacity=".55"/><rect x="8.8" y="4" width="12" height="15" rx="2" transform="rotate(7 14.8 11.5)" fill="currentColor"/></svg> 카드</button>
-            <button class="dex-tab" id="dex-tab-cg" onclick="game.switchDexTab('cg')"><svg class="bic" viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="13" rx="2.2" fill="currentColor" opacity=".85"/><circle cx="8.6" cy="10" r="1.7" fill="#2a1c12"/><path d="M4.5 17.2l4.6-4.6 2.8 2.8 3.6-3.6 4 4.6z" fill="#2a1c12"/></svg> CG</button>
+            <button class="dex-tab" id="dex-tab-cg" onclick="game.switchDexTab('cg')"><svg class="bic" viewBox="0 0 24 24"><rect x="3.5" y="5.5" width="17" height="13" rx="2.2" fill="currentColor" opacity=".85"/><circle cx="8.6" cy="10" r="1.7" fill="#2a1c12"/><path d="M4.5 17.2l4.6-4.6 2.8 2.8 3.6-3.6 4 4.6z" fill="#2a1c12"/></svg> 이벤트</button>
         </div>
         <div id="dex-pane-word" class="dex-pane">
             <div style="background:rgba(0,0,0,.25); border:2px solid rgba(255,202,40,.3); padding:12px; border-radius:14px; color:#fff; margin-bottom:6px; width:90%; max-width:400px;">
@@ -1453,7 +1453,7 @@ body.fever-mode #fever-fx { opacity:1; }
         </div>
         <div id="dex-pane-cg" class="dex-pane hidden">
             <div style="background:rgba(0,0,0,.25); border:2px solid rgba(255,202,40,.3); padding:10px; border-radius:14px; color:#fff; margin-bottom:8px; width:90%; max-width:430px;">
-                모은 CG <b id="cgdex-count" style="color:var(--gold); font-size:1.2rem;">0</b>
+                모은 이벤트 <b id="cgdex-count" style="color:var(--gold); font-size:1.2rem;">0</b>
                 <span style="opacity:.7;">/ <span id="cgdex-total">0</span></span>
                 <div style="font-size:.72rem; opacity:.75; margin-top:4px;">유대 막·이벤트에서 본 장면이 모여요. 눌러서 다시 감상</div>
             </div>
@@ -2307,6 +2307,14 @@ const CG_DEX = [
   { cat:'특별',   k:'cg_three_regulars_mark',      t:'세 단골' },
   { cat:'특별',   k:'cg_ending_new_morning',       t:'새 아침' },
 ];
+// 이벤트 도감은 '가로 원본'으로 감상 — 게임 내 컷신은 세로(폰 화면 꽉참) 유지.
+// 세로로 재구성해 교체된 CG는 가로 원본을 assets/art/dex/에 별도 보관하고 도감만 그걸 참조.
+const CG_WIDE = new Set([
+  'cg_dmitasse_first_visit','cg_dmitasse_young_memory','cg_luna_act1_moonlight','cg_luna_awakening',
+  'cg_luna_empty_chair','cg_roa_act2_name','cg_roa_act4_summons','cg_roa_grindheim_flashback',
+  'cg_roa_three_cups','cg_sera_act2_name','cg_sera_five_song','cg_three_regulars_mark'
+]);
+function cgWideSrc(key){ return CG_WIDE.has(key) ? ('assets/art/dex/' + key + '.jpg') : ('assets/art/' + key + '.jpg'); }
 
 // ===== 유대 5막 다회차 대화 씬 (해금 시 여러 컷 재생 → CG → 보상) · 성별 분기 tail 포함 =====
 const AFFECTION_SCENES = {
@@ -4409,7 +4417,7 @@ equipItem: function(category, level) {
         const e = CG_DEX.find(c => c.k === key);
         if(!e) return;
         if(!Array.isArray(this.seenCgs) || this.seenCgs.indexOf(key) === -1) return; // 잠긴 CG는 감상 불가
-        showCutsceneCG('assets/art/' + key + '.jpg', e.t, null);
+        showCutsceneCG(cgWideSrc(key), e.t, null);   // 도감은 가로 원본으로 감상
     },
     renderCgDex: function() {
         const seen = Array.isArray(this.seenCgs) ? this.seenCgs : [];
@@ -4435,7 +4443,7 @@ equipItem: function(category, level) {
                 const cell = document.createElement('div');
                 cell.className = 'cgdex-cell' + (unlocked ? '' : ' locked');
                 if(unlocked) {
-                    cell.innerHTML = `<img src="assets/art/${c.k}.jpg" alt="" loading="lazy"><span class="cgdex-t">${c.t}</span>`;
+                    cell.innerHTML = `<img src="${cgWideSrc(c.k)}" alt="" loading="lazy"><span class="cgdex-t">${c.t}</span>`;
                     cell.onclick = () => this.viewCg(c.k);
                 } else {
                     cell.innerHTML = `<span class="cgdex-q">?</span>`;
