@@ -2379,7 +2379,7 @@ const DEMITAS_SCENES = [
     { title:"봉인고", cuts:[
       { who:'q_demitas', text:"여기까지 왔군. …봉인고(封印庫)에 온 걸 환영하네.", face:"chars/face_demitasse_base.png" },
       { who:'q_demitas', text:"이 방의 잔들을 보게. 백 년간 내가 모은 말들이 전부 여기 잠들어 있네.", face:"chars/face_demitasse_base.png" },
-      { who:'q_demitas', text:"루나가 잃어버린 이름도, 자네 친구들이 아끼던 말도, 이젠 안전하지. 아무도 잃을 수 없으니.", face:"chars/face_demitasse_base.png" },
+      { who:'q_demitas', text:"루나가 잃은 것과 같은 말들도, 자네 친구들이 아끼던 말도, 여기선 안전하지. 아무도 잃을 수 없으니.", face:"chars/face_demitasse_base.png" },
       { who:'boss', text:"안전한 게 아니라, 갇힌 거예요." },
       { who:'q_demitas', text:"말장난은 접지. 오늘 여기서 정하세. 나눔이 옳은지, 봉인이 옳은지.", face:"chars/face_demitasse_base.png" },
       { who:'q_demitas', text:"저들은 자네 편이 아니야. 그저 구경하러 온 사람들이지.", face:"chars/face_demitasse_base.png" },
@@ -2401,6 +2401,12 @@ const DEMITAS_SCENES = [
     ], cg:"assets/art/cg_climax_share_cup.jpg", caption:"드미타스가 백 년 만에 잔을 비우고, 다시 앞치마를 집어 들었다." }
 ];
 const DEMITAS_THRESHOLDS = [2500, 8000, 20000, 40000]; // 각 막 해금 누적점수
+// [스토리 순서] 드미타스 막별 '유대 선행조건' — {캐릭터id: 최소 열람 막수}.
+//   누적점수(lifetimeScore)와 유대(호감도)는 완전 독립 축이라, 이 게이트가 없으면 루나를 거의
+//   응대하지 않은 플레이어도 점수만 넘기면 3막이 떠서, 아직 게임이 보여주지 않은 루나의 비밀
+//   ('기억을 봉인에 바쳤다')을 빌런 입으로 먼저 듣게 된다. 3막(봉인고)·4막(클라이맥스)은
+//   루나 3막 공개 이후에만 발생. 미충족이면 대기했다가 조건을 채우는 순간 자연 발생한다.
+const DEMITAS_REQ = [ null, null, { m_luna: 3 }, { m_luna: 3 } ];
 DEMITAS_SCENES[0].introCg = 'assets/art/cg_dmitasse_first_visit.jpg'; DEMITAS_SCENES[0].introCaption = '검은 큐레이터, 드미타스가 처음으로 골목 끝 카페에 들어섰다.';
 DEMITAS_SCENES[2].introCg = 'assets/art/cg_dmitasse_vault.jpg'; DEMITAS_SCENES[2].introCaption = '봉인고 — 백 년간 모아 가둔 말들이 잠든 곳.';
 DEMITAS_SCENES[2].fx = 'assets/art/fx_seal1.png'; DEMITAS_SCENES[2].fxKind = 'seal'; // 봉인고 개봉 — 봉인 파열 이펙트
@@ -3033,6 +3039,9 @@ const game = {
         var st = this.demitasStage || 0;
         if(st >= DEMITAS_SCENES.length) return false;
         if((this.lifetimeScore||0) < DEMITAS_THRESHOLDS[st]) return false;
+        // [스토리 순서] 유대 선행조건 미충족이면 이번엔 발생시키지 않고 대기(점수는 유지되므로 조건 충족 시 자연 발생)
+        var req = DEMITAS_REQ[st];
+        if(req){ for(var k in req){ if(((this.charActs && this.charActs[k]) || 0) < req[k]) return false; } }
         this.demitasStage = st + 1; this.saveData();
         this.playCutscene(DEMITAS_SCENES[st], () => this.nextTurn(true));
         return true;
