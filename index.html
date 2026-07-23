@@ -2248,9 +2248,9 @@ const AFFECTION_STORY = {
 // 호감 단계: low(<30) · mid(30~59) · high(>=60). 캐릭터 개성·말투 살린 오리지널 대사.
 // ===== 유대 막 해금 CG (있는 막만 표시) · 경로 assets/art =====
 const AFFECTION_CG = {
-    m_roa:  { 2:'assets/art/cg_roa_grandprix.jpg',     3:'assets/art/cg_roa_act3_burnt_tongue.jpg', 5:'assets/art/cg_roa_act5_own_apron.jpg' },
-    m_luna: { 3:'assets/art/cg_luna_guardian_war.jpg', 4:'assets/art/cg_luna_empty_chair.jpg',      5:'assets/art/cg_luna_act5_memory.jpg' },
-    m_sera: { 1:'assets/art/cg_sera_disguise.jpg',     3:'assets/art/cg_sera_five_year_song.jpg',   4:'assets/art/cg_sera_act4_happiness.jpg' },
+    m_roa:  { 1:'assets/art/cg_roa_act1_first_sip.jpg', 2:'assets/art/cg_roa_act2_name.jpg',        3:'assets/art/cg_roa_act3_burnt_tongue.jpg', 4:'assets/art/cg_roa_act4_summons.jpg', 5:'assets/art/cg_roa_act5_own_apron.jpg' },
+    m_luna: { 1:'assets/art/cg_luna_act1_moonlight.jpg', 3:'assets/art/cg_luna_guardian_war.jpg',   4:'assets/art/cg_luna_empty_chair.jpg',      5:'assets/art/cg_luna_act5_memory.jpg' },
+    m_sera: { 1:'assets/art/cg_sera_disguise.jpg',     2:'assets/art/cg_sera_act2_name.jpg',        3:'assets/art/cg_sera_five_year_song.jpg',   4:'assets/art/cg_sera_act4_happiness.jpg', 5:'assets/art/cg_sera_five_song.jpg' },
 };
 function affCg(id, actNum){ return (AFFECTION_CG[id]||{})[actNum] || ''; }
 
@@ -2326,20 +2326,22 @@ const DEMITAS_SCENES = [
       { who:'q_demitas', text:"…이건, 내가 불가능하다고 믿었던 거야.", face:"chars/face_demitasse_base.png" }
     ] },
     { title:"다시 한 잔", cuts:[
-      { who:'q_demitas', text:"…자네가 이겼네. 봉인고를 부수지도 않고, 나를 이겼어.", face:"chars/face_demitasse_base.png" },
+      { who:'q_demitas', text:"…자네가 이겼네. 봉인고를 부수지도 않고, 나를 이겼어.", face:"chars/face_demitasse_crack.png" },
       { who:'boss', text:"이거, 오래전에 잃어버리신 거 아니에요?" },
-      { who:'q_demitas', text:"…이 단어를, 어떻게.", face:"chars/face_demitasse_base.png" },
+      { who:'q_demitas', text:"…이 단어를, 어떻게.", face:"chars/face_demitasse_crack.png" },
       { who:'boss', text:"'share(셰어)' — 나눈다는 뜻이에요. 예전에 친구분이랑 같이 쓰시던 말이라고 들었어요." },
-      { who:'q_demitas', text:"(오래 잔을 바라보다, 처음으로 한 모금을 마신다) …맛이, 기억나는군.", face:"chars/face_demitasse_smile.png" },
-      { who:'q_demitas', text:"나는 잃는 게 두려워 전부 가뒀네. 그런데 가두는 순간, 이미 다 잃고 있었어.", face:"chars/face_demitasse_base.png" },
+      { who:'q_demitas', text:"(오래 잔을 바라보다, 처음으로 한 모금을 마신다) …맛이, 기억나는군.", face:"chars/face_demitasse_redeem.png" },
+      { who:'q_demitas', text:"나는 잃는 게 두려워 전부 가뒀네. 그런데 가두는 순간, 이미 다 잃고 있었어.", face:"chars/face_demitasse_redeem.png" },
       { who:'boss', text:"다시 내리시면 돼요. 늦지 않았어요." },
       { who:'q_demitas', text:"…한 잔만 해보지. 오래된 손이라, 굳었을 테니.", face:"chars/face_demitasse_smile.png" },
       { who:'q_demitas', text:"천천히 하겠네. 급한 건 언제나 흘리는 법이니까.", face:"chars/face_demitasse_smile.png" }
     ], cg:"assets/art/cg_climax_share_cup.jpg", caption:"드미타스가 백 년 만에 잔을 비우고, 다시 앞치마를 집어 들었다." }
 ];
 const DEMITAS_THRESHOLDS = [2500, 8000, 20000, 40000]; // 각 막 해금 누적점수
+DEMITAS_SCENES[0].introCg = 'assets/art/cg_dmitasse_first_visit.jpg'; DEMITAS_SCENES[0].introCaption = '검은 큐레이터, 드미타스가 처음으로 골목 끝 카페에 들어섰다.';
 DEMITAS_SCENES[2].introCg = 'assets/art/cg_dmitasse_vault.jpg'; DEMITAS_SCENES[2].introCaption = '봉인고 — 백 년간 모아 가둔 말들이 잠든 곳.';
 DEMITAS_SCENES[2].fx = 'assets/art/fx_seal1.png'; DEMITAS_SCENES[2].fxKind = 'seal'; // 봉인고 개봉 — 봉인 파열 이펙트
+DEMITAS_SCENES[3].introCg = 'assets/art/cg_dmitasse_young_memory.jpg'; DEMITAS_SCENES[3].introCaption = '오래전, 누군가 그에게 처음 커피를 내려주던 날.';
 
 // ===== 리코 케미 씬 (2인) — 로아 무시·루나 쫄음·세라 팬심·순자여사 손주 =====
 const RICO_CHEMISTRY = {
