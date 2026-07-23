@@ -2879,6 +2879,7 @@ const game = {
             this.exploreVisits = data.exploreVisits || 0;
             this.demitasStage = data.demitasStage || 0;   // [버그수정] 드미타스 컷신 진행도 복원
             this.seenCgs = Array.isArray(data.seenCgs) ? data.seenCgs : [];   // [CG 도감] 감상 목록 복원
+            this.crossPlayed = (data.crossPlayed && typeof data.crossPlayed === 'object') ? data.crossPlayed : {};   // [버그수정] 교차 씬 하루1회 기록 복원 — 저장 안 하면 재실행 시 같은 날 재발동
             this.unlockedAchievements = Array.isArray(data.unlockedAchievements) ? data.unlockedAchievements : [];
             if(data.stats) {
                 totalServedCount = data.stats.totalServed || 0;
@@ -2895,6 +2896,7 @@ const game = {
             this.feverCount = 0;
             this.exploreVisits = 0;
             this.demitasStage = 0;
+            this.crossPlayed = {};
             this.unlockedAchievements = [];
         }
 
@@ -2973,6 +2975,7 @@ const game = {
             feverCount: this.feverCount || 0,
             exploreVisits: this.exploreVisits || 0,
             demitasStage: this.demitasStage || 0,   // [버그수정] 드미타스 컷신 진행도 — 저장 안 하면 매 세션 이미 본 막이 재발동
+            crossPlayed: this.crossPlayed || {},     // [버그수정] 교차 씬 하루1회 기록(날짜 키, 다음날 자연 만료)
             seenCgs: this.seenCgs || [],             // [CG 도감] 감상한 CG 키 목록
             unlockedAchievements: this.unlockedAchievements || []
         };
@@ -3329,26 +3332,42 @@ const game = {
             this.charActs[id] = seen + 1;
             const reward = AFFECTION_REWARD[actIdx] || 0;
             this.wallet += reward; this.updateHUD();
-            const ch = CHAR_BY_ID[id];
-            const story = affStoryLine(id, actIdx);
-            BgMusic.playJingle(id.replace('m_', ''));
-            // 2막(호감 40) 해금 시 비로소 이름을 밝힌다(#10) — 첫만남 직후 공개 방지
-            const nameReveal = (actIdx===1 && ch && ch.kind==='main')
-                ? `<div style="font-size:0.92rem;color:#7b1fa2;margin-bottom:10px;">${UI_ICON.spark} 드디어 이름을 알려주었다 — <b>${ch.name}</b></div>` : '';
-            const cg = affCg(id, actIdx+1);
-            const _actModal = () => showGameAlert(
-                `${UI_ICON.hearts} <b>${ch?ch.name:''}</b>와의 유대 ${actIdx+1}막 해금!<br><br>`+
-                nameReveal+
-                `<span style="font-size:0.92rem;color:#444;">${story}</span><br><br>`+
-                `<img src="sprites/coin.svg" style="width:16px;height:16px;vertical-align:middle;"> +${reward.toLocaleString()}G`
-            );
-            // 다회차 대화 씬 → CG → 보상 모달. 씬 없으면 CG만, 그것도 없으면 모달만.
-            const scene = affScene(id, actIdx);
-            if(scene && scene.length){ this.playCutscene({ cuts: scene, cg: cg }, _actModal); }
-            else if(cg){ showCutsceneCG(cg, '', _actModal); }
-            else { _actModal(); }
+            // [버그수정] 막 해금 컷신을 큐에 쌓아 순차 재생 — 호감 아이템(3인 동시 +10) 등으로 여러 막이
+            //   한 프레임에 열리면 showDialogue가 단일 대화창/_dlgOnDismiss를 덮어써 앞 캐릭터 컷신·이름공개가
+            //   화면에 뜨지도 못한 채 '열람 완료'로 유실되던 문제 방지.
+            if(!this._affActQueue) this._affActQueue = [];
+            this._affActQueue.push({ id: id, actIdx: actIdx, reward: reward });
             this.saveData();
+            this._drainAffActQueue();
         }
+    },
+    // [버그수정] 유대 막 해금 컷신 순차 재생기 — 한 번에 하나만 재생, 모달 확인 후 다음 막으로.
+    _drainAffActQueue: function() {
+        if(this._affActPlaying) return;                       // 재생 중이면 대기(현재 컷신 종료 후 이어감)
+        if(!this._affActQueue || !this._affActQueue.length) return;
+        this._affActPlaying = true;
+        const job = this._affActQueue.shift();
+        const id = job.id, actIdx = job.actIdx, reward = job.reward;
+        const ch = CHAR_BY_ID[id];
+        const story = affStoryLine(id, actIdx);
+        BgMusic.playJingle(id.replace('m_', ''));
+        // 2막(호감 40) 해금 시 비로소 이름을 밝힌다(#10) — 첫만남 직후 공개 방지
+        const nameReveal = (actIdx===1 && ch && ch.kind==='main')
+            ? `<div style="font-size:0.92rem;color:#7b1fa2;margin-bottom:10px;">${UI_ICON.spark} 드디어 이름을 알려주었다 — <b>${ch.name}</b></div>` : '';
+        const cg = affCg(id, actIdx+1);
+        const self = this;
+        const _actModal = () => showGameAlert(
+            `${UI_ICON.hearts} <b>${ch?ch.name:''}</b>와의 유대 ${actIdx+1}막 해금!<br><br>`+
+            nameReveal+
+            `<span style="font-size:0.92rem;color:#444;">${story}</span><br><br>`+
+            `<img src="sprites/coin.svg" style="width:16px;height:16px;vertical-align:middle;"> +${reward.toLocaleString()}G`,
+            function(){ self._affActPlaying = false; self._drainAffActQueue(); }   // 이 막 모달 확인 후 다음 큐 재생
+        );
+        // 다회차 대화 씬 → CG → 보상 모달. 씬 없으면 CG만, 그것도 없으면 모달만.
+        const scene = affScene(id, actIdx);
+        if(scene && scene.length){ this.playCutscene({ cuts: scene, cg: cg }, _actModal); }
+        else if(cg){ showCutsceneCG(cg, '', _actModal); }
+        else { _actModal(); }
     },
     // [대사] 호감 단계 판정 + 랜덤 선택 + 그날 첫 등장(일일) 판정
     affTier: function(id){ const a=(this.affection&&this.affection[id])||0; return a>=60?'high':(a>=30?'mid':'low'); }, // 대사 밴드(3단): 유대 티어 수와 분리
