@@ -385,6 +385,7 @@
       <div class="chip">Lv <span id="hud-level">1</span></div>
       <div class="chip"><svg class="uic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 20.5S3.6 15 3.6 9.3A4.6 4.6 0 0 1 12 6.6a4.6 4.6 0 0 1 8.4 2.7c0 5.7-8.4 11.2-8.4 11.2z" fill="#ff6b7a" stroke="#c62839" stroke-width="1.2" stroke-linejoin="round"/></svg> <span id="hud-hp">0</span></div>
       <div class="chip" id="hud-mats"><svg class="uic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 8h12l1 12.5H5z" fill="#c98a4a" stroke="#7a5020" stroke-width="1.3" stroke-linejoin="round"/><path d="M8.5 9V6.8a3.5 3.5 0 0 1 7 0V9" fill="none" stroke="#7a5020" stroke-width="1.6"/><rect x="4.5" y="7.5" width="15" height="3" rx="1.4" fill="#e0a86a" stroke="#7a5020" stroke-width="1.1"/></svg> <span id="hud-mats-n">0</span></div>
+      <div class="chip" id="hud-vocab" title="울림 지수 — 정확한 옛말을 되살릴수록 커피의 울림이 깊어져 전투력이 오른다"><svg class="uic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5 8.5h11V13a4.5 4.5 0 0 1-4.5 4.5h-2A4.5 4.5 0 0 1 5 13z" fill="#ffcf4d" stroke="#b8860b" stroke-width="1.2"/><path d="M16 10h1.6a2.2 2.2 0 0 1 0 4.4H16" fill="none" stroke="#b8860b" stroke-width="1.3"/><path d="M8 5.4c0 .9-1 1.1-1 2M11 4.8c0 1-1 1.2-1 2.2" fill="none" stroke="#e0a83a" stroke-width="1.2" stroke-linecap="round"/></svg> 울림 <span id="hud-vocab-n">+0%</span></div>
     </div>
   </div>
 
@@ -698,7 +699,10 @@ const Explore = {
                 // ★ 동행 채용 판정(isRecruited)이 호감도를 본다 — 이걸 빠뜨려 호감도 MAX여도 항상 잠겨 있었다.
                 affection:(c.affection&&typeof c.affection==='object')?c.affection:{},
                 // [버그수정] 탐험 SRS 졸업 단어를 카페 마스터 도감에 반영하기 위해 현재 목록을 적재(빠지면 탐험 졸업이 도감에서 유실).
-                masteredList:Array.isArray(c.masteredList)?c.masteredList:[] };
+                masteredList:Array.isArray(c.masteredList)?c.masteredList:[],
+                // [울림지수] 학습→전투력% 계산용 통계(누적 정답/오답). 없을 수 있어 가드.
+                stats:(c.stats&&typeof c.stats==='object')?c.stats:{},
+                masteredCount:(typeof c.masteredCount==='number')?c.masteredCount:(Array.isArray(c.masteredList)?c.masteredList.length:0) };
     this.state=SaveBridge.loadExplore();
     if(!this.isRecruited(this.state.companion)) this.state.companion='none';  // 미채용 동행은 기본으로
     Sfx.init();
@@ -727,8 +731,23 @@ const Explore = {
     ['weapon','armor'].forEach(slot=>{ const it=(EQUIP_DB[slot]||[]).find(x=>x.id===eq[slot]); if(it){ b.atk+=it.atk||0; b.def+=it.def||0; b.maxHp+=it.hp||0; } });
     const p=COMP_PASSIVE[this.state.companion||'none']; if(p){ b.atk+=p.atk||0; b.def+=p.def||0; b.maxHp+=p.maxHp||0; b.goldPct+=p.goldPct||0; }
     return b; },
-  effStats(){ const s=this.state.stats; const b=this.effBonus(); const maxHp=s.maxHp+b.maxHp;
-    return { hp:Math.min(s.hp,maxHp), maxHp, atk:s.atk+b.atk, def:s.def+b.def, base:s, bonus:b }; },
+  // [울림지수] 누적 학습 → 전투력 가산%(로그상한). 재미우선: 강제·페널티 없음, 안 해도 클리어됨. 상한으로 무력화 방지.
+  //   M=마스터 단어수→공격% / A=누적 정답률→크리%. (R=오답정복→방어%, S=스펠링→게이지속도는 트래킹 추가 후 확장)
+  vocabPower(){
+    const c=this.cafe||{};
+    const M=(typeof c.masteredCount==='number'?c.masteredCount:(c.masteredList||[]).length)||0;
+    const st=c.stats||{}; const tc=st.totalCorrect||0, tw=st.totalWrong||0;
+    const A=(tc+tw)?tc/(tc+tw):0;
+    const atkPct=0.30*(1-Math.exp(-M/60));                 // 공격 ≤ +30%
+    const critBonus=0.15*Math.max(0,(A-0.5)/0.5);          // 크리 ≤ +15%p (정답률 50%↓는 0 — 페널티 아님)
+    const defPct=0, gaugePct=0;                            // 확장 예정
+    return { M, A, atkPct, critBonus, defPct, gaugePct, pct:Math.round(atkPct*100) };
+  },
+  effStats(){ const s=this.state.stats; const b=this.effBonus(); const vp=this.vocabPower(); const maxHp=s.maxHp+b.maxHp;
+    return { hp:Math.min(s.hp,maxHp), maxHp,
+             atk:Math.round((s.atk+b.atk)*(1+vp.atkPct)),   // 울림 공격% 반영
+             def:Math.round((s.def+b.def)*(1+vp.defPct)),   // 울림 방어%(현재 0)
+             base:s, bonus:b, vocab:vp }; },
   exitToCafe(){ this.persist(); try{ unlockOrientation(); }catch(e){}
     try{ localStorage.setItem('vb_resume_paused','1'); }catch(e){} // 카페 복귀 시 일시정지 화면으로
     location.href='index.html'; },
@@ -738,6 +757,8 @@ const Explore = {
     document.getElementById('hud-level').textContent=s.level;
     const e=this.effStats(); document.getElementById('hud-hp').textContent=e.hp+'/'+e.maxHp;
     document.getElementById('hud-mats-n').textContent=Object.values(s.materials).reduce((n,v)=>n+(v||0),0);
+    // [울림지수] 학습→전투력% 표기(대표=공격%). 크리 보너스가 있으면 함께 표기.
+    const vn=document.getElementById('hud-vocab-n'); if(vn){ const vp=e.vocab||this.vocabPower(); const cr=Math.round(vp.critBonus*100); vn.textContent='+'+vp.pct+'%'+(cr>0?' · 크리+'+cr:''); }
     // 맵 회복 버튼: 보유 개수 / 비활성 상태 갱신
     const hr=CRAFT_DB.find(x=>x.effect==='heal'); const hn=hr?((c.craftedItems||{})[hr.id]||0):0;
     const hc=document.getElementById('heal-ct'), hb=document.getElementById('heal-btn');
@@ -1902,7 +1923,7 @@ const Battle = {
     document.getElementById('p-name').textContent='나'; document.getElementById('p-lv').textContent='Lv '+Explore.state.level; },
   setBar(who,hp,max){ const f=document.getElementById(who+'-hpfill'); const pct=Math.max(0,Math.min(100,hp/max*100));
     f.style.width=pct+'%'; f.className='hpfill'+(pct<=25?' low':(pct<=50?' mid':'')); },
-  calc(atk,def,mult){ let b=atk*mult-def*0.5; b*=0.85+this._rand()*0.3; const crit=this._rand()<0.12; if(crit)b*=1.6; return {dmg:Math.max(1,Math.round(b)),crit}; },
+  calc(atk,def,mult,critB){ let b=atk*mult-def*0.5; b*=0.85+this._rand()*0.3; const crit=this._rand()<(0.12+(critB||0)); if(crit)b*=1.6; return {dmg:Math.max(1,Math.round(b)),crit}; }, // critB=울림 크리 보너스(플레이어 공격에만 전달)
   setButtons(on){ this._canAct=on; document.getElementById('cmd-atk').disabled=!on; document.getElementById('cmd-flee').disabled=!on;
     const ib=document.getElementById('cmd-item'); if(ib) ib.disabled=!on; if(!on) this.hideItems(); this.refreshSkill(); },
   // ----- 전투 소비 아이템(공격력↑/방어력↑) — 같은 craftedItems 공유, 이번 전투 한정 버프 -----
@@ -1926,7 +1947,7 @@ const Battle = {
   refreshSkill(){ const sb=document.getElementById('cmd-skill'); if(!sb)return; const ready=this.gauge>=this.GMAX;
     const fill=document.getElementById('skill-fill'); if(fill) fill.style.height=Math.min(100,this.gauge/this.GMAX*100)+'%';
     sb.disabled=!(this._canAct&&ready); sb.classList.toggle('ready', ready&&!!this._canAct); },
-  addGauge(n){ this.gauge=Math.min(this.GMAX,(this.gauge||0)+n); this.refreshSkill(); },
+  addGauge(n){ const g=1+((Explore.vocabPower&&Explore.vocabPower().gaugePct)||0); this.gauge=Math.min(this.GMAX,(this.gauge||0)+n*g); this.refreshSkill(); }, // 울림 게이지속도%(현재 0)
   setSkillLabel(){ const sk=SKILLS[Explore.state.companion||'none']||SKILLS.none; document.getElementById('skill-lb').textContent=sk.name; },  /* [버튼] 스킬 아이콘은 고정 별 SVG 유지, 이름만 동적 갱신 */
   skillFlash(sk){ const f=document.getElementById('b-flash'); if(!f)return; f.style.background='radial-gradient(circle, '+(sk.color||'#fff')+'cc, transparent 72%)'; f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); },
   // [스킬 연출] 캐릭터별 고유 이펙트 — b-skillfx 레이어에 테마별 파티클/애니 주입
@@ -1991,7 +2012,7 @@ const Battle = {
     const ps=document.getElementById('p-self'), es=document.getElementById('e-sprite');
     ps.classList.add('lunge'); await this.wait(150);
     if(this._rand()<miss){ Sfx.play('miss'); this.pop('e','MISS','miss'); this.msg('공격이 빗나갔다…'); await this.wait(650); }
-    else { const {dmg,crit}=this.calc(p.atk,this.enemy.def,(power?1.7:1.0)*(this.atkBuff||1)); this.eHp-=dmg;
+    else { const {dmg,crit}=this.calc(p.atk,this.enemy.def,(power?1.7:1.0)*(this.atkBuff||1),(p.vocab&&p.vocab.critBonus)||0); this.eHp-=dmg; // 울림 크리 보너스 반영(플레이어 공격만)
       Sfx.play(crit?'crit':'hit'); exHaptic(crit?'heavy':'light');
       es.classList.add('hit'); this.shake(); this.hitFx('e-sprite', crit); this.pop('e','-'+dmg+(crit?'!':''),crit?'crit':null);
       this.msg(`${power?'강공격! ':''}${this.enemy.name}에게 <b>${dmg}</b> 피해!${crit?' 치명타!':''}`); this.renderBars(); await this.wait(550); es.classList.remove('hit'); }
