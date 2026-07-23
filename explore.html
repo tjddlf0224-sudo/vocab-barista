@@ -2161,7 +2161,8 @@ const DarkDuel = {
     setTimeout(()=>{ this.q++; this.render(); }, 850); },
   finish(){ const body=document.getElementById('dm-body'); const win=this.score>=4;
     if(win){ const first=!((Explore.state.events||{}).darkMerchant);
-      const reward=first? {gold:600, exp:60, mat:'goldbean', matCount:2, item:'cr_heal'} : {gold:200, exp:20};
+      // [버그수정] 재대결은 '연습'으로 남기되 보상은 토큰 수준으로 — 200G/20EXP 고정지급은 반복 파밍 파우셋이었다(gone 상태가 세팅된 적 없어 무한 반복 가능).
+      const reward=first? {gold:600, exp:60, mat:'goldbean', matCount:2, item:'cr_heal'} : {gold:40, exp:8};
       if(!Explore.state.events)Explore.state.events={}; Explore.state.events.darkMerchant='beaten';
       const rwtxt=Explore.grantReward(reward);
       if(window.Sfx)Sfx.play('levelup'); if(window.exHaptic)exHaptic('success');

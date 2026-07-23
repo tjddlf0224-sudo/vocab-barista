@@ -3199,9 +3199,10 @@ const game = {
 
         // 10초 뒤 자동 종료
         if (this.feverTimer) clearTimeout(this.feverTimer);
+        this._feverEndsAt = Date.now() + 10000;   // [버그수정] 일시정지 시 잔여시간 계산용
         this.feverTimer = setTimeout(() => {
             this.endFever();
-        }, 10000); 
+        }, 10000);
     },
 
     // 2. 피버 모드 종료
@@ -3210,11 +3211,12 @@ const game = {
         document.body.classList.remove('fever-mode');
         const feverMsg = document.getElementById('fever-msg');
         if(feverMsg) feverMsg.style.opacity = '0';
-        
-        // 음악 속도 복구
-        BgMusic.playTrack('cafe');
-        
+
+        // 음악 속도 복구 — [버그수정] 일시정지 중엔 음악을 켜지 않는다(정지 화면에서 cafe 트랙이 재생되던 문제 방지)
+        if(!this.isPaused) BgMusic.playTrack('cafe');
+
         if (this.feverTimer) clearTimeout(this.feverTimer);
+        this._feverEndsAt = 0;
     },
 
     // 3. 랭크 시스템
@@ -3643,6 +3645,7 @@ const game = {
     },
     checkVipAnswer: function() {
         const val = document.getElementById('vip-input').value.trim();
+        if(!val) return; // [버그수정] 빈 제출은 페널티 없이 무시 — 실수로 빈칸 엔터/제출 시 라이프 소실 방지
         this.checkAnswer(val);
     },
 
@@ -4691,7 +4694,13 @@ equipItem: function(category, level) {
         if(this.isPaused) {
             this.isPaused=false;
             document.getElementById('pause-screen').classList.add('hidden');
-            BgMusic.playTrack('cafe');
+            // [버그수정] 피버 중 재개면 피버곡을 잇고, 멈춰뒀던 피버 타이머를 잔여시간으로 재예약
+            BgMusic.playTrack(this.isFever ? 'fever' : 'cafe');
+            if(this.isFever && this._feverLeft != null){
+                this._feverEndsAt = Date.now() + this._feverLeft;
+                this.feverTimer = setTimeout(() => this.endFever(), this._feverLeft);
+                this._feverLeft = null;
+            }
             // 탐험 복귀 등으로 진행 중 손님이 없으면 새 손님(턴)부터 시작
             if(this._needTurn) {
                 this._needTurn=false; this.isActive=true; this.nextTurn();
@@ -4706,6 +4715,11 @@ equipItem: function(category, level) {
         else {
             this.isPaused=true;
             clearInterval(this.timer);
+            // [버그수정] 피버 타이머도 함께 멈춘다 — 안 멈추면 정지 중 실시간으로 소진되고 endFever가 정지화면에서 음악을 켰다
+            if(this.isFever && this.feverTimer){
+                this._feverLeft = Math.max(0, (this._feverEndsAt||0) - Date.now());
+                clearTimeout(this.feverTimer); this.feverTimer = null;
+            }
             document.getElementById('pause-screen').classList.remove('hidden');
             document.getElementById('pause-screen').style.display='flex';
             BgMusic.stop();
