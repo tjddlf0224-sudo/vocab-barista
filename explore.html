@@ -1769,8 +1769,8 @@ const MONSTERS = {
 };
 // 존(지역) 레지스트리 — 이름/해제레벨/난이도/틴트/몬스터풀/보스/이웃
 const ZONES = {
-  forest:   { name:'원두 숲', icon:'<svg class="uic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.5l5.2 7.6h-2.8l4 5.9H5.6l4-5.9H6.8z" fill="#5faa5f" stroke="#357a35" stroke-width="1.2" stroke-linejoin="round"/><rect x="10.7" y="15.6" width="2.6" height="4.6" fill="#8a5a30"/></svg>', minLv:1, diff:1.0,  tint:null,                     monsters:['slime','boar','crow'],      boss:'golem', next:'deepwood', treeOrange:0.3 },
-  deepwood: { name:'깊은 숲', icon:'<svg class="uic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.5 15.2A7.2 7.2 0 0 1 9 6.4a7.4 7.4 0 1 0 8.5 8.8z" fill="#c9b6ee" stroke="#6b4aa0" stroke-width="1.2" stroke-linejoin="round"/></svg>', minLv:6, diff:1.4,  tint:'rgba(14,16,52,0.52)',    monsters:['shadowwolf','wisp','crow'], boss:'golem', prev:'forest',   treeOrange:0.7 },
+  forest:   { name:'원두 숲', icon:'<svg class="uic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.5l5.2 7.6h-2.8l4 5.9H5.6l4-5.9H6.8z" fill="#5faa5f" stroke="#357a35" stroke-width="1.2" stroke-linejoin="round"/><rect x="10.7" y="15.6" width="2.6" height="4.6" fill="#8a5a30"/></svg>', minLv:1, lvMax:5,  diff:1.0,  tint:null,                     monsters:['slime','boar','crow'],      boss:'golem', next:'deepwood', treeOrange:0.3 },
+  deepwood: { name:'깊은 숲', icon:'<svg class="uic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.5 15.2A7.2 7.2 0 0 1 9 6.4a7.4 7.4 0 1 0 8.5 8.8z" fill="#c9b6ee" stroke="#6b4aa0" stroke-width="1.2" stroke-linejoin="round"/></svg>', minLv:6, lvMax:11, diff:1.4,  tint:'rgba(14,16,52,0.52)',    monsters:['shadowwolf','wisp','crow'], boss:'golem', prev:'forest',   treeOrange:0.7 },
 };
 // 동행별 고유 스킬 (게이지 가득 차면 사용)
 const SKILLS = {
@@ -1840,12 +1840,14 @@ const Battle = {
   // 몬스터를 플레이어 레벨에 맞춰 스케일(정체성=스탯비율 유지) — 신규 즉사·고렙 무의미화 방지
   scaleMonster(base, opts){
     opts = opts || {};
-    const plv = Explore.state.level || 1;
     const z = (typeof ZONES!=='undefined') ? ZONES[Explore.state.map.zone] : null;
-    const zoneMin = (z && z.minLv) || 1;        // 존 최소 레벨대
+    const zoneMin = (z && z.minLv) || 1;                 // 존 고정 레벨 하한
+    const zoneMax = (z && z.lvMax) || (zoneMin + 4);     // 존 고정 레벨 상한
     const diff = ((z && z.diff) || 1) * (opts.boss ? 1.7 : 1); // 존 난이도 + 보스 가중
-    let lv = Math.max(plv + Math.floor(this._rand()*4) - 1, zoneMin); // 플레이어±, 존 하한
-    if(opts.boss) lv = Math.max(plv, zoneMin) + 2;                    // 보스는 약간 위
+    // [맵별 고정 난이도] 몬스터 레벨은 '맵(존)'으로 고정 — 플레이어 레벨을 따라가지 않는다.
+    //   → 강해진 플레이어가 초반 맵을 쓸어담는 손맛(파워 판타지). 뒤 맵일수록 고정으로 더 셈.
+    let lv = zoneMin + Math.floor(this._rand() * (zoneMax - zoneMin + 1)); // 존 밴드 내 랜덤(고정)
+    if(opts.boss) lv = zoneMax + 1;                                   // 보스는 존 밴드 최상단+1로 고정
     if(lv < 1) lv = 1;
     const f = Math.pow(1.16, lv - (base.lv || lv)) * diff;
     return { ...base, lv, isBoss: !!opts.boss,
