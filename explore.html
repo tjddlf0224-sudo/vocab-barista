@@ -696,7 +696,9 @@ const Explore = {
                 collectedChars:Array.isArray(c.collectedChars)?c.collectedChars:[],
                 craftedItems:(c.craftedItems&&typeof c.craftedItems==='object')?c.craftedItems:{},
                 // ★ 동행 채용 판정(isRecruited)이 호감도를 본다 — 이걸 빠뜨려 호감도 MAX여도 항상 잠겨 있었다.
-                affection:(c.affection&&typeof c.affection==='object')?c.affection:{} };
+                affection:(c.affection&&typeof c.affection==='object')?c.affection:{},
+                // [버그수정] 탐험 SRS 졸업 단어를 카페 마스터 도감에 반영하기 위해 현재 목록을 적재(빠지면 탐험 졸업이 도감에서 유실).
+                masteredList:Array.isArray(c.masteredList)?c.masteredList:[] };
     this.state=SaveBridge.loadExplore();
     if(!this.isRecruited(this.state.companion)) this.state.companion='none';  // 미채용 동행은 기본으로
     Sfx.init();
@@ -706,10 +708,16 @@ const Explore = {
     World.init();
     World.updateCompChip();
   },
-  persist(){ SaveBridge.patchCafe({ wallet:this.cafe.wallet, myWords:this.cafe.myWords, turnCount:this.cafe.turnCount, craftedItems:this.cafe.craftedItems }); SaveBridge.saveExplore(this.state); },
+  persist(){ SaveBridge.patchCafe({ wallet:this.cafe.wallet, myWords:this.cafe.myWords, turnCount:this.cafe.turnCount, craftedItems:this.cafe.craftedItems, masteredList:this.cafe.masteredList }); SaveBridge.saveExplore(this.state); },
   // 스펠링 조합 정답 시 SRS 갱신(오답노트 단어면 박스↑, 졸업하면 제거)
   srsCorrect(word){ const arr=this.cafe.myWords||[]; const v=arr.find(x=>x.w&&x.w.toLowerCase()===word);
-    if(v){ v.box=(v.box||1)+1; v.due=(this.cafe.turnCount||0)+(v.box*2); if(v.box>=5){ this.cafe.myWords=arr.filter(x=>x!==v); } this.persist(); } },
+    if(v){ v.box=(v.box||1)+1; v.due=(this.cafe.turnCount||0)+(v.box*2);
+      if(v.box>=5){ this.cafe.myWords=arr.filter(x=>x!==v);
+        // [버그수정] 졸업 단어를 카페 마스터 도감에도 반영(예전엔 오답노트에서 빼기만 해 크레딧·도감 유실).
+        if(!Array.isArray(this.cafe.masteredList)) this.cafe.masteredList=[];
+        if(this.cafe.masteredList.indexOf(v.w)<0) this.cafe.masteredList.push(v.w);
+      }
+      this.persist(); } },
   // 채용 여부: 카페 손님 도감에 해당 메인 캐릭터가 등록(=만난 적 있음)되면 동행 가능
   // 동행 채용: 카페에서 그 메인 캐릭터 호감도를 MAX(100)까지 올려야 가능
   isRecruited(key){ if(!key||key==='none') return true; const c=COMPANIONS[key]; if(!(c&&c.charId)) return false;
@@ -1826,7 +1834,7 @@ const Battle = {
   maybeEncounter(){ if(this.active)return; const s=Explore.state; if((s.steps-this.lastStep)<25)return;
     if(this._rand()<0.05){
       const zone=ZONES[s.map.zone]||ZONES.forest;
-      const bossOk = (s.level >= (zone.minLv+3)) && this._rand()<0.12; // 충분히 강하면 가끔 보스
+      const bossOk = (s.level >= (zone.minLv+4)) && this._rand()<0.12; // [밸런스] +3→+4: 최소 트리거 레벨에서 보스가 과도하게 셌음(플레이어 4피격 vs 보스 10타). 완충용 여유 상향
       this.start(bossOk?{boss:true}:{});
     } },
   // 몬스터를 플레이어 레벨에 맞춰 스케일(정체성=스탯비율 유지) — 신규 즉사·고렙 무의미화 방지
@@ -1856,6 +1864,7 @@ const Battle = {
     const m = this.scaleMonster(base, opts);
     this.enemy=m; this.eMax=m.hp; this.eHp=m.hp; this.active=true; this.busy=false; this.lastStep=Explore.state.steps;
     this.atkBuff=1; this.dmgReduce=0; this.hideItems(); // 전투 아이템 버프는 전투마다 초기화
+    if(m.isBoss) this.gauge=this.GMAX; // [밸런스] 보스전은 필살기 게이지 만충으로 시작 — 첫 턴 버스트 보장(탱키 보스 완충). ※ 플레이테스트로 수치 조정 여지
     World.release();
     const es=document.getElementById('e-sprite'); es.className='sprite-enemy'+(m.isBoss?' boss':'');
     if(m.art){ es.innerHTML='<img src="'+m.art+'">'; } else { es.classList.add('emoji'); es.textContent=m.emoji; }

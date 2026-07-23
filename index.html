@@ -2950,6 +2950,9 @@ const game = {
             localStorage.removeItem('vb_save_v7');
             localStorage.removeItem('vb_mastered_v7');
             localStorage.removeItem('vb_ranks_v4');
+            // [버그수정] 탐험 진행·클라우드 타임스탬프도 함께 초기화 — 안 지우면 '초기화' 후에도 탐험 레벨/장비가 남고 ts가 어긋남.
+            localStorage.removeItem('vb_explore_v1');
+            localStorage.removeItem('vb_cloud_ts');
             location.reload();
         }
     },
@@ -3061,7 +3064,9 @@ const game = {
             if(reviewObj) {
                 wordObj = reviewObj; isReview = true;
             } else {
-                let availableWords = rawWords.filter(item => !this.mastered.includes(item.w));
+                // [버그수정] 오답노트(myWords) 단어는 '신규 손님'으로 뽑지 않는다 — 반드시 복습(isReview) 경로로만 출제.
+                //   예전엔 mastered만 제외해, 아직 due 아닌 오답노트 단어가 신규로 나와 정답 시 mastered+myWords 이중등재됐다.
+                let availableWords = rawWords.filter(item => !this.mastered.includes(item.w) && !this.myWords.some(v => v.w === item.w));
                 if(availableWords.length === 0) {
                     // 새 단어가 없으면 남은 복습 단어로, 그것도 없으면 난이도 마스터
                     if(this.myWords.length > 0) {
@@ -3430,6 +3435,9 @@ const game = {
     // 5. 정답 체크 (오류 수정됨)
     checkAnswer: function(val, btnEl) {
         if(!this.isActive || this.isPaused) return;
+        // [버그수정] 중복 제출 가드 — 정답 직후 렌더 교체 전(TTS·400ms) 재탭 시 점수·콤보·일일진행 이중 가산 방지.
+        //   pass/useHint/buyTimeStop은 이미 solved를 검사하는데 정답 경로만 빠져 있었다.
+        if(!this.currentCust || this.currentCust.solved) return;
 
         // [정답인 경우]
         if(val.toLowerCase() === this.currentCust.data.w.toLowerCase()) {
@@ -3545,8 +3553,8 @@ const game = {
                 }
             } else {
                 if(!this.mastered.includes(_wkey)) this.mastered.push(_wkey);
-                // [버그수정] 복습 테스트 졸업 시 오답노트에서도 제거 — 데이터 모순·무한 파밍 방지
-                if(this.gameMode === 'review') this.myWords = this.myWords.filter(v => v.w !== _wkey);
+                // [버그수정] gameMode 무관하게 오답노트에서도 제거 — mastered로 졸업했는데 myWords에 남아 이중등재되던 모순 방지(방어).
+                this.myWords = this.myWords.filter(v => v.w !== _wkey);
             }
             this.masteredCount = this.mastered.length;
 
@@ -5084,7 +5092,9 @@ if(typeof window.vbDeleteAccount!=='function'){ window.vbDeleteAccount=function(
 
 // ==================== 로그인 + 클라우드 동기화 (Firebase Auth) ====================
 (function(){
-  const SYNC_KEYS = ['vb_save_v7','vb_mastered_v7','vb_ranks_v4','vb_category'];
+  // [버그수정] vb_explore_v1(탐험 레벨·장비·맵·재료) 추가 — 빠져 있어 기기 변경 시 탐험 진행이 통째 소실됐다.
+  //   (클라우드 덮어쓰기 방지 수정 이후라 빈 세이브로 백업을 날릴 위험 없음)
+  const SYNC_KEYS = ['vb_save_v7','vb_mastered_v7','vb_ranks_v4','vb_category','vb_explore_v1'];
   const $ = id => document.getElementById(id);
   const loginErr = m => { const e=$('vbLoginError'); if(e) e.textContent=m||''; };
   const hideLogin = () => { const l=$('login-screen'); if(l) l.classList.add('hidden'); };
