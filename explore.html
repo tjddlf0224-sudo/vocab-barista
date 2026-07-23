@@ -2191,6 +2191,11 @@ const Quest = {
 // ============================================================
 // 시네마틱 CG 오버레이 재생 (탭하여 넘김) — index.html showCutsceneCG의 explore판
 function showExCutsceneCG(src, caption, onDone){
+  // [CG 도감] 탐험에서 본 CG를 카페 저장소(seenCgs)에 기록 — 도감(index.html)이 읽음
+  try{
+    var _k=(src||'').split('/').pop().replace(/\.(jpg|jpeg|png)$/i,'');
+    if(_k){ var c=SaveBridge.loadCafe(); var arr=Array.isArray(c.seenCgs)?c.seenCgs:[]; if(arr.indexOf(_k)===-1){ arr.push(_k); SaveBridge.patchCafe({seenCgs:arr}); } }
+  }catch(e){}
   var el = document.getElementById('ex-cutscene');
   if(!el){ if(onDone) onDone(); return; }
   el.querySelector('.csc-blur').style.backgroundImage = "url('"+src+"')";
