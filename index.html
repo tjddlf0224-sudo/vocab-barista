@@ -2315,7 +2315,11 @@ const CG_WIDE = new Set([
   'cg_luna_empty_chair','cg_roa_act2_name','cg_roa_act4_summons','cg_roa_grindheim_flashback',
   'cg_roa_three_cups','cg_sera_act2_name','cg_sera_five_song','cg_three_regulars_mark',
   'cg_climax_share_cup',   // 게임 내는 세로 크롭, 도감은 가로 원본(워터마크 제거)
-  'cg_sera_disguise','cg_sera_five_year_song','cg_sera_act4_happiness'   // 세라 가로CG → 인게임 세로 크롭, 도감 가로 원본
+  'cg_sera_disguise','cg_sera_five_year_song','cg_sera_act4_happiness',   // 세라 가로CG → 인게임 세로 크롭, 도감 가로 원본
+  // 단독/무드 가로CG → 인게임 세로 크롭(폰 풀사이즈), 도감 가로 원본. (봉인고 dmitasse_vault는 서고 전경이라 가로 유지)
+  'cg_first_cup_yujin','cg_luna_act2_name','cg_luna_act5_memory','cg_luna_guardian_war','cg_rico_disaster',
+  'cg_roa_act1_first_sip','cg_roa_act3_burnt_tongue','cg_roa_act5_own_apron','cg_roa_grandprix',
+  'cg_sera_alley_child','cg_sera_stage'
 ]);
 function cgWideSrc(key){ return CG_WIDE.has(key) ? ('assets/art/dex/' + key + '.jpg') : ('assets/art/' + key + '.jpg'); }
 
