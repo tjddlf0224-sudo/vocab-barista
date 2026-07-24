@@ -755,6 +755,8 @@ body.fever-mode #fever-fx { opacity:1; }
 #cutscene-cg.csc-hidden { display:none; }
 #cutscene-cg .csc-blur { position:absolute; inset:-8%; background-size:cover; background-position:center; filter:blur(26px) brightness(.38); transform:scale(1.12); }
 #cutscene-cg .csc-img { position:relative; width:100%; max-height:100%; object-fit:contain; box-shadow:0 0 44px rgba(0,0,0,.55); animation:cscZoom 6.5s ease-out both; }
+/* [세로 프레이밍] 인게임 컷신: 세로 폰을 꽉 채움(cover). 도감 감상은 기본(contain)으로 원본 전체 표시. */
+#cutscene-cg .csc-img.csc-fill { width:100%; height:100%; max-height:none; object-fit:cover; box-shadow:none; }
 @keyframes cscZoom { from{ transform:scale(1.05); } to{ transform:scale(1); } }
 #cutscene-cg .csc-caption { position:absolute; left:0; right:0; bottom:0; padding:64px 26px calc(38px + env(safe-area-inset-bottom)); background:linear-gradient(transparent, rgba(0,0,0,.86)); color:#fff; font-size:1.05rem; font-weight:700; line-height:1.5; text-align:center; text-shadow:0 2px 10px rgba(0,0,0,.85); }
 #cutscene-cg .csc-hint { position:absolute; right:18px; bottom:calc(14px + env(safe-area-inset-bottom)); color:rgba(255,255,255,.72); font-size:.82rem; animation:cscBlink 1.4s ease-in-out infinite; }
@@ -1895,13 +1897,19 @@ var onAlertClose = null;
 // isPaused 하나로 startTimer/nextTurn/checkAnswer가 모두 게이트됨.
 // 이미 다른 이유로 멈춰 있었다면(일시정지 화면 등) 그 상태를 기억해 닫을 때 되돌린다.
 let _alertPrevPaused = null;
-function showCutsceneCG(src, caption, onDone){
+function showCutsceneCG(src, caption, onDone, opts){
+    opts = opts || {};
+    var _k=(src||'').split('/').pop().replace(/\.(jpg|jpeg|png)$/i,'');
     // [CG 도감] 감상한 CG를 파일명 키로 기록(도감에 등록된 것만)
-    try{ if(typeof game !== 'undefined' && game){ var _k=(src||'').split('/').pop().replace(/\.(jpg|jpeg|png)$/i,''); if(_k) game.markCgSeen(_k); } }catch(e){}
+    try{ if(typeof game !== 'undefined' && game){ if(_k) game.markCgSeen(_k); } }catch(e){}
     var el = document.getElementById('cutscene-cg');
     if(!el){ if(onDone) onDone(); return; }
+    // [세로 프레이밍] 도감(contain=원본 전체) / 인게임(cover=세로 꽉 채움, 2인 구도는 레터박스)
+    var img = el.querySelector('.csc-img');
+    if(opts.contain || CG_LETTERBOX.has(_k)){ img.classList.remove('csc-fill'); img.style.objectPosition=''; }
+    else { img.classList.add('csc-fill'); img.style.objectPosition = CG_POS[_k] || 'center 45%'; }
     el.querySelector('.csc-blur').style.backgroundImage = "url('"+src+"')";
-    el.querySelector('.csc-img').src = src;
+    img.src = src;
     var cap = el.querySelector('.csc-caption');
     cap.textContent = caption || ''; cap.style.display = caption ? '' : 'none';
     el.classList.remove('csc-hidden'); void el.offsetWidth; el.classList.add('csc-show');
@@ -2322,6 +2330,18 @@ const CG_WIDE = new Set([
   'cg_sera_alley_child','cg_sera_stage'
 ]);
 function cgWideSrc(key){ return CG_WIDE.has(key) ? ('assets/art/dex/' + key + '.jpg') : ('assets/art/' + key + '.jpg'); }
+
+// [세로 프레이밍] 가로 CG를 세로 폰에 object-fit:cover로 '꽉 채움'. 파일은 안 자르고 CSS로만 프레이밍(비파괴).
+//   인물이 중앙에서 벗어난 가로CG만 object-position X%로 초점을 맞춘다(=인물 중심). 나머지는 기본값.
+const CG_POS = {
+  cg_first_cup_yujin:'34% 50%', cg_luna_act2_name:'62% 50%', cg_luna_act5_memory:'55% 50%',
+  cg_luna_guardian_war:'46% 50%', cg_rico_disaster:'80% 45%', cg_roa_act1_first_sip:'52% 45%',
+  cg_roa_act3_burnt_tongue:'51% 45%', cg_roa_grandprix:'44% 45%', cg_sera_disguise:'46% 45%',
+  cg_sera_five_year_song:'45% 45%', cg_sera_act4_happiness:'49% 45%', cg_sera_alley_child:'51% 45%',
+  cg_sera_stage:'48% 45%'
+};
+// 2인 구도/결투 CG — 세로로 채우면 한쪽 인물이 잘려서, 레터박스(가로 전체)로 보여준다.
+const CG_LETTERBOX = new Set(['cg_roa_act2_name','cg_roa_act4_summons','cg_dark_merchant_duel']);
 
 // ===== 유대 5막 다회차 대화 씬 (해금 시 여러 컷 재생 → CG → 보상) · 성별 분기 tail 포함 =====
 const AFFECTION_SCENES = {
@@ -4476,7 +4496,7 @@ equipItem: function(category, level) {
         const e = CG_DEX.find(c => c.k === key);
         if(!e) return;
         if(!Array.isArray(this.seenCgs) || this.seenCgs.indexOf(key) === -1) return; // 잠긴 CG는 감상 불가
-        showCutsceneCG(cgWideSrc(key), e.t, null);   // 도감은 가로 원본으로 감상
+        showCutsceneCG(cgWideSrc(key), e.t, null, { contain:true });   // 도감은 가로 원본 전체(contain)로 감상
     },
     renderCgDex: function() {
         const seen = Array.isArray(this.seenCgs) ? this.seenCgs : [];
