@@ -2270,7 +2270,7 @@ const AFFECTION_STORY = {
 // ===== 유대 막 해금 CG (있는 막만 표시) · 경로 assets/art =====
 const AFFECTION_CG = {
     m_roa:  { 1:'assets/art/cg_roa_act1_first_sip.jpg', 2:'assets/art/cg_roa_act2_name.jpg',        3:'assets/art/cg_roa_act3_burnt_tongue.jpg', 4:'assets/art/cg_roa_act4_summons.jpg', 5:'assets/art/cg_roa_act5_own_apron.jpg' },
-    m_luna: { 1:'assets/art/cg_luna_act1_moonlight.jpg', 3:'assets/art/cg_luna_guardian_war.jpg',   4:'assets/art/cg_luna_empty_chair.jpg',      5:'assets/art/cg_luna_act5_memory.jpg' },
+    m_luna: { 1:'assets/art/cg_luna_act1_moonlight.jpg', 2:'assets/art/cg_luna_act2_name.jpg',       3:'assets/art/cg_luna_guardian_war.jpg',   4:'assets/art/cg_luna_empty_chair.jpg',      5:'assets/art/cg_luna_act5_memory.jpg' },
     m_sera: { 1:'assets/art/cg_sera_disguise.jpg',     2:'assets/art/cg_sera_act2_name.jpg',        3:'assets/art/cg_sera_five_year_song.jpg',   4:'assets/art/cg_sera_act4_happiness.jpg', 5:'assets/art/cg_sera_five_song.jpg' },
 };
 function affCg(id, actNum){ return (AFFECTION_CG[id]||{})[actNum] || ''; }
@@ -2286,6 +2286,7 @@ const CG_DEX = [
   { cat:'로아',   k:'cg_roa_three_cups',           t:'세 개의 우승컵' },
   { cat:'로아',   k:'cg_roa_grindheim_flashback',  t:'그라인드 하임' },
   { cat:'루나',   k:'cg_luna_act1_moonlight',      t:'1막 · 달빛' },
+  { cat:'루나',   k:'cg_luna_act2_name',           t:'2막 · 이름' },
   { cat:'루나',   k:'cg_luna_guardian_war',        t:'3막 · 봉인의 밤' },
   { cat:'루나',   k:'cg_luna_empty_chair',         t:'4막 · 빈 의자' },
   { cat:'루나',   k:'cg_luna_act5_memory',         t:'5막 · 돌아온 기억' },
@@ -2322,7 +2323,7 @@ const AFFECTION_SCENES = {
   m_roa: [
     {c:[{w:"m_roa",t:"추출 온도, 낮췄지?"},{w:"boss",t:"요즘 조금씩 바꿔보고 있어요."},{w:"m_roa",t:"그렇군."},{w:"m_roa",t:"(한 모금 더) …나쁘진 않군."},{w:"m_roa",t:"또 올게."}]},
     {c:[{w:"q_rico",t:"자, 잠깐만. 그, 그라인드 하임의 로아?! 라테 그랑프리 3연속—"},{w:"m_roa",t:"…시끄러워."},{w:"m_roa",t:"(내게) 로아야. 이름. 이렇게 알려질 줄은 몰랐고."},{w:"boss",t:"물어보려던 참이었어요."},{w:"m_roa",t:"알아. 안 물어봐서 편했어."},{w:"boss",t:"왜 이런 골목에 계세요?"},{w:"m_roa",t:"…그건 커피 몇 잔 더 팔면 말해줄게."}]},
-    {c:[{w:"boss",t:"무슨 생각 해요?"},{w:"m_roa",t:"커피 대회 세 번 우승했어. 근데 세 번째 우승하고부터 맛이 안 느껴졌어.",cg:"assets/art/cg_roa_grandprix.jpg",cgc:"라테 그랑프리 — 세 번째 우승. 그날부터 맛이 사라졌다."},{w:"boss",t:"맛이… 아예요?"},{w:"m_roa",t:"우승하고 마신 축배도 맹물 같더군. 스승은 '기술만 완벽하면 된다'고 했고."},{w:"m_roa",t:"그날 앞치마 벗었어."},{w:"m_roa",t:"(내 커피를 한 모금) 근데 여기 커피는… 완벽하진 않아. 그런데 맛이 나.",fc:"chars/face_roa_confess.png"},{w:"m_roa",t:"한 잔 더."}]},
+    {c:[{w:"boss",t:"무슨 생각 해요?"},{w:"m_roa",t:"…커피 몇 잔 더 팔면 말해준다고 했지. 세 번째 우승. 그때부터 맛이 안 느껴졌어.",cg:"assets/art/cg_roa_grandprix.jpg",cgc:"라테 그랑프리 — 세 번째 우승. 그날부터 맛이 사라졌다."},{w:"boss",t:"맛이… 아예요?"},{w:"m_roa",t:"우승하고 마신 축배도 맹물 같더군. 스승은 '기술만 완벽하면 된다'고 했고."},{w:"m_roa",t:"그날 앞치마 벗었어."},{w:"m_roa",t:"(내 커피를 한 모금) 근데 여기 커피는… 완벽하진 않아. 그런데 맛이 나.",fc:"chars/face_roa_confess.png"},{w:"m_roa",t:"한 잔 더."}]},
     {c:[{w:"m_roa",t:"그라인드 하임에서 사람 보내왔어.",cg:"assets/art/cg_roa_grindheim_flashback.jpg",cgc:"그라인드 하임 — 그가 앞치마를 벗고 걸어 나온 곳."},{w:"boss",t:"스승 분이요?"},{w:"m_roa",t:"스승이 아프대. 그 카페 이름으로 4승 나가달라는 거야."},{w:"m_roa",t:"가기 싫어. 근데 안 가기도 그래.",fc:"chars/face_roa_waver.png"},{w:"m_roa",t:"처음으로 선택이 어려워.",fc:"chars/face_roa_waver.png"},{w:"boss",t:"여기 있어요. 결정은 나중에 해도 되잖아요."},{w:"m_roa",t:"…그 말, 가볍게 한 거 아니지?"},{w:"boss",t:"네."},{w:"m_roa",t:"알겠어."},{w:"m_roa",t:"커피나 줘."}]},
     {c:[{w:"m_roa",t:"그라인드 하임엔 안 갔어."},{w:"boss",t:"괜찮겠어요?"},{w:"m_roa",t:"스승한텐 연락했어. 다른 사람 세우라고."},{w:"m_roa",t:"우승컵은 세 개면 충분해. 이제는 맛을 느끼면서 내리고 싶어.",cg:"assets/art/cg_roa_three_cups.jpg",cgc:"세 개의 우승컵. 그에겐 이걸로 충분했다."},{w:"m_roa",t:"(앞치마를 집어 스스로 두르며) 이건 내가 두르는 거야. 누가 씌운 게 아니라."},{w:"m_roa",t:"…여기 있어도 돼?"}],m:[{w:"boss",t:"언제든."},{w:"m_roa",t:"좋아. 대신 안 봐줘."},{w:"m_roa",t:"자네 커피, 내가 이겨야 직성이 풀리거든.",fc:"chars/face_roa_rival.png"},{w:"m_roa",t:"(잔을 비우고) 내일 또 겨루지."}],f:[{w:"boss",t:"언제든."},{w:"m_roa",t:"…그래. (남은 커피를 반쯤 내밀며) 반은 자네 거. 혼자 마시는 건 이제 그만하려고.",fc:"chars/face_roa_confess.png"},{w:"m_roa",t:"내일도, 같은 시간에 올게."}]},
   ],
@@ -2334,11 +2335,11 @@ const AFFECTION_SCENES = {
     {c:[{w:"m_luna",t:"마지막 조각이 돌아왔어."},{w:"boss",t:"어떤 기억이요?"},{w:"m_luna",t:"봉인 직전에 뭘 마셨는지. 커피였어. 누가 내려준 커피."},{w:"m_luna",t:"얼굴이 이제야 떠올라. …네 커피랑 맛이 겹쳐서, 계속 여기로 왔나 봐."},{w:"m_luna",t:"잊는 게 무서웠는데. 다시 기억하는 것도 나쁘지 않네."}],m:[{w:"m_luna",t:"백 년 중에 요즘이 제일 빨리 가."},{w:"boss",t:"저도요."},{w:"m_luna",t:"…그거면 됐어. 잘됐네."}],f:[{w:"m_luna",t:"처음으로 바라는 게 생겼어."},{w:"boss",t:"뭔데요?"},{w:"m_luna",t:"네가 늙어가는 걸, 곁에서 끝까지 보는 거."},{w:"m_luna",t:"(담담히) 슬픈 얘기 아니야. 이번엔 배웅 말고, 곁에 있겠단 뜻이야."}]},
   ],
   m_sera: [
-    {c:[{w:"m_sera",t:"저... 혹시 저 아세요?"},{w:"boss",t:"글쎄요. 처음 뵙는 것 같은데요."},{w:"m_sera",t:"(모자챙을 슬쩍 내리며) 다행이다."},{w:"m_sera",t:"요즘 다들 아는 척을 해서요. 여긴 안 그러네요."},{w:"boss",t:"그냥 손님이신데요."},{w:"m_sera",t:"네. 그냥 손님. ...그 말 오랜만이에요."}]},
+    {c:[{w:"m_sera",t:"저... 혹시 저 아세요?"},{w:"boss",t:"창가 말고 안쪽으로 드릴게요. 거긴 밖에서 다 보이거든요."},{w:"m_sera",t:"(모자챙을 슬쩍 내리며) ...사람 잘못 보셨어요. 저 그냥 손님이에요."},{w:"m_sera",t:"요즘 다들 아는 척을 해서요. 여긴 안 그러네요."},{w:"boss",t:"안 여쭐게요, 아무것도. 그냥 손님이신데요."},{w:"m_sera",t:"네. 그냥 손님. ...그 말 오랜만이에요."}]},
     {c:[{w:"m_sera",t:"지금 저 말고 손님 없죠?"},{w:"boss",t:"네, 지금은요."},{w:"m_sera",t:"그럼 말할게요. 저 세라예요. 진짜 이름이요."},{w:"boss",t:"세라."},{w:"m_sera",t:"...이름이 그렇게 불리는 거였구나."},{w:"m_sera",t:"다들 '아이돌 세라', '거기 세라' 그러거든요. 그냥 이름으로 불린 건 오랜만이에요.",cg:"assets/art/cg_sera_stage.jpg",cgc:"무대 위의 세라 — 만 명이 부르는 이름."},{w:"boss",t:"앞으로도 세라라고 부를게요."},{w:"m_sera",t:"(잔을 두 손으로 감싸며) ...네. 그렇게 해주세요."}]},
     {c:[{w:"m_sera",t:"저 처음 노래한 게 다섯 살이에요. 골목에서 혼자.",cg:"assets/art/cg_sera_alley_child.jpg",cgc:"다섯 살, 골목에서 혼자 부르던 노래."},{w:"boss",t:"지금이랑 달라요?"},{w:"m_sera",t:"그땐 틀린다는 게 뭔지도 몰랐어요. 그냥 좋아서 불렀거든요."},{w:"m_sera",t:"지금은 한 음만 틀려도 큰일 나요. 만 명이 보니까."},{w:"m_sera",t:"제 노래에 'wander'라는 말이 있어요. 여기저기 떠돈다는 뜻이에요."},{w:"m_sera",t:"뜻도 모르고 불렀거든요. 근데 그 골목 헤매던 다섯 살 저 같더라고요."},{w:"boss",t:"지금도 노래 좋아해요?"},{w:"m_sera",t:"(작게) 좋은데 무섭기도 해요. 여기서만 그냥 좋아요."}]},
     {c:[{w:"m_sera",t:"(밝게) 사장님! 오늘 라떼 완전 기대돼요, 저 SNS에 올려서 태그—"},{w:"m_sera",t:"(문득 멈칫) ...아. 또 이러네요, 나. 여기선 안 그래도 되는데."},{w:"boss",t:"세라. 지금 행복해요?"},{w:"m_sera",t:"네, 당연히— (말이 끊긴다)"},{w:"m_sera",t:"...어? 이상하다. 대답이 안 나와요."},{w:"m_sera",t:"그 질문 처음 받아봐요. 다들 '행복하죠?' 하고 답을 정해주거든요."},{w:"boss",t:"천천히 생각해도 돼요."},{w:"m_sera",t:"(한참 뒤) 모르겠어요. 근데 여기 이렇게 앉아 있는 지금은... 좀 알 것 같기도 하고."}]},
-    {c:[{w:"m_sera",t:"저 모자 안 썼어요. 눈치챘어요?"},{w:"boss",t:"네. 처음이네요."},{w:"m_sera",t:"여기선 벗어도 될 것 같아서요."},{w:"m_sera",t:"데뷔하고 진짜 제 얼굴 보여준 데가 없었어요. 다들 무대 위 세라만 아니까."},{w:"m_sera",t:"근데 사장님은 처음부터 그냥 세라로 봤잖아요. 이름도 직업도 모르고."},{w:"m_sera",t:"(창가 의자에 앉아, 다섯 살 그 골목의 노래를 아주 작게 흥얼거린다.)"},{w:"m_sera",t:"(멈추고 웃으며) ...방금 음 틀렸다. 근데 하나도 안 무섭네."}],m:[{w:"m_sera",t:"여기 오면 숨이 쉬어져요. 집이란 게 이런 느낌인가 봐요."},{w:"m_sera",t:"앞으로도 와도 되죠? 오래오래요."},{w:"boss",t:"언제든지요."},{w:"m_sera",t:"(식어가는 잔을 감싸 쥐며) ...다행이다. 여기 있어서."}],f:[{w:"m_sera",t:"사장님, 저 진짜 친구 없는 거 알아요?"},{w:"m_sera",t:"무대 밖에서 그냥 수다 떨 수 있는 사람. 사장님이 처음이에요."},{w:"boss",t:"저도 세라 같은 친구는 처음이에요."},{w:"m_sera",t:"(무대 웃음이 아닌, 환하게) 우리 이제 베프인 거예요. 무르기 없기."}]},
+    {c:[{w:"m_sera",t:"저 모자 안 썼어요. 눈치챘어요?"},{w:"boss",t:"네. 처음이네요."},{w:"m_sera",t:"여기선 벗어도 될 것 같아서요."},{w:"m_sera",t:"데뷔하고 진짜 제 얼굴 보여준 데가 없었어요. 다들 무대 위 세라만 아니까."},{w:"m_sera",t:"근데 사장님은 처음부터 그냥 세라로 봐줬잖아요. 알면서도, 끝까지 모르는 사람처럼."},{w:"m_sera",t:"(창가 의자에 앉아, 다섯 살 그 골목의 노래를 아주 작게 흥얼거린다.)"},{w:"m_sera",t:"(멈추고 웃으며) ...방금 음 틀렸다. 근데 하나도 안 무섭네."}],m:[{w:"m_sera",t:"여기 오면 숨이 쉬어져요. 집이란 게 이런 느낌인가 봐요."},{w:"m_sera",t:"앞으로도 와도 되죠? 오래오래요."},{w:"boss",t:"언제든지요."},{w:"m_sera",t:"(식어가는 잔을 감싸 쥐며) ...다행이다. 여기 있어서."}],f:[{w:"m_sera",t:"사장님, 저 진짜 친구 없는 거 알아요?"},{w:"m_sera",t:"무대 밖에서 그냥 수다 떨 수 있는 사람. 사장님이 처음이에요."},{w:"boss",t:"저도 세라 같은 친구는 처음이에요."},{w:"m_sera",t:"(무대 웃음이 아닌, 환하게) 우리 이제 베프인 거예요. 무르기 없기."}]},
   ],
 };
 // 성별 분기 tail 합쳐 컷 배열 반환({who,text} 형태로 정규화)
@@ -2379,7 +2380,8 @@ const DEMITAS_SCENES = [
     { title:"봉인고", cuts:[
       { who:'q_demitas', text:"여기까지 왔군. …봉인고(封印庫)에 온 걸 환영하네.", face:"chars/face_demitasse_base.png" },
       { who:'q_demitas', text:"이 방의 잔들을 보게. 백 년간 내가 모은 말들이 전부 여기 잠들어 있네.", face:"chars/face_demitasse_base.png" },
-      { who:'q_demitas', text:"루나가 잃은 것과 같은 말들도, 자네 친구들이 아끼던 말도, 여기선 안전하지. 아무도 잃을 수 없으니.", face:"chars/face_demitasse_base.png" },
+      { who:'boss', text:"…저 안쪽 잔은 이름이 둘 새겨져 있네요. 안에 든 글자는 철자가 반쯤 바랬고요." },
+      { who:'q_demitas', text:"…그 잔은 건드리지 말게. 루나가 잃은 것과 같은 말들도, 자네 친구들이 아끼던 말도, 여기선 안전하지. 아무도 잃을 수 없으니.", face:"chars/face_demitasse_base.png" },
       { who:'boss', text:"안전한 게 아니라, 갇힌 거예요." },
       { who:'q_demitas', text:"말장난은 접지. 오늘 여기서 정하세. 나눔이 옳은지, 봉인이 옳은지.", face:"chars/face_demitasse_base.png" },
       { who:'q_demitas', text:"저들은 자네 편이 아니야. 그저 구경하러 온 사람들이지.", face:"chars/face_demitasse_base.png" },
@@ -2392,8 +2394,9 @@ const DEMITAS_SCENES = [
       { who:'q_demitas', text:"…자네가 이겼네. 봉인고를 부수지도 않고, 나를 이겼어.", face:"chars/face_demitasse_crack.png" },
       { who:'boss', text:"이거, 오래전에 잃어버리신 거 아니에요?" },
       { who:'q_demitas', text:"…이 단어를, 어떻게.", face:"chars/face_demitasse_crack.png" },
-      { who:'boss', text:"'share(셰어)' — 나눈다는 뜻이에요. 예전에 친구분이랑 같이 쓰시던 말이라고 들었어요." },
+      { who:'boss', text:"'share(셰어)' — 나눈다는 뜻이에요. 봉인고 그 잔에 반쯤 바랜 채로 남아 있던 철자요. 나머지 한 분이 누구신지는… 안 여쭐게요." },
       { who:'q_demitas', text:"(오래 잔을 바라보다, 처음으로 한 모금을 마신다) …맛이, 기억나는군.", face:"chars/face_demitasse_redeem.png" },
+      { who:'q_demitas', text:"잔에 이름을 나란히 새긴 친구가 있었네. 제 이름 철자마저 잊고 떠난 뒤로, 나는 저 말을 가장 깊은 곳에 묻어두었지.", face:"chars/face_demitasse_redeem.png" },
       { who:'q_demitas', text:"나는 잃는 게 두려워 전부 가뒀네. 그런데 가두는 순간, 이미 다 잃고 있었어.", face:"chars/face_demitasse_redeem.png" },
       { who:'boss', text:"다시 내리시면 돼요. 늦지 않았어요." },
       { who:'q_demitas', text:"…한 잔만 해보지. 오래된 손이라, 굳었을 테니.", face:"chars/face_demitasse_smile.png" },
