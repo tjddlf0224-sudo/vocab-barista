@@ -1714,6 +1714,7 @@ var totalVipCount = 0;
 var totalItemsBought = 0;
 var totalCorrectCount = 0; // [신규] 학습 통계용 — 누적 정답 수
 var totalWrongCount = 0;   // [신규] 학습 통계용 — 누적 오답 수
+var recentAnswers = [];    // [울림 A] 최근 40문 정답(1)/오답(0) 윈도우 — 생애누적 대체
 
 const QUEST_DB = {
     normal: [
@@ -2361,7 +2362,7 @@ const AFFECTION_SCENES = {
     {c:[{w:"m_luna",t:"루나. 그게 내 이름이야."},{w:"boss",t:"'Luna' — 옛말로 달이잖아요."},{w:"m_luna",t:"(잠깐 멈춘다) …알아보는 사람 오랜만이네."},{w:"boss",t:"달에서 따온 이름이에요?"},{w:"m_luna",t:"글쎄. 너무 오래돼서 나도 가끔 헷갈려."},{w:"m_luna",t:"이름 제대로 불린 거, 백 년 만이야."},{w:"m_luna",t:"(옅게 웃는다) 웃을 생각 없었는데. 이상하네."}]},
     {c:[{w:"boss",t:"오늘 좀 지쳐 보여요."},{w:"m_luna",t:"꿈을 꿨어. 백 년 만에."},{w:"boss",t:"좋은 꿈이요?"},{w:"m_luna",t:"아니. 전쟁이 끝나던 밤이었어."},{w:"m_luna",t:"그 어둠을 가두려면 봉인이 필요했어. 봉인엔 대가가 따르고."},{w:"m_luna",t:"나는 가진 것 중에 제일 값진 걸 내놨어."},{w:"boss",t:"그게 뭐였는데요?"},{w:"m_luna",t:"기억. 백 년 치.",fc:"chars/face_luna_sorrow.png"},{w:"m_luna",t:"깨보니 아무것도 안 남았더라. 사람도, 마을도, 이름도.",fc:"chars/face_luna_sorrow.png",cg:"assets/art/cg_luna_awakening.jpg",cgc:"봉인이 끝나고, 홀로 깨어난 아침."},{w:"m_luna",t:"이상하지. 얼굴은 안 떠오르는데 그리운 건 남았어."},{w:"boss",t:"그만큼 소중했던 거 아닐까요."},{w:"m_luna",t:"…그렇게 들으니 좀 낫네."},{w:"m_luna",t:"미안한데, 며칠 안 올지도 몰라. 기억이 돌아올 때마다 좀… 아파서."}]},
     {c:[{w:"m_luna",t:"솔직히 말해도 돼?"},{w:"boss",t:"네."},{w:"m_luna",t:"여기 오는 게 가끔 무서워.",fc:"chars/face_luna_fear.png"},{w:"boss",t:"왜요?"},{w:"m_luna",t:"너희는 늙잖아. 나만 남고.",fc:"chars/face_luna_fear.png"},{w:"m_luna",t:"정 붙이면 늘 내가 배웅하는 쪽이야. 매번."},{w:"m_luna",t:"그래서 이름도 늦게 알려준 거야. 멀리 두려고."},{w:"boss",t:"근데 지금 여기 있잖아요."},{w:"m_luna",t:"…그러네. 무서워도 발이 여기로 오더라. 어쩌겠어."},{w:"boss",t:"무서우면 무서운 채로 와요. 문 열어둘게요."},{w:"m_luna",t:"그런 말 오랜만에 들어."},{w:"m_luna",t:"계속 와도 되는 거지?"},{w:"boss",t:"언제든요."},{w:"m_luna",t:"고마워.",fc:"chars/face_luna_grateful.png"}]},
-    {c:[{w:"m_luna",t:"마지막 조각이 돌아왔어."},{w:"boss",t:"어떤 기억이요?"},{w:"m_luna",t:"봉인 직전에 뭘 마셨는지. 커피였어. 누가 내려준 커피."},{w:"m_luna",t:"얼굴이 이제야 떠올라. …네 커피랑 맛이 겹쳐서, 계속 여기로 왔나 봐."},{w:"m_luna",t:"잊는 게 무서웠는데. 다시 기억하는 것도 나쁘지 않네."}],m:[{w:"m_luna",t:"백 년 만에 처음으로 바라는 게 생겼어."},{w:"boss",t:"뭔데요?"},{w:"m_luna",t:"네가 나이 드는 걸, 끝까지 곁에서 보는 거."},{w:"m_luna",t:"(담담히) 배웅하는 쪽은 이제 그만할래. 이번엔 남는 쪽이야."}],f:[{w:"m_luna",t:"처음으로 바라는 게 생겼어."},{w:"boss",t:"뭔데요?"},{w:"m_luna",t:"네가 늙어가는 걸, 곁에서 끝까지 보는 거."},{w:"m_luna",t:"(담담히) 슬픈 얘기 아니야. 이번엔 배웅 말고, 곁에 있겠단 뜻이야."}]},
+    {c:[{w:"m_luna",t:"마지막 조각이 돌아왔어."},{w:"boss",t:"어떤 기억이요?"},{w:"m_luna",t:"봉인 직전에 뭘 마셨는지. 커피였어. 누가 내려준 커피."},{w:"m_luna",t:"얼굴이 이제야 떠올라. …네 커피랑 맛이 겹쳐서, 계속 여기로 왔나 봐."},{w:"m_luna",t:"봉인이 지켜준다던 것들, 결국 아무것도 못 지켰어. 지켜준 건 이 한 잔이었지."},{w:"m_luna",t:"잊는 게 무서웠는데. 다시 기억하는 것도 나쁘지 않네."}],m:[{w:"m_luna",t:"백 년 만에 처음으로 바라는 게 생겼어."},{w:"boss",t:"뭔데요?"},{w:"m_luna",t:"네가 나이 드는 걸, 끝까지 곁에서 보는 거."},{w:"m_luna",t:"(담담히) 배웅하는 쪽은 이제 그만할래. 이번엔 남는 쪽이야."}],f:[{w:"m_luna",t:"처음으로 바라는 게 생겼어."},{w:"boss",t:"뭔데요?"},{w:"m_luna",t:"네가 늙어가는 걸, 곁에서 끝까지 보는 거."},{w:"m_luna",t:"(담담히) 슬픈 얘기 아니야. 이번엔 배웅 말고, 곁에 있겠단 뜻이야."}]},
   ],
   m_sera: [
     {c:[{w:"m_sera",t:"저... 혹시 저 아세요?"},{w:"boss",t:"창가 말고 안쪽으로 드릴게요. 거긴 밖에서 다 보이거든요."},{w:"m_sera",t:"(모자챙을 슬쩍 내리며) ...사람 잘못 보셨어요. 저 그냥 손님이에요."},{w:"boss",t:"안 여쭐게요, 아무것도. 그냥 손님이신데요."},{w:"m_sera",t:"네. 그냥 손님. ...그 말 오랜만이에요."}]},
@@ -2429,9 +2430,9 @@ const DEMITAS_SCENES = [
       { who:'q_demitas', text:"…이 단어를, 어떻게.", face:"chars/face_demitasse_crack.png" },
       { who:'boss', text:"'share(셰어)' — 나눈다는 뜻이에요. 봉인고 그 잔에 반쯤 바랜 채로 남아 있던 철자요. 나머지 한 분이 누구신지는… 안 여쭐게요." },
       { who:'q_demitas', text:"(오래 잔을 바라보다, 처음으로 한 모금을 마신다) …맛이, 기억나는군.", face:"chars/face_demitasse_redeem.png" },
-      { who:'q_demitas', text:"잔에 이름을 나란히 새긴 동업자가 있었네. 제 이름 철자마저 잊고 떠난 뒤로, 나는 저 말을 가장 깊은 곳에 묻어두었지.", face:"chars/face_demitasse_redeem.png" },
+      { who:'q_demitas', text:"저 잔엔 이름이 나란히 둘이었네. 나와 함께 이 가게를 열었던 반쪽 — 언젠가부터 제 이름 철자마저 잊어가더니, 결국 나에게서 갈라져 나갔지.", face:"chars/face_demitasse_redeem.png" },
       { who:'q_demitas', text:"나는 잃는 게 두려워 전부 가뒀네. 그런데 가두는 순간, 이미 다 잃고 있었어.", face:"chars/face_demitasse_redeem.png" },
-      { who:'q_demitas', text:"값밖에 모르던 내 반쪽은, 밤마다 골목으로 나가 헐값에 말을 그러모았네. 사람들은 그를 '어둠의 상인'이라 불렀지.", face:"chars/face_demitasse_redeem.png" },
+      { who:'q_demitas', text:"값밖에 모르게 된 그 반쪽은, 나에게서 갈라져 나가 밤마다 골목으로 나가 헐값에 말을 그러모았네. 사람들은 그를 '어둠의 상인'이라 불렀지.", face:"chars/face_demitasse_redeem.png" },
       { who:'q_demitas', text:"이제 그 손을 거둬들이겠네. 더는 값으로 세상을 잴 필요가 없으니.", face:"chars/face_demitasse_redeem.png" },
       { who:'boss', text:"다시 내리시면 돼요. 늦지 않았어요." },
       { who:'q_demitas', text:"…한 잔만 해보지. 오래된 손이라, 굳었을 테니.", face:"chars/face_demitasse_smile.png" },
@@ -2943,6 +2944,9 @@ const game = {
                 totalItemsBought = data.stats.totalItems || 0;
                 totalCorrectCount = data.stats.totalCorrect || 0; // [신규] 학습 통계
                 totalWrongCount = data.stats.totalWrong || 0;     // [신규] 학습 통계
+                recentAnswers = Array.isArray(data.stats.recentAnswers) ? data.stats.recentAnswers.slice(-40) : []; // [울림 A]
+                this._srsGraduated = data.stats.srsGraduated || 0; // [울림 R]
+                this._vipCorrect = data.stats.vipCorrect || 0;     // [울림 S]
                 if(data.stats.currentQuests) currentQuests = data.stats.currentQuests;
             }
         } else {
@@ -3021,7 +3025,8 @@ const game = {
             bestDay: this.bestDay || 1, lastDaily: this.lastDaily || '', dailyStreak: this.dailyStreak || 0,
             affection: this.affection || {}, charActs: this.charActs || {}, mainSeenDay: this.mainSeenDay || {}, mainMet: this.mainMet || {}, moodBoost: this.moodBoost || 0,
             lives: (this.gameMode === 'review' && this._livesBackup !== undefined) ? this._livesBackup : this.lives, // [버그수정] 복습 모드는 본편 라이프 백업값을 저장
-            stats: { totalServed: totalServedCount, totalVip: totalVipCount, totalItems: totalItemsBought, totalCorrect: totalCorrectCount, totalWrong: totalWrongCount, currentQuests: currentQuests },
+            stats: { totalServed: totalServedCount, totalVip: totalVipCount, totalItems: totalItemsBought, totalCorrect: totalCorrectCount, totalWrong: totalWrongCount, currentQuests: currentQuests,
+                     recentAnswers: recentAnswers, srsGraduated: this._srsGraduated || 0, vipCorrect: this._vipCorrect || 0 }, // [울림 A/R/S]
             totalCustomers: this.totalCustomers, dailyCount: this.dailyCount, isMuted: this.isMuted,
             masteredCount: this.masteredCount, masteredList: this.mastered,
             maxCombo: this.maxCombo || 0, turnCount: this.turnCount || 0,
@@ -3638,6 +3643,8 @@ const game = {
         if(val.toLowerCase() === this.currentCust.data.w.toLowerCase()) {
             clearInterval(this.timer); playSound('correct'); haptic('light');
             totalCorrectCount++; // [신규] 학습 통계용 누적 정답 수
+            recentAnswers.push(1); if(recentAnswers.length>40) recentAnswers.shift(); // [울림 A] 최근 40문 윈도우
+            if(this.currentCust.type==='vip') this._vipCorrect=(this._vipCorrect||0)+1; // [울림 S] 스펠링(직접입력) 성공 누적 — 게이지속도%
             // [첫 잔] 게임 통틀어 최초의 정답 응대면 시네마틱 예약(정식 신규 유저만 — 기존 저장 유저는 totalServed>0라 스킵)
             if(totalServedCount === 0 && !localStorage.getItem('vb_first_cup')) this._firstCupPending = true;
 
@@ -3743,6 +3750,7 @@ const game = {
                 if(r.box >= 5) {
                     this.myWords = this.myWords.filter(v => v.w !== r.w); // 졸업: 오답노트에서 제거
                     if(!this.mastered.includes(r.w)) this.mastered.push(r.w);
+                    this._srsGraduated = (this._srsGraduated || 0) + 1; // [울림 R] 오답정복(SRS 졸업) 누적 — 방어%
                 } else {
                     r.due = this.turnCount + this.srsInterval(r.box); // 다음 복습 예약
                 }
@@ -3846,6 +3854,7 @@ const game = {
         clearInterval(this.timer); playSound('wrong'); haptic('heavy');
         flashFX('bad'); // [이펙트] 오답 화면 플래시
         totalWrongCount++; // [신규] 학습 통계용 누적 오답 수
+        recentAnswers.push(0); if(recentAnswers.length>40) recentAnswers.shift(); // [울림 A] 최근 40문 윈도우
         this.lives--; this.updateHUD();
 
         // [버그수정] 콤보/피버/실드 처리를 여기서 통일 — 예전엔 오답 경로(checkAnswer)에만 있고

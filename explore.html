@@ -744,21 +744,25 @@ const Explore = {
     const p=COMP_PASSIVE[this.state.companion||'none']; if(p){ b.atk+=p.atk||0; b.def+=p.def||0; b.maxHp+=p.maxHp||0; b.goldPct+=p.goldPct||0; }
     return b; },
   // [울림지수] 누적 학습 → 전투력 가산%(로그상한). 재미우선: 강제·페널티 없음, 안 해도 클리어됨. 상한으로 무력화 방지.
-  //   M=마스터 단어수→공격% / A=누적 정답률→크리%. (R=오답정복→방어%, S=스펠링→게이지속도는 트래킹 추가 후 확장)
+  //   M=마스터 단어수→공격% / A=최근40문 정답률→크리% / R=오답정복(SRS졸업)→방어% / S=스펠링(직접입력)성공→게이지속도%
   vocabPower(){
     const c=this.cafe||{};
     const M=(typeof c.masteredCount==='number'?c.masteredCount:(c.masteredList||[]).length)||0;
-    const st=c.stats||{}; const tc=st.totalCorrect||0, tw=st.totalWrong||0;
-    const A=(tc+tw)?tc/(tc+tw):0;
+    const st=c.stats||{};
+    const ra=Array.isArray(st.recentAnswers)?st.recentAnswers:[];                    // [A] 최근 40문 윈도우(생애누적 대체)
+    const A=ra.length? ra.reduce((a,b)=>a+b,0)/ra.length : 0;
+    const R=st.srsGraduated||0;                                                       // [R] 오답정복(SRS 졸업) 누적
+    const S=st.vipCorrect||0;                                                         // [S] 스펠링(직접입력) 성공 누적
     const atkPct=0.30*(1-Math.exp(-M/60));                 // 공격 ≤ +30%
     const critBonus=0.15*Math.max(0,(A-0.5)/0.5);          // 크리 ≤ +15%p (정답률 50%↓는 0 — 페널티 아님)
-    const defPct=0, gaugePct=0;                            // 확장 예정
-    return { M, A, atkPct, critBonus, defPct, gaugePct, pct:Math.round(atkPct*100) };
+    const defPct=0.25*(1-Math.exp(-R/45));                 // 방어 ≤ +25%
+    const gaugePct=0.40*(1-Math.exp(-S/50));               // 게이지속도 ≤ +40%
+    return { M, A, R, S, atkPct, critBonus, defPct, gaugePct, pct:Math.round(atkPct*100) };
   },
   effStats(){ const s=this.state.stats; const b=this.effBonus(); const vp=this.vocabPower(); const maxHp=s.maxHp+b.maxHp;
     return { hp:Math.min(s.hp,maxHp), maxHp,
              atk:Math.round((s.atk+b.atk)*(1+vp.atkPct)),   // 울림 공격% 반영
-             def:Math.round((s.def+b.def)*(1+vp.defPct)),   // 울림 방어%(현재 0)
+             def:Math.round((s.def+b.def)*(1+vp.defPct)),   // 울림 방어%(R=오답정복)
              base:s, bonus:b, vocab:vp }; },
   exitToCafe(){ this.persist(); try{ unlockOrientation(); }catch(e){}
     try{ localStorage.setItem('vb_resume_paused','1'); }catch(e){} // 카페 복귀 시 일시정지 화면으로
@@ -769,8 +773,11 @@ const Explore = {
     document.getElementById('hud-level').textContent=s.level;
     const e=this.effStats(); document.getElementById('hud-hp').textContent=e.hp+'/'+e.maxHp;
     document.getElementById('hud-mats-n').textContent=Object.values(s.materials).reduce((n,v)=>n+(v||0),0);
-    // [울림지수] 학습→전투력% 표기(대표=공격%). 크리 보너스가 있으면 함께 표기.
-    const vn=document.getElementById('hud-vocab-n'); if(vn){ const vp=e.vocab||this.vocabPower(); const cr=Math.round(vp.critBonus*100); vn.textContent='+'+vp.pct+'%'+(cr>0?' · 크리+'+cr:''); }
+    // [울림지수] 학습→전투력% 표기(대표=공격%). 크리/방어/게이지 보너스가 있으면 함께 표기, 툴팁엔 4축 전부.
+    const vn=document.getElementById('hud-vocab-n'); if(vn){ const vp=e.vocab||this.vocabPower();
+      const cr=Math.round(vp.critBonus*100), dp=Math.round(vp.defPct*100), gp=Math.round(vp.gaugePct*100);
+      vn.textContent='+'+vp.pct+'%'+(cr>0?' · 크리+'+cr:'')+(dp>0?' · 방어+'+dp:'')+(gp>0?' · 가속+'+gp:'');
+      const chip=document.getElementById('hud-vocab'); if(chip) chip.title='울림 지수 — 공격 +'+vp.pct+'% · 크리 +'+cr+'%p · 방어 +'+dp+'% · 게이지속도 +'+gp+'%'; }
     // 맵 회복 버튼: 보유 개수 / 비활성 상태 갱신
     const hr=CRAFT_DB.find(x=>x.effect==='heal'); const hn=hr?((c.craftedItems||{})[hr.id]||0):0;
     const hc=document.getElementById('heal-ct'), hb=document.getElementById('heal-btn');
@@ -1033,7 +1040,9 @@ const DARK_MERCHANT = { name:'어둠의 상인', img:'chars/npc_merchant.png',
   // [반전] 드미타스(큐레이터)를 만난 뒤 첫 조우 — 정체를 흘린다(1회)
   reveal:["\"…자네, 그 골목 끝 카페 주인이지.<br>큐레이터께서 자네 얘길 하시더군. 값도 조건도 없이 말을 나눠주는 미친 사람이 있다고.\"", "\"나는 그분의 손일세. 그분이 차마 못 나서는 밤길까지 나가, 흩어진 말을 봉인고로 그러모으지.<br>…한데 요즘, 자네 앞에만 서면 그러모으던 손이 자꾸 멈춰.\""],
   // [반전] 드미타스 구원 후 — 값을 매기던 반쪽이 흐려진다
-  dissolve:["\"…이상한 일이야. 그분이 백 년 만에 잔을 비우셨다더군.<br>그날 이후로, 값을 매기던 내 손이 자꾸 흐릿해져. 마치 나라는 얼굴이 더는 필요 없어진 것처럼.\"", "\"내가 누구였는지 잊어가네. 값. 값. …그것 말곤 아무것도 없던 얼굴이었는데.<br>후후. 마지막으로 한 판, 값 없이 걸어보겠나.\""] };
+  dissolve:["\"…이상한 일이야. 그분이 백 년 만에 잔을 비우셨다더군.<br>그날 이후로, 값을 매기던 내 손이 자꾸 흐릿해져. 마치 나라는 얼굴이 더는 필요 없어진 것처럼.\"", "\"내가 누구였는지 잊어가네. 값. 값. …그것 말곤 아무것도 없던 얼굴이었는데.<br>후후. 마지막으로 한 판, 값 없이 걸어보겠나.\""],
+  // [서사] dissolve(소멸 고백)는 1회만 — 그 뒤로는 '이미 흐려진' 정상상태 대사로, 재대결은 여전히 가능하되 '마지막'을 반복하지 않는다
+  faded:["\"…또 왔군. 값을 안 매긴 지 오래돼서, 이 판도 그냥 재미로 받아주지.\"", "\"나는 이제 얼굴보다 손에 가깝네. 값 없이 한 판 정도는… 아직 몸에 남아 있어서.\""] };
 // ---------- 이미지 프리로더 ----------
 const Assets = {
   imgs:{},
@@ -1975,7 +1984,7 @@ const Battle = {
   refreshSkill(){ const sb=document.getElementById('cmd-skill'); if(!sb)return; const ready=this.gauge>=this.GMAX;
     const fill=document.getElementById('skill-fill'); if(fill) fill.style.height=Math.min(100,this.gauge/this.GMAX*100)+'%';
     sb.disabled=!(this._canAct&&ready); sb.classList.toggle('ready', ready&&!!this._canAct); },
-  addGauge(n){ const g=1+((Explore.vocabPower&&Explore.vocabPower().gaugePct)||0); this.gauge=Math.min(this.GMAX,(this.gauge||0)+n*g); this.refreshSkill(); }, // 울림 게이지속도%(현재 0)
+  addGauge(n){ const g=1+((Explore.vocabPower&&Explore.vocabPower().gaugePct)||0); this.gauge=Math.min(this.GMAX,(this.gauge||0)+n*g); this.refreshSkill(); }, // 울림 게이지속도%(S=스펠링 성공)
   // [스킬 진화] 동행별 티어 조회 / 쓸수록 랜덤 승급(내려가지 않음, 최대 3=울림)
   skillTierOf(ck){ const st=Explore.state.skillTier; return (st&&st[ck])||0; },
   tryPromote(ck){ if(!Explore.state.skillTier) Explore.state.skillTier={};
@@ -2265,7 +2274,9 @@ const DarkDuel = {
     var _stage=0; try{ _stage=(JSON.parse(localStorage.getItem('vb_save_v7')||'{}').demitasStage)||0; }catch(e){}
     if(!Explore.state.events) Explore.state.events={};
     var _say;
-    if(_stage>=4){ _say=this._say('dissolve'); }
+    // [서사] dissolve(소멸 고백)는 1회만 재생 — 그 뒤 재조우는 faded(정상상태)로, '마지막 한 판'이 매번 거짓이 되지 않게
+    if(_stage>=4 && !Explore.state.events.dmDissolve){ _say=this._say('dissolve'); Explore.state.events.dmDissolve=1; try{Explore.persist();}catch(e){} }
+    else if(_stage>=4){ _say=this._say('faded'); }
     else if(_stage>=2 && !Explore.state.events.dmReveal){ _say=this._say('reveal'); Explore.state.events.dmReveal=1; try{Explore.persist();}catch(e){} }
     else { _say=this._say(_beaten?'again':'intro'); }
     document.getElementById('dm-body').innerHTML=
