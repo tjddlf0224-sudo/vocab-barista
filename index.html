@@ -2179,7 +2179,7 @@ const CHAR_DEX = [
       story:'"후훗… 오늘 밤은 운이 좋네. 내 철자 주문을 완성하면, 달빛의 보상을 주지."',
       spec:{ skin:'#f3dcc4', skinShade:'#e6c5a6', hair:'#7e57c2', hairStyle:'long', shirt:'#311b4f', shirtDark:'#23123b', mood:'happy', brow:'#5e35a8', blush:true, lashes:true, lips:true, special:'vip',
         front:`<g><path d="M50 18 L150 18 L100 -34 Z" fill="#3b2456"/><path d="M50 18 L150 18 L100 -10 Z" fill="#4a2e6e"/><circle cx="100" cy="-18" r="6" fill="#ffd76a"/><path d="M150 34 l6 -8 l3 9 l9 3 l-9 3 l-3 9 l-3 -9 l-9 -3 l9 -3 z" fill="#ffd76a" opacity=".9"/><circle cx="138" cy="150" r="5" fill="#ffd76a" opacity=".8"/></g>` } },
-    { id:'m_sera', name:'세라', alias:'아이돌 에코', kind:'main', rarity:'epic', tags:['normal','vip'], img:'chars/sera.png',
+    { id:'m_sera', name:'세라', alias:'아이돌 에코', kind:'main', rarity:'epic', tags:['normal','vip'], img:'chars/sera.png', hidden:'chars/sera_hidden.png',
       title:'커피 거리의 인기 아이돌',
       desc:'우연히 우리 카페를 마음에 들어한 톱스타. 그녀가 오면 가게가 들썩인다. 무대 밖에서 처음 \'집\' 같은 걸 느낀다.',
       story:'"여기선… 그냥 손님이어도 괜찮은 거죠? 자, 제 주문 맞춰주실래요?"' },
@@ -2489,6 +2489,8 @@ function affStoryLine(id, i){ var v=(AFFECTION_STORY[id]||[])[i]; if(v && typeof
 function mainNameKnown(id){ return ((game && game.charActs && game.charActs[id])||0) >= 2; }
 // 이름 공개(2막) 전 표기: alias가 있으면 그걸(세라=세상이 아는 예명 '아이돌 에코'), 없으면 ???(로아·루나는 진짜 무명)
 function mainDisplayName(ch){ if(ch && ch.kind==='main' && !mainNameKnown(ch.id)) return ch.alias || '???'; return ch ? ch.name : ''; }
+// 이름 공개 전 초상: hidden(변장)이 있으면 그걸 쓴다(세라=베레모+마스크). 대화창·카페 스프라이트 공통.
+function mainPortrait(ch){ return (ch && ch.kind==='main' && ch.hidden && !mainNameKnown(ch.id)) ? ch.hidden : ((ch && ch.img) || ''); }
 
 // ===== 캐릭터 교차 씬 (같은 날 2인+ 방문 트리거) — 셋 겹치면 D 우선 =====
 const CROSS_SCENES = [
@@ -2623,7 +2625,7 @@ const ACHIEVEMENTS = [
 
 function charSVG(c) {
     if(!c) return '';
-    if(c.img) return `<img class="cust-png" src="${c.img}" alt="${c.name}">`;
+    if(c.img) return `<img class="cust-png" src="${mainPortrait(c)}" alt="${mainDisplayName(c)}">`;
     if(c.anim) return buildAnimalSVG(c.anim, c);
     return buildAvatarSVG(c.spec);
 }
@@ -3470,7 +3472,7 @@ const game = {
         const textEl = document.getElementById('dlg-text');
         if(!box || !nameTag || !textEl) return;
 
-        if(charLarge) charLarge.src = opts.face || ch.img || '';
+        if(charLarge) charLarge.src = opts.face || mainPortrait(ch);   // 이름 공개 전이면 변장 초상
         nameTag.textContent = mainDisplayName(ch);
         textEl.textContent = text.replace(/<[^>]+>/g, '').replace(/&[a-z]+;/gi, '');
         box.classList.add('dlg-active');
