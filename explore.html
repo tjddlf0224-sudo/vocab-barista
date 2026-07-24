@@ -1026,10 +1026,14 @@ const QUEST_NPCS = [
 ];
 // ---------- 숨겨진 이벤트: 어둠의 상인 (영어 대결) ----------
 const DARK_MERCHANT = { name:'어둠의 상인', img:'chars/npc_merchant.png',
-  intro:["\"이런, 길 잃은 사장 나리 아니신가. 후후.<br>내 수수께끼 몇 개만 맞혀보게. 대가는… 섭섭잖게 쳐주지.\"", "\"단어 하나에 값이 붙는 거, 아나?<br>오늘은 제법 귀한 놈을 걸었네. 자신 있으면 앉게.\"", "\"겁먹을 것 없어. 나는 손님을 물지 않아.<br>…지갑만 살짝 가져갈 뿐이지. 후후후.\""],
-  lose:["\"허어… 졌네, 졌어. 깔끔하게 인정하지.<br>약속한 물건일세. 자, 가져가게.\"", "\"과연 소문대로군. 오늘 판은 자네 거야.<br>이깟 패배로 사라질 상인은 아니니, 또 보세.\"", "\"…쳇. 요즘 사장 나리들은 왜 이리 똑똑한지.<br>가져가게. 대신 다음엔 안 봐줘.\""],
-  win:["\"아깝군, 아까워. 딱 한 글자 차이였는데 말이야.<br>이 바닥은 그 한 글자에서 값이 갈려. 다음엔 좀 더 벼려 오게.\"", "\"이번 판은 내가 챙기겠네. 후후.<br>서운해 말게, 복수할 기회야 얼마든지 있으니.\""],
-  again:["\"또 왔군, 사장 나리. 반갑구먼.<br>이번엔 값을 좀 올렸네. 각오는 됐고?\"", "\"돌아올 줄 알았지. 그 표정, 아직 안 끝났다는 얼굴이군.<br>좋아, 다시 걸어보세.\""] };
+  intro:["\"이런, 길 잃은 사장 나리 아니신가. 후후.<br>흩어진 옛말을 헐값에 사 모으는 게 내 일이지. 한 판 걸어보겠나.\"", "\"단어 하나에도 값이 붙는 거, 아나?<br>내가 사들인 말들은 전부 어느 '금고'로 실려 가지. 자신 있으면 앉게.\"", "\"겁먹을 것 없어. 나는 손님을 물지 않아.<br>…자네 그 온기 어린 말들, 값으로 매기면 얼마쯤 할까. 후후.\""],
+  lose:["\"허어… 졌네, 졌어.<br>자네 말엔 값이 안 매겨져. 그게… 어째서인지 자꾸 신경이 쓰이는군.\"", "\"오늘 판은 자네 거야. 약속한 물건일세.<br>…내 주인께서 아시면. 아니, 됐네. 또 보세, 사장 나리.\"", "\"…쳇. 값을 못 매기는 말이 세상에 있다니.<br>가져가게. 대신 다음엔 안 봐줘.\""],
+  win:["\"아깝군. 딱 한 글자 차이였는데.<br>이 바닥은 그 한 글자에서 값이 갈려. 다음엔 좀 더 벼려 오게.\"", "\"이번 판은 내가 챙기겠네. 후후.<br>서운해 말게, 복수할 기회야 얼마든지 있으니.\""],
+  again:["\"또 왔군, 사장 나리.<br>이번엔 값을 좀 올렸네. …자네를 만날수록, 내 저울이 이상하게 흔들려.\"", "\"돌아올 줄 알았지.<br>좋아, 다시 걸어보세. …한데 자네, 어딘가 낯이 익어. 어디서였더라.\""],
+  // [반전] 드미타스(큐레이터)를 만난 뒤 첫 조우 — 정체를 흘린다(1회)
+  reveal:["\"…자네, 그 골목 끝 카페 주인이지.<br>큐레이터께서 자네 얘길 하시더군. 값도 조건도 없이 말을 나눠주는 미친 사람이 있다고.\"", "\"나는 그분의 손일세. 그분이 차마 못 나서는 밤길까지 나가, 흩어진 말을 봉인고로 그러모으지.<br>…한데 요즘, 자네 앞에만 서면 그러모으던 손이 자꾸 멈춰.\""],
+  // [반전] 드미타스 구원 후 — 값을 매기던 반쪽이 흐려진다
+  dissolve:["\"…이상한 일이야. 그분이 백 년 만에 잔을 비우셨다더군.<br>그날 이후로, 값을 매기던 내 손이 자꾸 흐릿해져. 마치 나라는 얼굴이 더는 필요 없어진 것처럼.\"", "\"내가 누구였는지 잊어가네. 값. 값. …그것 말곤 아무것도 없던 얼굴이었는데.<br>후후. 마지막으로 한 판, 값 없이 걸어보겠나.\""] };
 // ---------- 이미지 프리로더 ----------
 const Assets = {
   imgs:{},
@@ -2256,7 +2260,15 @@ const DarkDuel = {
   meet(){ document.getElementById('dm-portrait').src=DARK_MERCHANT.portrait||DARK_MERCHANT.img; this.buildRounds(); this.q=0; this.score=0; this._cgShown=false;
     document.getElementById('dark-duel').classList.add('show'); this.intro();
     if(window.ExploreBgm) try{ExploreBgm.play('boss');}catch(e){} },
-  intro(){ var _beaten=!!((Explore.state.events||{}).darkMerchant); var _say=this._say(_beaten?'again':'intro'); document.getElementById('dm-body').innerHTML=
+  intro(){ var _beaten=!!((Explore.state.events||{}).darkMerchant);
+    // [반전] 카페 드미타스 진행도에 따라 정체를 흘림 — 만난 뒤 첫 조우=reveal(1회), 구원 후=dissolve
+    var _stage=0; try{ _stage=(JSON.parse(localStorage.getItem('vb_save_v7')||'{}').demitasStage)||0; }catch(e){}
+    if(!Explore.state.events) Explore.state.events={};
+    var _say;
+    if(_stage>=4){ _say=this._say('dissolve'); }
+    else if(_stage>=2 && !Explore.state.events.dmReveal){ _say=this._say('reveal'); Explore.state.events.dmReveal=1; try{Explore.persist();}catch(e){} }
+    else { _say=this._say(_beaten?'again':'intro'); }
+    document.getElementById('dm-body').innerHTML=
     `<div class="dm-say">${_say}<br><small style="opacity:.8">${this.total}문제 중 <b>4개 이상</b> 맞히면 큰 보상!</small></div>
      <div class="dm-acts"><button class="q-btn ok" onclick="DarkDuel.begin()">${UI_ICON.atk} 대결한다</button><button class="q-btn ghost" onclick="DarkDuel.close()">도망친다</button></div>`; },
   begin(){ this.q=0; this.score=0;
