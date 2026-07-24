@@ -2341,7 +2341,8 @@ const CG_POS = {
   cg_sera_stage:'48% 45%'
 };
 // 2인 구도/결투 CG — 세로로 채우면 한쪽 인물이 잘려서, 레터박스(가로 전체)로 보여준다.
-const CG_LETTERBOX = new Set(['cg_roa_act2_name','cg_roa_act4_summons','cg_dark_merchant_duel']);
+//   (로아 2·4막은 두 인물이 다 들어간 세로본으로 교체돼 cover로 꽉 채움 → 여기서 제외)
+const CG_LETTERBOX = new Set(['cg_dark_merchant_duel']);
 
 // ===== 유대 5막 다회차 대화 씬 (해금 시 여러 컷 재생 → CG → 보상) · 성별 분기 tail 포함 =====
 const AFFECTION_SCENES = {
