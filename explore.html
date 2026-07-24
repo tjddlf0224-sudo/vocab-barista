@@ -721,6 +721,8 @@ const Explore = {
     lockLandscape();
     World.init();
     World.updateCompChip();
+    // [스토리 보스] 카페 봉인고 막에서 넘어왔으면 지도 탐험 없이 바로 드미타스 결전
+    try{ if(localStorage.getItem('vb_story_boss')==='demitas'){ localStorage.removeItem('vb_story_boss'); setTimeout(function(){ Battle.startDemitasBoss(); }, 350); } }catch(e){}
   },
   persist(){ SaveBridge.patchCafe({ wallet:this.cafe.wallet, myWords:this.cafe.myWords, turnCount:this.cafe.turnCount, craftedItems:this.cafe.craftedItems, masteredList:this.cafe.masteredList }); SaveBridge.saveExplore(this.state); },
   // 스펠링 조합 정답 시 SRS 갱신(오답노트 단어면 박스↑, 졸업하면 제거)
@@ -1897,11 +1899,16 @@ const Battle = {
       gold: Math.max(4, Math.round(base.gold* f * (opts.boss?3:1))) };
   },
   start(opts){ opts = opts || {};
-    const zone = ZONES[Explore.state.map.zone] || ZONES.forest;
-    let base = opts.base;
-    if(!base){ const ids = opts.boss ? [zone.boss] : zone.monsters;
-      base = MONSTERS[ids[Math.floor(this._rand()*ids.length)]] || MONSTERS.slime; }
-    const m = this.scaleMonster(base, opts);
+    this.storyBoss = !!opts.storyBoss;   // [스토리 보스] 카페 결전(드미타스) 여부
+    let m;
+    if(opts.enemy){ m = opts.enemy; }    // 고정 스탯 적 — 존 스케일 우회
+    else {
+      const zone = ZONES[Explore.state.map.zone] || ZONES.forest;
+      let base = opts.base;
+      if(!base){ const ids = opts.boss ? [zone.boss] : zone.monsters;
+        base = MONSTERS[ids[Math.floor(this._rand()*ids.length)]] || MONSTERS.slime; }
+      m = this.scaleMonster(base, opts);
+    }
     this.enemy=m; this.eMax=m.hp; this.eHp=m.hp; this.active=true; this.busy=false; this.lastStep=Explore.state.steps;
     this.atkBuff=1; this.dmgReduce=0; this.hideItems(); // 전투 아이템 버프는 전투마다 초기화
     if(m.isBoss) this.gauge=this.GMAX; // [밸런스] 보스전은 필살기 게이지 만충으로 시작 — 첫 턴 버스트 보장(탱키 보스 완충). ※ 플레이테스트로 수치 조정 여지
@@ -2084,7 +2091,26 @@ const Battle = {
       this.msg(`${this.enemy.name}의 공격! 나에게 <b>${dmg}</b> 피해!`); this.renderBars(); Explore.refreshHUD(); this.addGauge(16); await this.wait(600); ps.classList.remove('hit'); }
     es.classList.remove('lunge');
     if(Explore.state.stats.hp<=0) return this.lose(); this.busy=false; this.setButtons(true); },
+  // [스토리 보스] 드미타스 봉인고 결전 — 플레이어 현재 탐험 스탯 기준 고정 보스(성장하면 이길 수 있게)
+  startDemitasBoss(){
+    const p = Explore.effStats();
+    const enemy = { id:'demitas', name:'드미타스', art:'chars/face_demitasse_base.png',
+      lv:(Explore.state.level||1)+2, isBoss:true,
+      hp:  Math.max(60, Math.round(p.maxHp * 2.3)),
+      atk: Math.max(8,  Math.round(p.atk * 1.1 + 5)),
+      def: Math.max(2,  Math.round(p.atk * 0.35)),
+      exp:0, gold:0, drops:[] };
+    this.start({ enemy: enemy, storyBoss:true });
+  },
+  // [스토리 보스] 결과를 카페로 넘기고 index로 복귀(승/패)
+  endStoryBoss(outcome){
+    this.active=false; this.busy=false; clearTimeout(this._introT); clearTimeout(this._skipT);
+    try{ localStorage.setItem('vb_story_boss_result', JSON.stringify({ boss:'demitas', outcome:outcome })); }catch(e){}
+    try{ Explore.persist(); }catch(e){}
+    location.href='index.html';
+  },
   async win(){ const e=this.enemy; Sfx.play('win'); exHaptic('success'); document.getElementById('e-sprite').classList.add('dead'); this.msg(`${e.name}을(를) 쓰러뜨렸다!`); await this.wait(700);
+    if(this.storyBoss){ this.msg(`${UI_ICON.spark} 봉인이 자네를 가두지 못했다…`); await this.wait(1300); return this.endStoryBoss('win'); }
     const gold=Math.round(e.gold*(1+Explore.effBonus().goldPct)); Explore.cafe.wallet+=gold;
     // 몬스터별 확률 드롭 테이블
     const drops=e.drops||(e.drop?[{mat:e.drop,chance:1}]:[]); const dparts=[];
@@ -2108,6 +2134,7 @@ const Battle = {
     no.onclick=()=>done(false);
   }); },
   async lose(){ this.busy=true; this.setButtons(false);
+    if(this.storyBoss){ this.msg('쓰러졌다… 봉인고에서 쫓겨났다.'); await this.wait(1500); return this.endStoryBoss('lose'); }   // 스토리 보스 패배 = 쫓겨남(부활 없음)
     this.msg(`쓰러졌다… ${UI_ICON.film} 광고를 보고 그 자리에서 부활할까?`);
     const revived=await this._askAdRevive();
     if(revived){ Explore.state.stats.hp=this.pStat().maxHp;   // 풀 회복하고 전투 계속
@@ -2122,6 +2149,7 @@ const Battle = {
     await this.wait(900); this.renderBars(); Explore.refreshHUD(); Explore.persist(); this.setButtons(false);
     await this.wait(1500); this.close(); },
   async flee(){ if(this.busy||!this.active)return; this.busy=true; this.setButtons(false);
+    if(this.storyBoss){ this.msg('물러섰다… 봉인고에서 나왔다.'); await this.wait(1100); return this.endStoryBoss('lose'); }   // 스토리 보스전은 도망 = 물러남(재도전)
     if(this._rand()<0.55){ this.msg('무사히 도망쳤다!'); await this.wait(700); return this.close(); }
     this.msg('도망치지 못했다!'); await this.wait(700); await this.enemyTurn(); },
   close(){ this.active=false; this.busy=false; clearTimeout(this._introT);
