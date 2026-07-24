@@ -2314,7 +2314,8 @@ const CG_WIDE = new Set([
   'cg_dmitasse_first_visit','cg_dmitasse_young_memory','cg_luna_act1_moonlight','cg_luna_awakening',
   'cg_luna_empty_chair','cg_roa_act2_name','cg_roa_act4_summons','cg_roa_grindheim_flashback',
   'cg_roa_three_cups','cg_sera_act2_name','cg_sera_five_song','cg_three_regulars_mark',
-  'cg_climax_share_cup'   // 게임 내는 세로 크롭, 도감은 가로 원본(워터마크 제거)
+  'cg_climax_share_cup',   // 게임 내는 세로 크롭, 도감은 가로 원본(워터마크 제거)
+  'cg_sera_disguise','cg_sera_five_year_song','cg_sera_act4_happiness'   // 세라 가로CG → 인게임 세로 크롭, 도감 가로 원본
 ]);
 function cgWideSrc(key){ return CG_WIDE.has(key) ? ('assets/art/dex/' + key + '.jpg') : ('assets/art/' + key + '.jpg'); }
 
