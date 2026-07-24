@@ -2334,15 +2334,18 @@ function cgWideSrc(key){ return CG_WIDE.has(key) ? ('assets/art/dex/' + key + '.
 // [세로 프레이밍] 가로 CG를 세로 폰에 object-fit:cover로 '꽉 채움'. 파일은 안 자르고 CSS로만 프레이밍(비파괴).
 //   인물이 중앙에서 벗어난 가로CG만 object-position X%로 초점을 맞춘다(=인물 중심). 나머지는 기본값.
 const CG_POS = {
-  cg_first_cup_yujin:'34% 50%', cg_luna_act2_name:'62% 50%', cg_luna_act5_memory:'55% 50%',
-  cg_luna_guardian_war:'46% 50%', cg_rico_disaster:'80% 45%', cg_roa_act1_first_sip:'52% 45%',
-  cg_roa_act3_burnt_tongue:'51% 45%', cg_roa_grandprix:'44% 45%', cg_sera_disguise:'46% 45%',
+  cg_first_cup_yujin:'50% 50%', cg_luna_act2_name:'68% 50%', cg_luna_act5_memory:'55% 50%',
+  cg_luna_guardian_war:'46% 50%', cg_rico_disaster:'56% 45%', cg_roa_act1_first_sip:'52% 45%',
+  cg_roa_act3_burnt_tongue:'55% 45%', cg_roa_grandprix:'54% 45%', cg_sera_disguise:'46% 45%',
   cg_sera_five_year_song:'45% 45%', cg_sera_act4_happiness:'49% 45%', cg_sera_alley_child:'51% 45%',
-  cg_sera_stage:'48% 45%'
+  cg_sera_stage:'48% 45%',
+  // 미리보기에서 조정한 초점(세로본 포함)
+  cg_roa_act2_name:'0% 45%', cg_roa_three_cups:'100% 45%', cg_dmitasse_young_memory:'56% 45%',
+  cg_dark_merchant_duel:'50% 45%', cg_ending_new_morning:'0% 45%', cg_three_regulars_mark:'100% 45%'
 };
 // 2인 구도/결투 CG — 세로로 채우면 한쪽 인물이 잘려서, 레터박스(가로 전체)로 보여준다.
-//   (로아 2·4막은 두 인물이 다 들어간 세로본으로 교체돼 cover로 꽉 채움 → 여기서 제외)
-const CG_LETTERBOX = new Set(['cg_dark_merchant_duel']);
+//   (로아 2·4막 세로본 교체·어둠상인 해제로 현재 비어 있음. 필요 시 키 추가.)
+const CG_LETTERBOX = new Set([]);
 
 // ===== 유대 5막 다회차 대화 씬 (해금 시 여러 컷 재생 → CG → 보상) · 성별 분기 tail 포함 =====
 const AFFECTION_SCENES = {
