@@ -206,6 +206,13 @@
   .b-vignette{ position:absolute; inset:0; pointer-events:none; z-index:4;
     background:radial-gradient(ellipse 80% 72% at 50% 46%, transparent 56%, rgba(0,0,0,.26) 100%); mix-blend-mode:multiply; }
   .b-arena.zone-deepwood .b-vignette{ background:radial-gradient(ellipse 82% 74% at 50% 46%, transparent 54%, rgba(8,6,26,.34) 100%); }
+  /* 잔향 항구(안개 항구) — 전용 배경 아트 전, CSS 그라디언트로 안개 낀 회색 항구 연출 + 안개 레이어 재활성 */
+  .b-arena.zone-harbor{ background:linear-gradient(180deg,#39485c 0%,#495a6c 36%,#59636f 64%,#6a6970 100%); }
+  .b-arena.zone-harbor::before{ content:''; position:absolute; inset:0; pointer-events:none; z-index:1;
+    background:radial-gradient(ellipse 95% 55% at 50% 14%, rgba(190,208,224,.30), transparent 72%),
+               radial-gradient(ellipse 60% 30% at 22% 78%, rgba(210,220,232,.14), transparent 70%); }
+  .b-arena.zone-harbor .b-fog{ display:block; background:radial-gradient(ellipse 82% 100% at 50% 122%, rgba(202,216,230,.24), transparent 74%); }
+  .b-arena.zone-harbor .b-vignette{ background:radial-gradient(ellipse 82% 74% at 50% 46%, transparent 52%, rgba(18,26,40,.40) 100%); }
   /* 스프라이트는 안개·비네트 위(선명하게 도드라지게) */
   .sprite-enemy, .sprite-self{ z-index:5; }
   /* idle 미세 바운스 — 스프라이트 '이미지'에만 적용해 hit/lunge 컨테이너 트랜스폼과 충돌 없음 */
@@ -854,6 +861,11 @@ const MATERIALS = {
   core:     { name:'로스팅 코어',  icon:'⚙️', img:'sprites/core.svg',    rare:true, loot:true },
   fang:     { name:'그림자 송곳니', icon:'🦴', img:'sprites/fang.svg',    rare:true, loot:true },
   ember:    { name:'도깨비 불씨',  icon:'🔥', img:'sprites/ember.svg',   rare:true, loot:true },
+  // ---- 잔향 항구 드롭(Lv12–17) ----
+  saltglass:{ name:'소금 유리',    icon:'🔷', rare:true, loot:true },   // 해무해파리
+  waxletter:{ name:'밀랍 편지',    icon:'✉️', rare:true, loot:true },   // 부두갈매기 도둑떼
+  sealtag:  { name:'봉인 표찰',    icon:'🏷️', rare:true, loot:true },   // 봉랍 인부
+  frostsalt:{ name:'서리 소금',    icon:'❄️', rare:true, loot:true },   // 서리망령
 };
 // 채집 노드로 등장하는 재료(황금 원두는 제외 — 전투 보상으로만 획득)
 const GATHER_MATS = Object.keys(MATERIALS).filter(k => !MATERIALS[k].rare);
@@ -915,6 +927,7 @@ const EQUIP_DB = {
     { id:'w_roast', name:'로스팅 창',    icon:'🔱', atk:8,  cost:{gold:600, bean:12, berry:6} },
     { id:'w_tusk',  name:'어금니 도끼',  icon:'🪓', atk:12, cost:{gold:900, tusk:3, bean:10} },
     { id:'w_fang',  name:'송곳니 단검',  icon:'🗡️', atk:16, cost:{gold:1400, fang:4, gel:3} },
+    { id:'w_frost', name:'서리 잔검',    icon:'🗡️', atk:19, cost:{gold:1700, frostsalt:4, saltglass:3} },
     { id:'w_ember', name:'불씨 로스터',  icon:'🔥', atk:21, cost:{gold:2000, ember:5, core:2} },
     { id:'w_core',  name:'코어 브레이커', icon:'⚔️', atk:28, cost:{gold:3000, core:5, fang:3, goldbean:1} },
   ],
@@ -923,6 +936,7 @@ const EQUIP_DB = {
     { id:'a_bean',    name:'원두 갑옷',     icon:'🧥', def:6,  hp:20, cost:{gold:600, bean:8, berry:8} },
     { id:'a_tusk',    name:'어금니 흉갑',   icon:'🛡️', def:10, hp:32, cost:{gold:900, tusk:3, berry:10} },
     { id:'a_feather', name:'깃털 로브',     icon:'🧥', def:13, hp:48, cost:{gold:1400, feather:5, milk:6} },
+    { id:'a_salt',    name:'소금유리 갑옷', icon:'🛡️', def:15, hp:56, cost:{gold:1700, saltglass:5, waxletter:3} },
     { id:'a_gel',     name:'젤 슈트',       icon:'🥋', def:17, hp:66, cost:{gold:2000, gel:6, core:2} },
     { id:'a_core',    name:'코어 플레이트', icon:'🦺', def:22, hp:90, cost:{gold:3000, core:4, fang:3, goldbean:1} },
   ],
@@ -1102,7 +1116,7 @@ const World = {
   generate(){
     // 존별 시드/분위기 — 같은 코드로 존마다 다른 레이아웃·나무색
     const zone = ZONES[Explore.state.map.zone] || ZONES.forest;
-    this._seed = 20240624 + (Explore.state.map.zone==='deepwood' ? 91237 : 0);
+    this._seed = 20240624 + (Explore.state.map.zone==='deepwood' ? 91237 : Explore.state.map.zone==='harbor' ? 55501 : 0);
     this._orangeRatio = zone.treeOrange || 0.3;
     this.barrier=new Set(); this.trees=[]; this.nodes=[]; this.base=[]; this.deco=[];
     for(let y=0;y<this.HT;y++){ this.base[y]=[]; this.deco[y]=[];
@@ -1151,19 +1165,20 @@ const World = {
     // 팻말 세우기(통과 불가) — 게이트 옆
     this.sign={ x:gateX-2, y:this.HT-4 };
     this.barrier.add(key(this.sign.x,this.sign.y));
-    // 상단 가장자리: 이웃 존으로 가는 포털(이웃 존이 있을 때만)
-    const neighbor = zone.next || zone.prev;
-    if(neighbor){
-      const portalX=Math.floor(this.WT/2);
-      this.portal={ x:portalX, y:0 };          // 윗줄을 밟으면 이웃 존으로
-      this.portalTarget=neighbor;
+    // 상단 가장자리: 이웃 존 포털(들). next=앞으로(레벨잠금)·prev=되돌아가기(자유).
+    //   중간 존(예: 깊은 숲)은 양쪽 이웃이 있어 포털 2개(좌=prev, 우=next)를 나란히 연다.
+    this.portals=[];
+    const mkPortal=(target, portalX)=>{
       for(let yy=0; yy<=4; yy++) for(let dx=-2; dx<=2; dx++){ const xx=portalX+dx;
         if(xx<1||xx>=this.WT-1) continue; this.barrier.delete(key(xx,yy));
         this.trees=this.trees.filter(t=>!(t.x===xx&&t.y===yy)); }
       this.nodes=this.nodes.filter(n=>!(Math.abs(n.x-portalX)<=2 && n.y<=4));
-      this.portalSign={ x:portalX-2, y:3 };
-      this.barrier.add(key(this.portalSign.x,this.portalSign.y));
-    } else { this.portal=null; this.portalSign=null; }
+      const signX=Math.max(1,portalX-2); this.barrier.add(key(signX,3));
+      this.portals.push({ x:portalX, y:0, target, signX, signY:3 });
+    };
+    if(zone.next && zone.prev){ mkPortal(zone.prev, Math.floor(this.WT*0.32)); mkPortal(zone.next, Math.floor(this.WT*0.68)); }
+    else if(zone.next){ mkPortal(zone.next, Math.floor(this.WT/2)); }
+    else if(zone.prev){ mkPortal(zone.prev, Math.floor(this.WT/2)); }
     // ----- 퀘스트 NPC 배치(걷기 가능 지점, 주변 정리) -----
     this.npcs=[];
     const clearAround=(x,y,r)=>{ for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){ const xx=x+dx,yy=y+dy;
@@ -1300,11 +1315,17 @@ const World = {
       // 하단 게이트(마을로 가는 길)에 닿으면 카페로 복귀
       if(this.gate && Math.round(this.py)>=this.gate.y && Math.abs(Math.round(this.px)-this.gate.x)<=2)
         this.leaveToVillage();
-      // 상단 포털(이웃 존) — 재진입 스팸 방지를 위해 포털을 벗어났다 들어올 때만 발동
-      if(this.portal){
-        const atPortal = Math.round(this.py)<=this.portal.y && Math.abs(Math.round(this.px)-this.portal.x)<=2;
-        if(atPortal && this._portalArmed!==false){ this._portalArmed=false; this.tryZonePortal(); }
-        else if(!atPortal && Math.round(this.py) > this.portal.y+3) this._portalArmed=true;
+      // 상단 포털(들) — 재진입 스팸 방지를 위해 포털을 벗어났다 들어올 때만 발동
+      if(this.portals && this.portals.length){
+        let onAny=false;
+        for(const pt of this.portals){
+          if(Math.round(this.py)<=pt.y && Math.abs(Math.round(this.px)-pt.x)<=2){
+            onAny=true;
+            if(this._portalArmed!==false){ this._portalArmed=false; this.tryZonePortal(pt.target); }
+            break;
+          }
+        }
+        if(!onAny && Math.round(this.py) > 3) this._portalArmed=true;
       }
     }
   },
@@ -1317,9 +1338,9 @@ const World = {
     try{ Explore.persist(); }catch(e){}
     setTimeout(()=>{ try{ Explore.exitToCafe(); }catch(e){ location.href='index.html'; } }, 450); },
   // 상단 포털: 이웃 존으로 이동(앞으로 갈 땐 레벨 잠금, 되돌아가는 건 자유)
-  tryZonePortal(){
+  tryZonePortal(targetId){
     const cur=ZONES[Explore.state.map.zone]||ZONES.forest;
-    const targetId=this.portalTarget; const target=ZONES[targetId];
+    const target=ZONES[targetId];
     if(!target) return;
     if(cur.next===targetId && (Explore.state.level||1) < target.minLv){
       this.toast(`${UI_ICON.lock} ${target.name} — Lv ${target.minLv} 이상부터 입장`);
@@ -1406,7 +1427,7 @@ const World = {
     const blk=(x,y,c,r,check)=>{ if(check && !seen(x,y))return; ctx.fillStyle=c; for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){ const xx=x+dx,yy=y+dy; if(xx>=0&&yy>=0&&xx<WT&&yy<HT) ctx.fillRect(xx,yy,1,1); } };
     // 게이트·포털 — 어두운 테두리 + 밝은 코어로 눈에 띄게(1px dot → 5x5 블록)
     if(this.gate){ blk(this.gate.x,HT-1,'#2a1f06',2,true); blk(this.gate.x,HT-1,'#ffcf4d',1,true); }
-    if(this.portal){ blk(this.portal.x,0,'#180a2a',2,true); blk(this.portal.x,0,'#c88bff',1,true); }
+    for(const pt of (this.portals||[])){ blk(pt.x,0,'#180a2a',2,true); blk(pt.x,0,'#c88bff',1,true); }
     // 재료 노드 — 어두운 3x3 테두리 + 밝은 코어(1px → 3x3, 여러 개라 과하지 않게)
     for(const n of (this.nodes||[])) if(!n.taken){ blk(n.x,n.y,'#403008',1,true); dot(n.x,n.y,'#ffe066'); }
     // 어둠의 상인은 미니맵에 표시하지 않음(진짜 숨겨진 이벤트) — 직접 발견해야 함
@@ -1431,7 +1452,7 @@ const World = {
     for(let y=0;y<this.HT;y++)for(let x=0;x<this.WT;x++){ if(!this.explored||!this.explored[y][x])continue; ctx.fillStyle=this._mmColor(x,y); ctx.fillRect(x*S,y*S,S,S); }
     const mark=(x,y,c,big)=>{ if(!this.explored||!this.explored[y]||!this.explored[y][x])return; ctx.fillStyle=c; const b=big?Math.round(S*1.8):S; ctx.fillRect(Math.round(x*S-(b-S)/2),Math.round(y*S-(b-S)/2),b,b); };
     if(this.gate) mark(this.gate.x,this.HT-1,'#ffcf4d',true);
-    if(this.portal) mark(this.portal.x,0,'#b46bff',true);
+    for(const pt of (this.portals||[])) mark(pt.x,0,'#b46bff',true);
     for(const n of (this.nodes||[])) if(!n.taken) mark(n.x,n.y,'#ffe066');
     for(const np of (this.npcs||[])) mark(np.x,np.y,'#ff6b6b',true);
     // 어둠의 상인은 전체지도에도 표시 안 함(숨겨진 이벤트). 대장간은 랜드마크라 표시.
@@ -1531,13 +1552,14 @@ const World = {
     // 팻말(마을로 가는 길)
     if(this.sign && this.sign.x>=x0-1 && this.sign.x<=x1+1 && this.sign.y>=y0-1 && this.sign.y<=y1+2){
       this.drawSign(Math.round(this.sign.x*TS-camX), Math.round(this.sign.y*TS-camY), TS); }
-    // 포털 팻말(이웃 존)
-    if(this.portalSign && this.portalSign.x>=x0-1 && this.portalSign.x<=x1+1 && this.portalSign.y>=y0-2 && this.portalSign.y<=y1+1){
-      const tgt=ZONES[this.portalTarget]||{}, cur=ZONES[Explore.state.map.zone]||{};
-      const locked = cur.next===this.portalTarget && (Explore.state.level||1) < (tgt.minLv||1);
+    // 포털 팻말(들 — 이웃 존)
+    for(const pt of (this.portals||[])){
+      if(!(pt.signX>=x0-1 && pt.signX<=x1+1 && pt.signY>=y0-2 && pt.signY<=y1+1)) continue;
+      const tgt=ZONES[pt.target]||{}, cur=ZONES[Explore.state.map.zone]||{};
+      const locked = cur.next===pt.target && (Explore.state.level||1) < (tgt.minLv||1);
       // drawSign이 이모지를 제거하므로(폭 측정 오차) 잠김 표시는 🔒 대신 글자로 남긴다
       const label = locked ? `${tgt.name||''} Lv${tgt.minLv} 필요` : `${tgt.name||''} →`;
-      this.drawSign(Math.round(this.portalSign.x*TS-camX), Math.round(this.portalSign.y*TS-camY), TS, label, '▲'); }
+      this.drawSign(Math.round(pt.signX*TS-camX), Math.round(pt.signY*TS-camY), TS, label, '▲'); }
     // 존 분위기 틴트(밤 등) — 플레이어 직전에 깔아 캐릭터는 또렷하게
     const zt=(ZONES[Explore.state.map.zone]||{}).tint;
     if(zt){ ctx.fillStyle=zt; ctx.fillRect(0,0,this.viewW,this.viewH); }
@@ -1812,11 +1834,18 @@ const MONSTERS = {
   golem:      { id:'golem',      name:'로스팅 골렘', emoji:'🪨', art:'monsters/golem.png',      lv:8, hp:80, atk:16, def:10, exp:60, gold:50, drops:[{mat:'berry',chance:0.9,count:2},{mat:'core',chance:0.45}] },
   shadowwolf: { id:'shadowwolf', name:'그림자 늑대', emoji:'🐺', art:'monsters/shadowwolf.png', lv:7, hp:42, atk:16, def:4,  exp:32, gold:26, drops:[{mat:'berry',chance:0.85},{mat:'fang',chance:0.4}] },
   wisp:       { id:'wisp',       name:'도깨비불',   emoji:'🔵', art:'monsters/wisp.png',       lv:6, hp:28, atk:14, def:2,  exp:28, gold:24, drops:[{mat:'bean',chance:0.8},{mat:'ember',chance:0.45}] },
+  // ---- 잔향 항구(Lv12–17) — 전용 아트 전 이모지 폴백 ----
+  seafog:     { id:'seafog',     name:'해무 해파리', emoji:'🎐', art:null, lv:14, hp:60, atk:18, def:6,  exp:64, gold:40, drops:[{mat:'saltglass',chance:0.55},{mat:'gel',chance:0.35}] },
+  dockgull:   { id:'dockgull',   name:'부두 갈매기 떼', emoji:'🕊️', art:null, lv:14, hp:50, atk:23, def:4,  exp:66, gold:52, drops:[{mat:'waxletter',chance:0.55},{mat:'feather',chance:0.4}] },
+  waxman:     { id:'waxman',     name:'봉랍 인부',  emoji:'🕴️', art:null, lv:15, hp:95, atk:19, def:13, exp:80, gold:58, drops:[{mat:'sealtag',chance:0.55},{mat:'core',chance:0.3}] },
+  frostwraith:{ id:'frostwraith',name:'서리 망령',  emoji:'👻', art:null, lv:16, hp:70, atk:25, def:7,  exp:92, gold:66, drops:[{mat:'frostsalt',chance:0.55},{mat:'fang',chance:0.3}] },
+  saffran:    { id:'saffran',    name:'회색 경매인, 사프란', emoji:'🎩', art:null, lv:18, hp:110, atk:20, def:13, exp:210, gold:160, drops:[{mat:'saltglass',chance:1,count:2},{mat:'frostsalt',chance:0.8},{mat:'sealtag',chance:0.8}] },
 };
 // 존(지역) 레지스트리 — 이름/해제레벨/난이도/틴트/몬스터풀/보스/이웃
 const ZONES = {
   forest:   { name:'원두 숲', icon:'<svg class="uic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.5l5.2 7.6h-2.8l4 5.9H5.6l4-5.9H6.8z" fill="#5faa5f" stroke="#357a35" stroke-width="1.2" stroke-linejoin="round"/><rect x="10.7" y="15.6" width="2.6" height="4.6" fill="#8a5a30"/></svg>', minLv:1, lvMax:5,  diff:1.0,  tint:null,                     monsters:['slime','boar','crow'],      boss:'golem', next:'deepwood', treeOrange:0.3 },
-  deepwood: { name:'깊은 숲', icon:'<svg class="uic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.5 15.2A7.2 7.2 0 0 1 9 6.4a7.4 7.4 0 1 0 8.5 8.8z" fill="#c9b6ee" stroke="#6b4aa0" stroke-width="1.2" stroke-linejoin="round"/></svg>', minLv:6, lvMax:11, diff:1.4,  tint:'rgba(14,16,52,0.52)',    monsters:['shadowwolf','wisp','crow'], boss:'golem', prev:'forest',   treeOrange:0.7 },
+  deepwood: { name:'깊은 숲', icon:'<svg class="uic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.5 15.2A7.2 7.2 0 0 1 9 6.4a7.4 7.4 0 1 0 8.5 8.8z" fill="#c9b6ee" stroke="#6b4aa0" stroke-width="1.2" stroke-linejoin="round"/></svg>', minLv:6, lvMax:11, diff:1.4,  tint:'rgba(14,16,52,0.52)',    monsters:['shadowwolf','wisp','crow'], boss:'golem', prev:'forest', next:'harbor', treeOrange:0.7 },
+  harbor:   { name:'잔향 항구', icon:'<svg class="uic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="5" r="2.2" fill="none" stroke="#8fb6c8" stroke-width="1.4"/><path d="M12 7.2V20M8.5 10h7" stroke="#8fb6c8" stroke-width="1.5" stroke-linecap="round"/><path d="M5 14a7 7 0 0 0 14 0" fill="none" stroke="#8fb6c8" stroke-width="1.5" stroke-linecap="round"/><path d="M5 14l-1.6.5M19 14l1.6.5" stroke="#8fb6c8" stroke-width="1.4" stroke-linecap="round"/></svg>', minLv:12, lvMax:17, diff:1.8, tint:'rgba(42,56,78,0.5)', monsters:['seafog','dockgull','waxman','frostwraith'], boss:'saffran', prev:'deepwood', treeOrange:0.15 },
 };
 // 동행별 고유 스킬 (게이지 가득 차면 사용)
 // [스킬 4단 진화] 티어명(저작권 안전·커피/울림 네이티브). 쓸수록 랜덤 승급, 내려가지 않음.
@@ -1933,7 +1962,7 @@ const Battle = {
     this.setSelfSprite(); this.setSkillLabel(); this.renderBars(); // 게이지는 전투 간 누적(리셋 안 함)
     // 전투 배경에 현재 존 테마 적용(숲/깊은숲 밤)
     const arena=document.getElementById('b-arena');
-    arena.classList.remove('zone-forest','zone-deepwood'); arena.classList.add('zone-'+(Explore.state.map.zone||'forest'));
+    arena.classList.remove('zone-forest','zone-deepwood','zone-harbor'); arena.classList.add('zone-'+(Explore.state.map.zone||'forest'));
     const battle=document.getElementById('battle'); battle.classList.add('show','intro');
     ExploreBgm.play(m.isBoss ? 'boss' : 'battle');
     void es.offsetWidth; es.classList.add('enter');
