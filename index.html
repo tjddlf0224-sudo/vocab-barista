@@ -2317,6 +2317,8 @@ const CG_DEX = [
   { cat:'특별',   k:'cg_three_regulars_mark',      t:'세 단골' },
   { cat:'특별',   k:'cg_ending_new_morning',       t:'새 아침' },
   { cat:'특별',   k:'cg_golem_defeat',             t:'고맙다, 다시 데워줘서' },
+  { cat:'특별',   k:'cg_lunashadow_meet',          t:'달의 뒷면' },
+  { cat:'특별',   k:'cg_lunashadow_thanks',        t:'백 년의 몫' },
 ];
 // 이벤트 도감은 '가로 원본'으로 감상 — 게임 내 컷신은 세로(폰 화면 꽉참) 유지.
 // 세로로 재구성해 교체된 CG는 가로 원본을 assets/art/dex/에 별도 보관하고 도감만 그걸 참조.
@@ -2331,7 +2333,12 @@ const CG_WIDE = new Set([
   'cg_roa_act1_first_sip','cg_roa_act3_burnt_tongue','cg_roa_act5_own_apron','cg_roa_grandprix',
   'cg_sera_alley_child','cg_sera_stage'
 ]);
-function cgWideSrc(key){ return CG_WIDE.has(key) ? ('assets/art/dex/' + key + '.jpg') : ('assets/art/' + key + '.jpg'); }
+// 성별 분기 CG는 파일이 _m/_f 둘이지만 도감 항목은 하나 — 여기서 플레이어 성별 파일로 해석한다.
+const CG_GENDERED = new Set(['cg_lunashadow_thanks']);
+function cgWideSrc(key){
+  if(CG_GENDERED.has(key)) key = key + (vbGender()==='f' ? '_f' : '_m');
+  return CG_WIDE.has(key) ? ('assets/art/dex/' + key + '.jpg') : ('assets/art/' + key + '.jpg');
+}
 
 // [세로 프레이밍] 가로 CG를 세로 폰에 object-fit:cover로 '꽉 채움'. 파일은 안 자르고 CSS로만 프레이밍(비파괴).
 //   인물이 중앙에서 벗어난 가로CG만 object-position X%로 초점을 맞춘다(=인물 중심). 나머지는 기본값.
