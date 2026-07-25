@@ -3374,7 +3374,6 @@ const game = {
         this.currentCust = { data: wordObj, type: type, maxTime: baseTime, timeLeft: baseTime, avatar: custAvatar,
                              char: charObj, timed: timed, isReview: isReview, reviewRef: isReview ? wordObj : null };
         this.renderScene();
-        this.playFx('assets/art/fx_steam1.png', 'steam'); // 새 손님 주문 등장 시 아로마 김
 
         // 메인 캐릭터(normal/vip 모두): 대화창 먼저 → 탭 후 타이머+focus 시작
         if(charObj && charObj.kind === 'main') {
@@ -3410,7 +3409,6 @@ const game = {
         
         // 화면 효과
         document.body.classList.add('fever-mode');
-        this.playFx('assets/art/fx_pour1.png', 'pour'); // 피버 개시 — 황금 추출 붓기 연출
         const feverMsg = document.getElementById('fever-msg');
         if(feverMsg) feverMsg.style.opacity = '1';
 
@@ -3702,8 +3700,6 @@ const game = {
 
             // [이펙트] 정답 플래시 + 컵 강조 + 코인 발사
             flashFX('good');
-            this.playFx('assets/art/fx_resonance1.png', 'burst');
-            if(this.currentCust.char && this.currentCust.char.kind === 'main') this.playFx('assets/art/fx_heart1.png', 'heart');
             if(btnEl) btnEl.classList.add('correct-pop');
             const _ce = document.getElementById('cust-el'), _wt = document.getElementById('wallet-target');
             for(let _i=0; _i<5; _i++) setTimeout(() => this.createCoinAnim(_ce, _wt), _i*70);
@@ -3857,8 +3853,6 @@ const game = {
                 <div style="color:var(--green); font-weight:900; font-size:1.2rem;">${praise}</div>
                 <div style="color:#555; font-size:0.9rem; margin-top:5px;">"${this.currentCust.data.ex}"</div>
             `;
-            const _csOk = document.getElementById('cust-speech');
-            if(_csOk && this.currentCust.char && this.currentCust.char.kind !== 'main'){ const _l = custLine(this.currentCust.char.id, 'ok'); if(_l) _csOk.innerHTML = _l; }
             speak(this.currentCust.data.ex, afterSpeech);
 
         } else {
@@ -4003,10 +3997,6 @@ const game = {
                 setTimeout(() => this.showDialogue(this.currentCust.char.id, line, { duration: 2000, face:_wf }), 300);
             }
         }
-
-        // [손님 대사] 일반 손님 오답 반응
-        const _csMiss = document.getElementById('cust-speech');
-        if(_csMiss && this.currentCust.char && this.currentCust.char.kind !== 'main'){ const _lm = custLine(this.currentCust.char.id, 'miss'); if(_lm) _csMiss.innerHTML = _lm; }
 
         // 5. 퇴장 처리
         if(this.lives <= 0) setTimeout(() => this.gameOver(), 1500);
@@ -4454,8 +4444,13 @@ equipItem: function(category, level) {
         cL.innerHTML=''; wL.innerHTML='';
         
         const eq = this.currentEquip || { counter: 0, wall: 0, pet: 0 };
-        
-        const sceneDeco = (src, size, cls) => `<img class="${cls||''}" src="${src}" style="width:${size}px;height:${size}px;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 5px 5px rgba(0,0,0,.35));">`;
+
+        // [야간 톤다운] 저녁/밤 배경에서는 파스텔톤 아이템이 혼자 튀지 않도록 살짝 어둡게·저채도로
+        const tphase = this._timePhase || 'day';
+        const tint = tphase === 'night' ? ' brightness(0.58) saturate(0.72) contrast(1.03)'
+                   : tphase === 'evening' ? ' brightness(0.8) saturate(0.86)'
+                   : '';
+        const sceneDeco = (src, size, cls) => `<img class="${cls||''}" src="${src}" style="width:${size}px;height:${size}px;object-fit:contain;object-position:center bottom;filter:drop-shadow(0 5px 5px rgba(0,0,0,.35))${tint};">`;
 
         // (1) 카운터 장식 — 카운터 위 왼쪽 (살랑 흔들)
         if(eq.counter > 0) {
@@ -5052,14 +5047,17 @@ equipItem: function(category, level) {
         }
     },
 
-    // [배경] 실시간 시간대별 카페 배경 (낮/저녁/밤·보름달)
+    // [배경] 게임 내 하루 진행도(dailyCount, 0~9)에 연동된 카페 배경 (낮/저녁/밤·보름달)
+    // 실제 기기 시각이 아니라 그날 응대한 손님 수를 기준으로 삼아, 매 Day마다 낮→저녁→밤을 새로 순환한다.
     updateCafeBg: function(){
         var img = document.querySelector('#scene-bg .scene-photo'); if(!img) return;
-        var h = new Date().getHours();
-        var src = (h >= 20 || h < 5) ? 'assets/art/bg_cafe_night_moon.jpg'
-                : (h >= 17)          ? 'assets/art/bg_cafe_evening.jpg'
-                :                      'scenes/cafe_pastel.png';
+        var dc = this.dailyCount || 0;
+        var src = (dc >= 8) ? 'assets/art/bg_cafe_night_moon.jpg'
+                : (dc >= 6) ? 'assets/art/bg_cafe_evening.jpg'
+                :             'scenes/cafe_pastel.png';
         if(img.getAttribute('src') !== src) img.src = src;
+        var phase = (dc >= 8) ? 'night' : (dc >= 6) ? 'evening' : 'day';
+        if(this._timePhase !== phase) { this._timePhase = phase; this.updateDecorations(); }
     },
     renderScene: function() {
         this.updateCafeBg();
@@ -5104,7 +5102,7 @@ equipItem: function(category, level) {
             }
         }
 
-        let custSpeech = (ch && ch.kind==='main') ? '' : (c.char ? custLine(c.char.id, 'order') : '');
+        let custSpeech = ''; // [정리] 일반 손님 일상 대사 제거 — 캐릭터가 아래로 밀려 보이지 않는 문제 방지
         document.getElementById('customer-area').innerHTML = `
             <div class="customer type-${c.type}" id="cust-el">
                 <div class="cust-speech" id="cust-speech">${custSpeech}</div>
