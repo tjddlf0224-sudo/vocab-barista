@@ -2385,6 +2385,19 @@ function faceFor(id, emo){ return (MAIN_FACE[id]||{})[emo] || ''; }
 
 // ===== 리코 카페 등장 (개그 릴리프 · npc_rico_talk 전신 + 표정) =====
 // ===== 드미타스(검은 큐레이터) 4막 컷신 · 누적점수 마일스톤 순차 발생 =====
+// [달 개방 컷신] 4개 지역 지도를 다 채운 뒤 루나에게 정답을 건네면 재생. 지도의 마지막 빈 칸 = 달.
+const MOON_OPEN_CUTS = [
+  { who:'m_luna', text:"…잠깐. 그거, 탐험 지도지? 좀 봐도 돼?", face:"chars/face_luna_serene.png" },
+  { who:'boss', text:"네. 이번에 마지막 한 곳까지 다 채웠어요." },
+  { who:'m_luna', text:"(조각들을 나란히 겹쳐 놓는다) …숲, 깊은 숲, 항구, 그리고 봉인고." },
+  { who:'m_luna', text:"지도가 딱 한 군데만 비었네. 여기는… <b>달</b>이야.", face:"chars/face_luna_grateful.png" },
+  { who:'boss', text:"달이요? 거긴 갈 수 있는 데가 아니잖아요." },
+  { who:'m_luna', text:"원래는 그렇지. 근데 봉인이 풀리면서 길이 생겼어.", face:"chars/face_luna_serene.png" },
+  { who:'m_luna', text:"가장 오래 잊힌 말들은 전부 그리로 가거든. 내가 백 년 전에 놓친 것들도." },
+  { who:'m_luna', text:"(지도 위 빈 칸을 손끝으로 짚는다) 여기, 이렇게 열어둘게. 봉인고 위쪽 길이야." },
+  { who:'boss', text:"같이 가실래요?" },
+  { who:'m_luna', text:"…물어봐 줘서 고마워. 이번엔 배웅 말고, 같이 가는 쪽으로 할게.", face:"chars/face_luna_grateful.png" }
+];
 const DEMITAS_SCENES = [
     { title:"검은 큐레이터", cuts:[
       { who:'q_demitas', text:"…향이 좋군. 오랜만에 맡는 냄새야.", face:"chars/face_demitasse_smile.png" },
@@ -2669,7 +2682,31 @@ const RARITY_REWARD = { common:80, uncommon:200, rare:500, epic:1500, legendary:
 const RARITY_LABEL  = { common:'일반', uncommon:'희귀', rare:'레어', epic:'에픽', legendary:'전설' };
 const RARITY_COLOR  = { common:'#9e9e9e', uncommon:'#26a69a', rare:'#5c6bc0', epic:'#ab47bc', legendary:'#ffb300' };
 
+// [달 개방] 탐험의 4개 지역 지도를 모두 채웠는데 아직 달이 안 열렸으면, 루나가 지도를 마저 읽어준다.
+//   루나는 평소 7% 확률로만 오기 때문에(=만나기 어려움) 조건이 서면 다음 손님으로 확정 등장시킨다.
+const MOON_REQ_MAPS = ['forest','deepwood','harbor','vault'];
+function moonScenePending(){
+    try{
+        if(localStorage.getItem('vb_moon_open')==='1') return false;      // 이미 열림
+        const ex = JSON.parse(localStorage.getItem('vb_explore_v1')||'{}');
+        const maps = ex.maps || {};
+        return MOON_REQ_MAPS.every(z => !!maps[z]);
+    }catch(e){ return false; }
+}
 function pickCharByType(type) {
+    // [달 개방] 조건이 서면 루나 등장 확률을 끌어올린다(일반 손님 차례에만 — VIP/러시 연출은 건드리지 않는다)
+    //   첫 등장은 확정(지도를 다 채운 직후 바로 만나게), 이후엔 45%(평소 7%)로 문제를 틀려도 금방 재회하도록.
+    if(type === 'normal' && moonScenePending()){
+        const luna = CHAR_BY_ID['m_luna'];
+        if(luna){
+            let seen = false;
+            try{ seen = localStorage.getItem('vb_moon_luna_seen')==='1'; }catch(e){}
+            if(!seen || Math.random() < 0.45){
+                try{ localStorage.setItem('vb_moon_luna_seen','1'); }catch(e){}
+                return luna;
+            }
+        }
+    }
     if(type === 'vip') {
         const vmains = CHAR_DEX.filter(c => c.kind==='main' && (c.tags||[]).includes('vip'));
         if(vmains.length && Math.random() < 0.18) return vmains[Math.floor(Math.random()*vmains.length)];
@@ -3680,9 +3717,20 @@ const game = {
                             `<span style="font-size:0.85rem;color:#777;">${nc.ch.title}</span><br><br>`+
                             `<span style="font-size:0.9rem;color:#444;">${nc.ch.story}</span><br><br>`+
                             `<img src="sprites/coin.svg" style="width:18px;height:18px;vertical-align:middle;"> +${nc.bonus}G · 손님 도감 등록!`,
-                            () => { this.isActive = true; this.nextTurn(); }
+                            // 루나를 '이번에 처음' 만나면서 동시에 달 조건이 서 있으면, 등록 모달 뒤로 달 컷신을 이어붙인다
+                            //   (그냥 return하면 컷신을 건너뛰게 되어, 다음 루나 조우까지 밀림)
+                            () => {
+                                if(cust && cust.char && cust.char.id === 'm_luna' && moonScenePending()){ this.playMoonOpenScene(); return; }
+                                this.isActive = true; this.nextTurn();
+                            }
                         );
                     }, 450);
+                    return;
+                }
+                // [달 개방] 지도를 다 채운 뒤 루나에게 정답을 건네면, 루나가 마지막 한 칸을 읽어준다
+                if(cust && cust.char && cust.char.id === 'm_luna' && moonScenePending()){
+                    if(el) el.classList.add('leaving');
+                    this.playMoonOpenScene();
                     return;
                 }
                 // 이미 아는 메인 캐릭터 재방문 — 작별 대사를 대화창으로 표시
@@ -3843,6 +3891,19 @@ const game = {
             else                      html += `<span class="vs vs-empty"></span>`;
         }
         hintEl.innerHTML = html;
+    },
+    // [달 개방] 루나가 지도의 마지막 빈 칸을 읽어주는 컷신 → 개방 플래그 → 안내 모달 → 다음 손님
+    playMoonOpenScene: function() {
+        this.isActive = false;
+        const self = this;
+        this.playCutscene({ cuts: MOON_OPEN_CUTS }, function(){
+            try{ localStorage.setItem('vb_moon_open','1'); }catch(e){}
+            showGameAlert(
+                `${UI_ICON.spark} <b>달로 가는 길이 열렸다</b><br><br>`+
+                `<span style="font-size:0.9rem;color:#444;">탐험의 <b>봉인고</b> 위쪽 포털에서 <b>달</b>로 갈 수 있습니다.</span>`,
+                function(){ self.isActive = true; self.nextTurn(); }
+            );
+        });
     },
     checkVipAnswer: function() {
         const val = document.getElementById('vip-input').value.trim();

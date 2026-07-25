@@ -1494,11 +1494,16 @@ const World = {
       this.toast(`${UI_ICON.lock} ${target.name} — 굳게 잠겨 있다.<br><span class="ko">카페에서 그와의 이야기가 끝나야 열릴 것 같다.</span>`);
       bounce(); return;
     }
-    // [지도 게이트] 달은 앞선 모든 지역의 지도를 완성해야 길이 열린다(포스트게임 = 탐험 완주 보상)
+    // [지도 게이트] 달은 앞선 모든 지역의 지도를 완성하고(포스트게임=탐험 완주 보상),
+    //   카페에서 루나가 지도의 마지막 빈 칸을 '달'이라고 읽어줘야 길이 열린다(vb_moon_open).
     if(cur.next===targetId && target.reqMaps){
       const m=this.mapsProgress(target.reqMaps);
       if(m.have < m.need){
         this.toast(`${UI_ICON.lock} ${target.name} — 아직 길이 보이지 않는다.<br><span class="ko">지도 조각 ${m.have} / ${m.need} · 모든 지역의 지도를 완성해야 한다</span>`);
+        bounce(); return;
+      }
+      if(!this.moonOpened()){
+        this.toast(`${UI_ICON.lock} ${target.name} — 지도는 다 채웠는데 길이 안 보인다.<br><span class="ko">카페에서 루나에게 지도를 보여주자</span>`);
         bounce(); return;
       }
     }
@@ -1509,6 +1514,8 @@ const World = {
   // 지도 완성 진행도 — 달 개방 판정·팻말 표기에 공용
   mapsProgress(list){ const done=Explore.state.maps||{};
     return { have:(list||[]).filter(z=>done[z]).length, need:(list||[]).length }; },
+  // 카페에서 루나의 '지도 읽기' 컷신을 봤는지(달 최종 개방 플래그)
+  moonOpened(){ try{ return localStorage.getItem('vb_moon_open')==='1'; }catch(e){ return false; } },
   travelZone(zoneId){
     Explore.state.map.zone=zoneId;
     this.generate();
@@ -1582,8 +1589,8 @@ const World = {
     // [달 개방] 마지막 한 조각을 채운 순간을 알려준다 — 지도 완성이 포스트게임으로 이어지는 동기
     const moonReq=(ZONES.moon||{}).reqMaps;
     const mp=moonReq?this.mapsProgress(moonReq):null;
-    if(mp && mp.have>=mp.need && moonReq.indexOf(zone)>=0){
-      this.toast(`${UI_ICON.map} <b>${zn} 지도 완성!</b> — 마지막 한 조각.<br><span class="ko">조각들이 겹쳐지자 하늘로 난 길이 드러났다. <b>달</b>로 갈 수 있다.</span>`);
+    if(mp && mp.have>=mp.need && moonReq.indexOf(zone)>=0 && !this.moonOpened()){
+      this.toast(`${UI_ICON.map} <b>${zn} 지도 완성!</b> — 마지막 한 조각.<br><span class="ko">조각을 다 모았는데 한 칸이 비어 있다. <b>카페에서 루나에게 보여주자.</b></span>`);
     } else {
       const prog = mp ? ` <span class="ko">(지도 조각 ${mp.have}/${mp.need})</span>` : '';
       this.toast(`${UI_ICON.map} <b>${zn} 지도 완성!</b><br><span class="ko">아이템에 지도가 추가됐어요</span>${prog}`);
@@ -1765,10 +1772,12 @@ const World = {
       const storyLock = fwd && tgt.reqDemitas && this.demitasStage() < tgt.reqDemitas;   // 봉인고: 카페 서사 선행 필요
       const mp = (fwd && tgt.reqMaps) ? this.mapsProgress(tgt.reqMaps) : null;           // 달: 모든 지역 지도 완성 필요
       const mapLock = !!(mp && mp.have < mp.need);
+      const lunaLock = !!(mp && !mapLock && !this.moonOpened());                          // 지도는 찼고 루나 컷신만 남음
       // drawSign이 이모지를 제거하므로(폭 측정 오차) 잠김 표시는 🔒 대신 글자로 남긴다
       const label = lvLock ? `${tgt.name||''} Lv${tgt.minLv} 필요`
                   : storyLock ? `${tgt.name||''} 굳게 잠김`
                   : mapLock ? `${tgt.name||''} 지도 ${mp.have}/${mp.need}`
+                  : lunaLock ? `${tgt.name||''} 루나에게 지도를`
                   : `${tgt.name||''} →`;
       this.drawSign(Math.round(pt.signX*TS-camX), Math.round(pt.signY*TS-camY), TS, label, '▲'); }
     // 존 분위기 틴트(밤 등) — 플레이어 직전에 깔아 캐릭터는 또렷하게
