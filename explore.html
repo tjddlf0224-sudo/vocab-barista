@@ -2068,7 +2068,13 @@ const MONSTERS = {
   slime:      { id:'slime',      name:'원두 슬라임', emoji:'🫧', art:'monsters/slime.png',      lv:3, hp:24, atk:7,  def:2,  exp:14, gold:12, drops:[{mat:'bean',chance:0.9},{mat:'gel',chance:0.4}] },
   boar:       { id:'boar',       name:'들 멧돼지',   emoji:'🐗', art:'monsters/boar.png',       lv:5, hp:34, atk:10, def:4,  exp:22, gold:20, drops:[{mat:'berry',chance:0.9},{mat:'tusk',chance:0.35}] },
   crow:       { id:'crow',       name:'까마귀 떼',   emoji:'🐦‍⬛', art:'monsters/crow.png',      lv:4, hp:18, atk:12, def:1,  exp:18, gold:16, drops:[{mat:'bean',chance:0.85},{mat:'feather',chance:0.4}] },
-  golem:      { id:'golem',      name:'로스팅 골렘', emoji:'🪨', art:'monsters/golem.png',      lv:8, hp:80, atk:16, def:10, exp:60, gold:50, drops:[{mat:'berry',chance:0.9,count:2},{mat:'core',chance:0.45}] },
+  // ※base.lv를 깊은숲 보스 등장레벨(12)에 맞춰 재보정 — 예전엔 원두숲/깊은숲 보스를 겸했으나
+  //   원두숲 보스는 'woodr'로 분리했다. 여기 수치는 예전 공유 정의가 원두숲 대상으로 내던 실측값과
+  //   동일하게 역산(hp345/atk69/def43 그대로 재현) — 기존에 튜닝된 난이도를 그대로 보존한다.
+  golem:      { id:'golem',      name:'로스팅 골렘', emoji:'🪨', art:'monsters/golem.png', phased:true, lv:12, hp:145, atk:29, def:18, exp:109, gold:90, drops:[{mat:'berry',chance:0.9,count:2},{mat:'core',chance:0.45}] },
+  // ※원두 숲 보스(신규 분리). base.lv=6은 예전 golem 공유정의가 원두숲 대상으로 내던 실측값
+  //   (hp101/atk20/def13)을 역산해 그대로 재현 — 기존 난이도 보존, 정체성·기믹만 신규.
+  woodr:      { id:'woodr',      name:'묵은 로스팅정령, 우드르', emoji:'🔥', art:'monsters/golem.png', nonlethal:true, lv:6, hp:60, atk:12, def:8, exp:45, gold:37, drops:[{mat:'berry',chance:0.9,count:2},{mat:'core',chance:1}] },
   shadowwolf: { id:'shadowwolf', name:'그림자 늑대', emoji:'🐺', art:'monsters/shadowwolf.png', lv:7, hp:42, atk:16, def:4,  exp:32, gold:26, drops:[{mat:'berry',chance:0.85},{mat:'fang',chance:0.4}] },
   wisp:       { id:'wisp',       name:'도깨비불',   emoji:'🔵', art:'monsters/wisp.png',       lv:6, hp:28, atk:14, def:2,  exp:28, gold:24, drops:[{mat:'bean',chance:0.8},{mat:'ember',chance:0.45}] },
   echo:       { id:'echo',       name:'잊힌 메아리', emoji:'💬', art:'monsters/echo.png',       lv:8, hp:36, atk:15, def:3,  exp:34, gold:28, drops:[{mat:'berry',chance:0.8},{mat:'fang',chance:0.4}] },
@@ -2098,7 +2104,7 @@ const MONSTERS = {
 };
 // 존(지역) 레지스트리 — 이름/해제레벨/난이도/틴트/몬스터풀/보스/이웃
 const ZONES = {
-  forest:   { name:'원두 숲', icon:'<svg class="uic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.5l5.2 7.6h-2.8l4 5.9H5.6l4-5.9H6.8z" fill="#5faa5f" stroke="#357a35" stroke-width="1.2" stroke-linejoin="round"/><rect x="10.7" y="15.6" width="2.6" height="4.6" fill="#8a5a30"/></svg>', minLv:1, lvMax:5,  diff:1.0,  tint:null,                     monsters:['slime','boar','crow'],      boss:'golem', next:'deepwood', treeOrange:0.3 },
+  forest:   { name:'원두 숲', icon:'<svg class="uic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.5l5.2 7.6h-2.8l4 5.9H5.6l4-5.9H6.8z" fill="#5faa5f" stroke="#357a35" stroke-width="1.2" stroke-linejoin="round"/><rect x="10.7" y="15.6" width="2.6" height="4.6" fill="#8a5a30"/></svg>', minLv:1, lvMax:5,  diff:1.0,  tint:null,                     monsters:['slime','boar','crow'],      boss:'woodr', next:'deepwood', treeOrange:0.3 },
   deepwood: { name:'깊은 숲', icon:'<svg class="uic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.5 15.2A7.2 7.2 0 0 1 9 6.4a7.4 7.4 0 1 0 8.5 8.8z" fill="#c9b6ee" stroke="#6b4aa0" stroke-width="1.2" stroke-linejoin="round"/></svg>', minLv:6, lvMax:11, diff:1.4,  tint:'rgba(14,16,52,0.52)',    monsters:['shadowwolf','wisp','echo','misttoad'], boss:'golem', prev:'forest', next:'harbor', treeOrange:0.7 },
   harbor:   { name:'잔향 항구', icon:'<svg class="uic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="5" r="2.2" fill="none" stroke="#8fb6c8" stroke-width="1.4"/><path d="M12 7.2V20M8.5 10h7" stroke="#8fb6c8" stroke-width="1.5" stroke-linecap="round"/><path d="M5 14a7 7 0 0 0 14 0" fill="none" stroke="#8fb6c8" stroke-width="1.5" stroke-linecap="round"/><path d="M5 14l-1.6.5M19 14l1.6.5" stroke="#8fb6c8" stroke-width="1.4" stroke-linecap="round"/></svg>', minLv:12, lvMax:17, diff:1.8, tint:'rgba(42,56,78,0.5)', monsters:['seafog','dockgull','waxman','frostwraith'], boss:'saffran', prev:'deepwood', next:'vault', treeOrange:0.15 },
   // 최종 지역 — 카페에서 드미타스를 꺾은 뒤(demitasStage>=3) 개방. 갇힌 말들을 풀러 가는 곳.
@@ -2218,6 +2224,9 @@ const Battle = {
     //   봉인이 한 겹이라도 남아 있으면 HP가 이 아래로 내려가지 않는다 — 힘으로 뚫는 우회를 막아
     //   '해제가 곧 승리'를 성립시키고, 마지막 겹이 풀리는 순간 25%가 남아 마무리 국면이 생긴다.
     this.veilFloor = this.veil>0 ? Math.ceil(m.hp*0.25) : 0;
+    // [3단계 페이즈] 깊은숲 로스팅 골렘 전용 — HP비율로 안개껍질(방어↑)→코어노출(평시)→잔열폭주(공격↑) 전환.
+    //   원본 atk/def를 보존해두고 매 데미지 후 updatePhase()가 현재 비율로 재계산(중첩 없음).
+    if(m.phased){ this.enemy._baseAtk=m.atk; this.enemy._baseDef=m.def; this.enemy._phaseName=null; this.updatePhase(); }
     this.atkBuff=1; this.dmgReduce=0; this.hideItems(); // 전투 아이템 버프는 전투마다 초기화
     if(m.isBoss) this.gauge=this.GMAX; // [밸런스] 보스전은 필살기 게이지 만충으로 시작 — 첫 턴 버스트 보장(탱키 보스 완충). ※ 플레이테스트로 수치 조정 여지
     World.release();
@@ -2356,7 +2365,9 @@ const Battle = {
       if(!isLast){ await this.wait(180); es.classList.remove('hit'); }
       if(this.eHp<=0) break;
     }
+    const phaseMsg=this.updatePhase();
     let m=`${sk.name}! ${this.enemy.name}에게 <b>${total}</b> 피해!${crit?' 치명타!':''}${hits>1?` (${hits}연타)`:''}`;
+    m+=phaseMsg;
     if(veilBroken){
       m += veilCleared
         ? `<br>${UI_ICON.spark} <b>값의 장막이 전부 풀렸다!</b> 갇혀 있던 말들이 쏟아져 나온다 — 이제 무방비다.`
@@ -2401,10 +2412,12 @@ const Battle = {
       const veiled = this.veil>0; if(veiled) dmg=Math.max(1,Math.round(dmg*0.3));   // 장막이 대부분 흘려보냄(0은 되지 않음)
       this.eHp-=dmg;
       if(veiled) this.eHp=Math.max(this.veilFloor, this.eHp);   // 봉인이 남아 있는 한 쓰러뜨릴 수 없다(해제가 곧 승리)
+      const phaseMsg=this.updatePhase();
       Sfx.play(crit?'crit':'hit'); exHaptic(crit?'heavy':'light');
       es.classList.add('hit'); this.shake(); this.hitFx('e-sprite', crit); this.pop('e','-'+dmg+(crit?'!':''),crit?'crit':null);
       this.msg(`${power?'강공격! ':''}${this.enemy.name}에게 <b>${dmg}</b> 피해!${crit?' 치명타!':''}`
-               + (veiled?`<br><span class="ko">봉인이 타격을 흘려보낸다 — 이대로는 쓰러지지 않는다. (남은 겹 ${this.veil})</span>`:''));
+               + (veiled?`<br><span class="ko">봉인이 타격을 흘려보낸다 — 이대로는 쓰러지지 않는다. (남은 겹 ${this.veil})</span>`:'')
+               + phaseMsg);
       this.renderBars(); await this.wait(550); es.classList.remove('hit'); }
     ps.classList.remove('lunge'); this.addGauge(22);
     if(this.eHp<=0) return this.win(); await this.enemyTurn(); },
@@ -2446,7 +2459,26 @@ const Battle = {
     try{ Explore.persist(); }catch(e){}
     location.href='index.html';
   },
-  async win(){ const e=this.enemy; Sfx.play('win'); exHaptic('success'); document.getElementById('e-sprite').classList.add('dead'); this.msg(`${e.name}을(를) 쓰러뜨렸다!`); await this.wait(700);
+  // [3단계 페이즈] 깊은숲 로스팅 골렘 — 현재 HP비율로 atk/def를 원본 기준 재계산(1회성 중첩 방지).
+  //   playerAttack/useSkill에서 데미지 반영 직후 호출 — 전환 시 문구를 반환해 호출부의 데미지 메시지에 덧붙인다
+  //   (this.msg()를 여기서 바로 부르면 뒤이은 데미지 메시지가 그걸 덮어써 버린다).
+  updatePhase(){ const e=this.enemy; if(!e||!e.phased) return '';
+    const ratio = this.eMax>0 ? Math.max(0,this.eHp)/this.eMax : 0;
+    let name;
+    if(ratio>0.7){ e.atk=e._baseAtk; e.def=Math.round(e._baseDef*1.3); name='mist'; }          // 1단계: 안개껍질 — 방어 보정
+    else if(ratio>0.3){ e.atk=e._baseAtk; e.def=e._baseDef; name='core'; }                        // 2단계: 코어 노출 — 평시
+    else { e.atk=Math.round(e._baseAtk*1.3); e.def=e._baseDef; name='rampage'; }                  // 3단계: 잔열폭주 — 공격 보정
+    if(name!==e._phaseName){ e._phaseName=name;
+      if(name==='core') return `<br>${e.name}의 안개 껍질이 갈라지며, 달아오른 코어가 드러난다!`;
+      if(name==='rampage') return `<br>${UI_ICON.atk} ${e.name}이(가) 잔열을 폭주시킨다! 공격이 거세진다!`;
+    }
+    return '';
+  },
+  async win(){ const e=this.enemy; Sfx.play('win'); exHaptic('success');
+    // [비살상 보스] 우드르는 쓰러뜨리는 게 아니라 진정시킨다 — 죽음 연출(dead 클래스) 없이 다른 문구로 마무리.
+    if(e.nonlethal){ this.msg(`${e.name}의 불씨가 서서히 잦아든다… 화덕이 식자, 그가 스스로 첫 로스팅 코어를 건넨다.`); }
+    else { document.getElementById('e-sprite').classList.add('dead'); this.msg(`${e.name}을(를) 쓰러뜨렸다!`); }
+    await this.wait(700);
     if(this.storyBoss){ this.msg(`${UI_ICON.spark} 봉인이 자네를 가두지 못했다…`); await this.wait(1300); return this.endStoryBoss('win'); }
     const gold=Math.round(e.gold*(1+Explore.effBonus().goldPct)); Explore.cafe.wallet+=gold;
     // 몬스터별 확률 드롭 테이블
