@@ -213,6 +213,13 @@
                radial-gradient(ellipse 60% 30% at 22% 78%, rgba(210,220,232,.14), transparent 70%); }
   .b-arena.zone-harbor .b-fog{ display:block; background:radial-gradient(ellipse 82% 100% at 50% 122%, rgba(202,216,230,.24), transparent 74%); }
   .b-arena.zone-harbor .b-vignette{ background:radial-gradient(ellipse 82% 74% at 50% 46%, transparent 52%, rgba(18,26,40,.40) 100%); }
+  /* 봉인고(최종) — 갇힌 말들이 잠든 검은 큐레이터의 진열장. 전용 배경 아트 전, 자수정빛 금고 홀을 CSS로 */
+  .b-arena.zone-vault{ background:linear-gradient(180deg,#191026 0%,#241733 34%,#2e1f3f 62%,#3a2b47 100%); }
+  .b-arena.zone-vault::before{ content:''; position:absolute; inset:0; pointer-events:none; z-index:1;
+    background:radial-gradient(ellipse 70% 44% at 50% 8%, rgba(190,160,255,.20), transparent 70%),
+               repeating-linear-gradient(90deg, rgba(150,120,200,.10) 0 2px, transparent 2px 96px); }
+  .b-arena.zone-vault .b-fog{ display:block; background:radial-gradient(ellipse 78% 100% at 50% 124%, rgba(176,150,224,.20), transparent 72%); }
+  .b-arena.zone-vault .b-vignette{ background:radial-gradient(ellipse 80% 72% at 50% 46%, transparent 48%, rgba(10,6,20,.52) 100%); }
   /* 스프라이트는 안개·비네트 위(선명하게 도드라지게) */
   .sprite-enemy, .sprite-self{ z-index:5; }
   /* idle 미세 바운스 — 스프라이트 '이미지'에만 적용해 hit/lunge 컨테이너 트랜스폼과 충돌 없음 */
@@ -866,6 +873,10 @@ const MATERIALS = {
   waxletter:{ name:'밀랍 편지',    icon:'✉️', rare:true, loot:true },   // 부두갈매기 도둑떼
   sealtag:  { name:'봉인 표찰',    icon:'🏷️', rare:true, loot:true },   // 봉랍 인부
   frostsalt:{ name:'서리 소금',    icon:'❄️', rare:true, loot:true },   // 서리망령
+  // ---- 봉인고 드롭(Lv18–24, 최종) ----
+  sealshard:{ name:'봉인 파편',    icon:'🔮', rare:true, loot:true },   // 봉인된 말의 잔영
+  pricechain:{ name:'값의 사슬',   icon:'⛓️', rare:true, loot:true },   // 값의 사냥개
+  silentbell:{ name:'침묵의 유리종', icon:'🔔', rare:true, loot:true }, // 침묵의 문지기
 };
 // 채집 노드로 등장하는 재료(황금 원두는 제외 — 전투 보상으로만 획득)
 const GATHER_MATS = Object.keys(MATERIALS).filter(k => !MATERIALS[k].rare);
@@ -932,6 +943,7 @@ const EQUIP_DB = {
     { id:'w_frost', name:'서리 잔검',    icon:'🗡️', atk:19, cost:{gold:1700, frostsalt:4, saltglass:3} },
     { id:'w_ember', name:'불씨 로스터',  icon:'🔥', atk:21, cost:{gold:2000, ember:5, core:2} },
     { id:'w_core',  name:'코어 브레이커', icon:'⚔️', atk:28, cost:{gold:3000, core:5, fang:3, goldbean:1} },
+    { id:'w_seal',  name:'봉인 해제검',  icon:'🗝️', atk:36, cost:{gold:4200, sealshard:5, silentbell:3, goldbean:2} },
   ],
   armor: [
     { id:'a_foam',    name:'우유거품 방패', icon:'🛡️', def:3,  hp:10, cost:{gold:200, berry:5} },
@@ -941,6 +953,7 @@ const EQUIP_DB = {
     { id:'a_salt',    name:'소금유리 갑옷', icon:'🛡️', def:15, hp:56, cost:{gold:1700, saltglass:5, waxletter:3} },
     { id:'a_gel',     name:'젤 슈트',       icon:'🥋', def:17, hp:66, cost:{gold:2000, gel:6, core:2} },
     { id:'a_core',    name:'코어 플레이트', icon:'🦺', def:22, hp:90, cost:{gold:3000, core:4, fang:3, goldbean:1} },
+    { id:'a_chain',   name:'풀린 사슬 갑주', icon:'⛓️', def:29, hp:120, cost:{gold:4200, pricechain:5, sealshard:3, goldbean:2} },
   ],
 };
 // 장비별 전용 SVG 아이콘(재료 테마 색) — 이모지 중복 제거 + 어울리는 그림
@@ -1118,7 +1131,7 @@ const World = {
   generate(){
     // 존별 시드/분위기 — 같은 코드로 존마다 다른 레이아웃·나무색
     const zone = ZONES[Explore.state.map.zone] || ZONES.forest;
-    this._seed = 20240624 + (Explore.state.map.zone==='deepwood' ? 91237 : Explore.state.map.zone==='harbor' ? 55501 : 0);
+    this._seed = 20240624 + (Explore.state.map.zone==='deepwood' ? 91237 : Explore.state.map.zone==='harbor' ? 55501 : Explore.state.map.zone==='vault' ? 77413 : 0);
     this._orangeRatio = zone.treeOrange || 0.3;
     this.barrier=new Set(); this.trees=[]; this.nodes=[]; this.base=[]; this.deco=[];
     for(let y=0;y<this.HT;y++){ this.base[y]=[]; this.deco[y]=[];
@@ -1359,13 +1372,20 @@ const World = {
     const cur=ZONES[Explore.state.map.zone]||ZONES.forest;
     const target=ZONES[targetId];
     if(!target) return;
+    const bounce=()=>{ this.py=Math.min(this.HT-2, this.py+1.5); };   // 살짝 되튕김
     if(cur.next===targetId && (Explore.state.level||1) < target.minLv){
       this.toast(`${UI_ICON.lock} ${target.name} — Lv ${target.minLv} 이상부터 입장`);
-      this.py=Math.min(this.HT-2, this.py+1.5); // 살짝 되튕김
-      return;
+      bounce(); return;
+    }
+    // [스토리 게이트] 봉인고는 카페에서 드미타스를 꺾은 뒤에만 열린다(스포일러 방지 + 서사 순서 보장)
+    if(cur.next===targetId && target.reqDemitas && this.demitasStage() < target.reqDemitas){
+      this.toast(`${UI_ICON.lock} ${target.name} — 굳게 잠겨 있다.<br><span class="ko">카페에서 그와의 이야기가 끝나야 열릴 것 같다.</span>`);
+      bounce(); return;
     }
     this.travelZone(targetId);
   },
+  // 카페 진행도(드미타스 막) 조회 — 봉인고 개방 판정·팻말 표기에 공용
+  demitasStage(){ try{ return (JSON.parse(localStorage.getItem('vb_save_v7')||'{}').demitasStage)||0; }catch(e){ return 0; } },
   travelZone(zoneId){
     Explore.state.map.zone=zoneId;
     this.generate();
@@ -1592,9 +1612,13 @@ const World = {
     for(const pt of (this.portals||[])){
       if(!(pt.signX>=x0-1 && pt.signX<=x1+1 && pt.signY>=y0-2 && pt.signY<=y1+1)) continue;
       const tgt=ZONES[pt.target]||{}, cur=ZONES[Explore.state.map.zone]||{};
-      const locked = cur.next===pt.target && (Explore.state.level||1) < (tgt.minLv||1);
+      const fwd = cur.next===pt.target;
+      const lvLock = fwd && (Explore.state.level||1) < (tgt.minLv||1);
+      const storyLock = fwd && tgt.reqDemitas && this.demitasStage() < tgt.reqDemitas;   // 봉인고: 카페 서사 선행 필요
       // drawSign이 이모지를 제거하므로(폭 측정 오차) 잠김 표시는 🔒 대신 글자로 남긴다
-      const label = locked ? `${tgt.name||''} Lv${tgt.minLv} 필요` : `${tgt.name||''} →`;
+      const label = lvLock ? `${tgt.name||''} Lv${tgt.minLv} 필요`
+                  : storyLock ? `${tgt.name||''} 굳게 잠김`
+                  : `${tgt.name||''} →`;
       this.drawSign(Math.round(pt.signX*TS-camX), Math.round(pt.signY*TS-camY), TS, label, '▲'); }
     // 존 분위기 틴트(밤 등) — 플레이어 직전에 깔아 캐릭터는 또렷하게
     const zt=(ZONES[Explore.state.map.zone]||{}).tint;
@@ -1878,12 +1902,23 @@ const MONSTERS = {
   waxman:     { id:'waxman',     name:'봉랍 인부',  emoji:'🕴️', art:'monsters/waxman.png', lv:15, hp:95, atk:19, def:13, exp:80, gold:58, drops:[{mat:'sealtag',chance:0.55},{mat:'core',chance:0.3}] },
   frostwraith:{ id:'frostwraith',name:'서리 망령',  emoji:'👻', art:'monsters/frostwraith.png', lv:16, hp:70, atk:25, def:7,  exp:92, gold:66, drops:[{mat:'frostsalt',chance:0.55},{mat:'fang',chance:0.3}] },
   saffran:    { id:'saffran',    name:'회색 경매인, 사프란', emoji:'🎩', art:'monsters/saffran.png', lv:18, hp:110, atk:20, def:13, exp:210, gold:160, drops:[{mat:'saltglass',chance:1,count:2},{mat:'frostsalt',chance:0.8},{mat:'sealtag',chance:0.8}] },
+  // ---- 봉인고(Lv18–24, 최종) — 전용 아트 전 이모지 폴백 ----
+  // ※base lv를 존 중앙(21)에 맞춰 밴드 편차를 줄이고, diff 2.2가 곱해지는 걸 감안해 base atk/def를 낮게 잡는다
+  sealedecho: { id:'sealedecho', name:'봉인된 말의 잔영', emoji:'🫥', art:null, lv:21, hp:90,  atk:14, def:8,  exp:130, gold:78, drops:[{mat:'sealshard',chance:0.55},{mat:'sealtag',chance:0.3}] },
+  pricehound: { id:'pricehound', name:'값의 사냥개',  emoji:'🐕‍🦺', art:null, lv:21, hp:100, atk:16, def:9,  exp:145, gold:96, drops:[{mat:'pricechain',chance:0.55},{mat:'fang',chance:0.35}] },
+  silentward: { id:'silentward', name:'침묵의 문지기', emoji:'🗿', art:null, lv:22, hp:150, atk:15, def:14, exp:170, gold:110, drops:[{mat:'silentbell',chance:0.55},{mat:'core',chance:0.35}] },
+  // 존 보스: 드미타스가 남긴 수호물(드미타스 본인은 카페 크로스페이지 결전) — '값의 장막' 기믹 보유
+  // ※밸런스: 존 배율(diff2.2×보스1.7=3.74)이 곱해지므로 base를 낮게 잡는다. 실측 Lv22+최상위장비 기준
+  //   hp411/atk64/def37 → 장막 해제까지 ~9턴·처치 ~12턴, 회복 아이템 쓰면 클리어 가능한 최종보스 난이도.
+  curatorward:{ id:'curatorward',name:'큐레이터의 수호물', emoji:'⚖️', art:null, lv:25, hp:110, atk:17, def:10, exp:340, gold:260, veil:3, drops:[{mat:'sealshard',chance:1,count:2},{mat:'silentbell',chance:0.9},{mat:'pricechain',chance:0.9},{mat:'goldbean',chance:0.5}] },
 };
 // 존(지역) 레지스트리 — 이름/해제레벨/난이도/틴트/몬스터풀/보스/이웃
 const ZONES = {
   forest:   { name:'원두 숲', icon:'<svg class="uic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.5l5.2 7.6h-2.8l4 5.9H5.6l4-5.9H6.8z" fill="#5faa5f" stroke="#357a35" stroke-width="1.2" stroke-linejoin="round"/><rect x="10.7" y="15.6" width="2.6" height="4.6" fill="#8a5a30"/></svg>', minLv:1, lvMax:5,  diff:1.0,  tint:null,                     monsters:['slime','boar','crow'],      boss:'golem', next:'deepwood', treeOrange:0.3 },
   deepwood: { name:'깊은 숲', icon:'<svg class="uic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.5 15.2A7.2 7.2 0 0 1 9 6.4a7.4 7.4 0 1 0 8.5 8.8z" fill="#c9b6ee" stroke="#6b4aa0" stroke-width="1.2" stroke-linejoin="round"/></svg>', minLv:6, lvMax:11, diff:1.4,  tint:'rgba(14,16,52,0.52)',    monsters:['shadowwolf','wisp','echo','misttoad'], boss:'golem', prev:'forest', next:'harbor', treeOrange:0.7 },
-  harbor:   { name:'잔향 항구', icon:'<svg class="uic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="5" r="2.2" fill="none" stroke="#8fb6c8" stroke-width="1.4"/><path d="M12 7.2V20M8.5 10h7" stroke="#8fb6c8" stroke-width="1.5" stroke-linecap="round"/><path d="M5 14a7 7 0 0 0 14 0" fill="none" stroke="#8fb6c8" stroke-width="1.5" stroke-linecap="round"/><path d="M5 14l-1.6.5M19 14l1.6.5" stroke="#8fb6c8" stroke-width="1.4" stroke-linecap="round"/></svg>', minLv:12, lvMax:17, diff:1.8, tint:'rgba(42,56,78,0.5)', monsters:['seafog','dockgull','waxman','frostwraith'], boss:'saffran', prev:'deepwood', treeOrange:0.15 },
+  harbor:   { name:'잔향 항구', icon:'<svg class="uic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="5" r="2.2" fill="none" stroke="#8fb6c8" stroke-width="1.4"/><path d="M12 7.2V20M8.5 10h7" stroke="#8fb6c8" stroke-width="1.5" stroke-linecap="round"/><path d="M5 14a7 7 0 0 0 14 0" fill="none" stroke="#8fb6c8" stroke-width="1.5" stroke-linecap="round"/><path d="M5 14l-1.6.5M19 14l1.6.5" stroke="#8fb6c8" stroke-width="1.4" stroke-linecap="round"/></svg>', minLv:12, lvMax:17, diff:1.8, tint:'rgba(42,56,78,0.5)', monsters:['seafog','dockgull','waxman','frostwraith'], boss:'saffran', prev:'deepwood', next:'vault', treeOrange:0.15 },
+  // 최종 지역 — 카페에서 드미타스를 꺾은 뒤(demitasStage>=3) 개방. 갇힌 말들을 풀러 가는 곳.
+  vault:    { name:'봉인고', icon:'<svg class="uic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="10" width="16" height="10.5" rx="1.6" fill="#b9a6d8" stroke="#5b4a86" stroke-width="1.3"/><path d="M8 10V7.2a4 4 0 0 1 8 0V10" fill="none" stroke="#5b4a86" stroke-width="1.5"/><circle cx="12" cy="15" r="1.7" fill="#5b4a86"/></svg>', minLv:18, lvMax:24, diff:2.2, tint:'rgba(28,20,46,0.56)', monsters:['sealedecho','pricehound','silentward'], boss:'curatorward', prev:'harbor', reqDemitas:3, treeOrange:0.1 },
 };
 // 동행별 고유 스킬 (게이지 가득 차면 사용)
 // [스킬 4단 진화] 티어명(저작권 안전·커피/울림 네이티브). 쓸수록 랜덤 승급, 내려가지 않음.
@@ -1990,6 +2025,10 @@ const Battle = {
       m = this.scaleMonster(base, opts);
     }
     this.enemy=m; this.eMax=m.hp; this.eHp=m.hp; this.active=true; this.busy=false; this.lastStep=Explore.state.steps;
+    // [값의 장막] 봉인고 보스 전용 — 값으로 두른 장막이 타격을 대부분 흘려보낸다.
+    //   무력화·페널티는 없다(딜은 계속 들어감). 스킬의 '옛말 빛'이 닿을 때마다 한 겹씩 풀리고,
+    //   전부 풀리면 갇힌 말이 해방되며 무방비가 된다 — 처치가 아니라 '봉인 해제'가 요령.
+    this.veil = m.veil || 0; this.veilMax = m.veil || 0;
     this.atkBuff=1; this.dmgReduce=0; this.hideItems(); // 전투 아이템 버프는 전투마다 초기화
     if(m.isBoss) this.gauge=this.GMAX; // [밸런스] 보스전은 필살기 게이지 만충으로 시작 — 첫 턴 버스트 보장(탱키 보스 완충). ※ 플레이테스트로 수치 조정 여지
     World.release();
@@ -2000,12 +2039,13 @@ const Battle = {
     this.setSelfSprite(); this.setSkillLabel(); this.renderBars(); // 게이지는 전투 간 누적(리셋 안 함)
     // 전투 배경에 현재 존 테마 적용(숲/깊은숲 밤)
     const arena=document.getElementById('b-arena');
-    arena.classList.remove('zone-forest','zone-deepwood','zone-harbor'); arena.classList.add('zone-'+(Explore.state.map.zone||'forest'));
+    arena.classList.remove('zone-forest','zone-deepwood','zone-harbor','zone-vault'); arena.classList.add('zone-'+(Explore.state.map.zone||'forest'));
     const battle=document.getElementById('battle'); battle.classList.add('show','intro');
     ExploreBgm.play(m.isBoss ? 'boss' : 'battle');
     void es.offsetWidth; es.classList.add('enter');
     this.setButtons(false);
-    this.msg(m.isBoss ? `${UI_ICON.atk} <b>${m.name}</b> — 보스가 길을 막아섰다!` : `${UI_ICON.paw} 앗! 야생 <b>${m.name}</b>이(가) 나타났다!`);
+    this.msg(this.veil>0 ? `${UI_ICON.atk} <b>${m.name}</b> — 값의 장막이 ${this.veil}겹 둘러쳐져 있다!<br><span class="ko">평타는 흘려보낸다… 필살기의 옛말 빛이라면 풀 수 있을 것 같다.</span>`
+           : m.isBoss ? `${UI_ICON.atk} <b>${m.name}</b> — 보스가 길을 막아섰다!` : `${UI_ICON.paw} 앗! 야생 <b>${m.name}</b>이(가) 나타났다!`);
     clearTimeout(this._introT);
     this._introT=setTimeout(()=>{ battle.classList.remove('intro'); es.classList.remove('enter'); this.msg('무엇을 할까?'+compSay((this.enemy&&this.enemy.isBoss)?'boss':'start')); this.setButtons(true); }, 1400); },
   // 메시지/아레나 탭 → 등장 연출이나 현재 대기를 빨리 넘김
@@ -2111,6 +2151,10 @@ const Battle = {
     // 총딜: 배율 + 다단히트 보너스(×1.2/히트초과). 크리엔 울림 크리 보너스도 반영(플레이어 스킬).
     const def=sk.ignoreDef?0:this.enemy.def; let base=p.atk*mult-def*0.5; base*=0.95+this._rand()*0.2; base*=(1+0.2*(hits-1));
     const crit=sk.alwaysCrit||this._rand()<(0.2+((p.vocab&&p.vocab.critBonus)||0)); if(crit)base*=1.6;
+    // [값의 장막] 스킬 이펙트에 흐르는 옛말 빛이 장막에 닿아 한 겹을 푼다 — 이 턴의 딜은 장막에 흘려보내지되,
+    //   전부 풀리는 순간 갇힌 말이 해방되며 무방비가 된다. 스킬이 곧 열쇠(학습=울림이 답).
+    let veilBroken=false, veilCleared=false;
+    if(this.veil>0){ this.veil--; veilBroken=true; veilCleared=(this.veil===0); base*=0.3; }
     const total=Math.max(1,Math.round(base));
     // 히트 분할 애니메이션(다단히트 손맛)
     let dealt=0;
@@ -2122,6 +2166,12 @@ const Battle = {
       if(this.eHp<=0) break;
     }
     let m=`${sk.name}! ${this.enemy.name}에게 <b>${total}</b> 피해!${crit?' 치명타!':''}${hits>1?` (${hits}연타)`:''}`;
+    if(veilBroken){
+      m += veilCleared
+        ? `<br>${UI_ICON.spark} <b>값의 장막이 전부 풀렸다!</b> 갇혀 있던 말들이 쏟아져 나온다 — 이제 무방비다.`
+        : `<br>${UI_ICON.spark} 옛말의 빛이 장막에 닿았다 — <b>한 겹 풀렸다</b>. (남은 겹 ${this.veil})`;
+      if(veilCleared){ Sfx.play('levelup'); exHaptic('success'); } else { Sfx.play('correct'); }
+    }
     if(sk.heal){ const hpR=(sk.heal[tier]!=null?sk.heal[tier]:(Array.isArray(sk.heal)?sk.heal[0]:sk.heal)); const h=Math.round(p.maxHp*hpR);
       Explore.state.stats.hp=Math.min(p.maxHp,p.hp+h); m+=`<br>${UI_ICON.spark} 체력 ${h} 회복!`; Explore.refreshHUD(); }
     this.msg(m); this.renderBars(); await this.wait(650); es.classList.remove('hit'); ps.classList.remove('lunge');
@@ -2156,10 +2206,14 @@ const Battle = {
     const ps=document.getElementById('p-self'), es=document.getElementById('e-sprite');
     ps.classList.add('lunge'); await this.wait(150);
     if(this._rand()<miss){ Sfx.play('miss'); this.pop('e','MISS','miss'); this.msg('공격이 빗나갔다…'); await this.wait(650); }
-    else { const {dmg,crit}=this.calc(p.atk,this.enemy.def,(power?1.7:1.0)*(this.atkBuff||1),(p.vocab&&p.vocab.critBonus)||0); this.eHp-=dmg; // 울림 크리 보너스 반영(플레이어 공격만)
+    else { let {dmg,crit}=this.calc(p.atk,this.enemy.def,(power?1.7:1.0)*(this.atkBuff||1),(p.vocab&&p.vocab.critBonus)||0); // 울림 크리 보너스 반영(플레이어 공격만)
+      const veiled = this.veil>0; if(veiled) dmg=Math.max(1,Math.round(dmg*0.3));   // 장막이 대부분 흘려보냄(0은 되지 않음)
+      this.eHp-=dmg;
       Sfx.play(crit?'crit':'hit'); exHaptic(crit?'heavy':'light');
       es.classList.add('hit'); this.shake(); this.hitFx('e-sprite', crit); this.pop('e','-'+dmg+(crit?'!':''),crit?'crit':null);
-      this.msg(`${power?'강공격! ':''}${this.enemy.name}에게 <b>${dmg}</b> 피해!${crit?' 치명타!':''}`); this.renderBars(); await this.wait(550); es.classList.remove('hit'); }
+      this.msg(`${power?'강공격! ':''}${this.enemy.name}에게 <b>${dmg}</b> 피해!${crit?' 치명타!':''}`
+               + (veiled?`<br><span class="ko">값의 장막이 타격을 흘려보낸다… (남은 겹 ${this.veil})</span>`:''));
+      this.renderBars(); await this.wait(550); es.classList.remove('hit'); }
     ps.classList.remove('lunge'); this.addGauge(22);
     if(this.eHp<=0) return this.win(); await this.enemyTurn(); },
   async enemyTurn(){ const ps=document.getElementById('p-self'), es=document.getElementById('e-sprite');
