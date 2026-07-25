@@ -921,10 +921,24 @@ const WALK_FRAMES = {};
 });
 // [에셋] 페인티드 맵 (픽셀 타일셋 대체) — 바닥 텍스처 + 서 있는 오브젝트(투명)
 const MAP_TEX = {};
-['grass','path','water'].forEach(n=>{ const im=new Image(); im.src='tiles/'+n+'.png'; MAP_TEX[n]=im; });
+['grass','path','water','harbor_ground','vault_ground','moon_ground']
+  .forEach(n=>{ const im=new Image(); im.src='tiles/'+n+'.png'; MAP_TEX[n]=im; });
 const MAP_OBJ = {};
-['tree_green','tree_orange','tree_pine','bush','rock','stump','flowers','grass_tuft','forge']
+['tree_green','tree_orange','tree_pine','bush','rock','stump','flowers','grass_tuft','forge',
+ 'harbor_obj1','harbor_obj2','vault_obj1','vault_obj2','moon_obj1','moon_obj2']
   .forEach(n=>{ const im=new Image(); im.src='sprites/'+n+'.png'; MAP_OBJ[n]=im; });
+// [존 테마] 걷기맵의 바닥 텍스처·장애물 오브젝트를 존마다 갈아끼운다.
+//   숲 계열(forest/deepwood)은 기존 잔디+나무 그대로(깊은 숲은 tint로 밤 숲이 됨).
+//   항구/봉인고/달은 잔디밭에 나무가 서 있으면 어색하므로 전용 에셋 사용.
+//   obj = [장애물 A, 장애물 B](나무 자리), objH = 타일 높이 배수(나무 2.9 기준으로 조정)
+const ZONE_THEME = {
+  forest:   { ground:'grass',         obj:['tree_green','tree_orange'], objH:2.9 },
+  deepwood: { ground:'grass',         obj:['tree_green','tree_orange'], objH:2.9 },
+  harbor:   { ground:'harbor_ground', obj:['harbor_obj1','harbor_obj2'], objH:2.2 },
+  vault:    { ground:'vault_ground',  obj:['vault_obj1','vault_obj2'],   objH:2.5 },
+  moon:     { ground:'moon_ground',   obj:['moon_obj1','moon_obj2'],     objH:2.0 },
+};
+function zoneTheme(){ return ZONE_THEME[(Explore.state&&Explore.state.map&&Explore.state.map.zone)||'forest'] || ZONE_THEME.forest; }
 // 채집 노드는 SVG 아이콘 사용(사용자 선호) — 페인티드 노드 아트 미사용
 const NODE_ART = {};
 // [체리 다람쥐] 비전투 상호작용 크리터 — monsters/ 폴더 공용 에셋 재사용
@@ -932,11 +946,12 @@ const CRITTER_IMG = new Image(); CRITTER_IMG.src = 'monsters/squirrel.png';
 // 잔디 반복용 사전 축소 캔버스(반복 크기 GR마다 1회 생성)
 let _grassCv=null;
 function grassCanvas(GR){
-  if(_grassCv && _grassCv._gr===GR) return _grassCv;
-  const g=MAP_TEX.grass; if(!g||!g.complete||!g.naturalWidth) return null;
+  const key=zoneTheme().ground;                                   // 존이 바뀌면 캐시를 새로 만든다
+  if(_grassCv && _grassCv._gr===GR && _grassCv._key===key) return _grassCv;
+  const g=MAP_TEX[key]||MAP_TEX.grass; if(!g||!g.complete||!g.naturalWidth) return null;
   const cv=document.createElement('canvas'); cv.width=GR; cv.height=GR;
   const c=cv.getContext('2d'); c.imageSmoothingEnabled=true; c.drawImage(g,0,0,GR,GR);
-  cv._gr=GR; _grassCv=cv; return cv;
+  cv._gr=GR; cv._key=key; _grassCv=cv; return cv;
 }
 // ---------- 동행 패시브 ----------
 const COMP_PASSIVE = {
@@ -1593,7 +1608,10 @@ const World = {
       this.toast(`${UI_ICON.map} <b>${zn} 지도 완성!</b><br><span class="ko">아이템에 지도가 추가됐어요</span>${prog}`);
     }
     if(window.Sfx)Sfx.play('levelup'); if(window.exHaptic)exHaptic('success'); },
-  _mmColor(x,y){ return this.barrier.has(x+','+y) ? '#4a6b3a' : '#84bd63'; },
+  // 미니맵 색도 존 테마를 따라간다(달인데 초록 미니맵이던 문제)
+  _MM_COL:{ grass:['#4a6b3a','#84bd63'], harbor_ground:['#3d4a56','#6f7f8c'], vault_ground:['#2e2440','#544766'], moon_ground:['#5d5f78','#a9abc4'] },
+  _mmColor(x,y){ const c=this._MM_COL[zoneTheme().ground]||this._MM_COL.grass;
+    return this.barrier.has(x+','+y) ? c[0] : c[1]; },
   drawMinimap(){ const ctx=this._mmctx; if(!ctx||!this.explored)return; const WT=this.WT,HT=this.HT;
     ctx.fillStyle='#10121a'; ctx.fillRect(0,0,WT,HT);
     for(let y=0;y<HT;y++)for(let x=0;x<WT;x++){ if(!this.explored[y][x])continue; ctx.fillStyle=this._mmColor(x,y); ctx.fillRect(x,y,1,1); }
@@ -1660,7 +1678,8 @@ const World = {
     if(gcv){ const ox=((camX%GR)+GR)%GR, oy=((camY%GR)+GR)%GR;
       for(let yy=-oy; yy<this.viewH; yy+=GR) for(let xx=-ox; xx<this.viewW; xx+=GR) ctx.drawImage(gcv, Math.round(xx), Math.round(yy)); }
     // ----- 바닥 장식(풀다발/꽃) -----
-    for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){ if(this.deco[y][x]<0) continue;
+    const _decoOk = zoneTheme().ground==='grass';                 // 풀다발·꽃은 숲 계열에만(판자·대리석·달 지면엔 부적합)
+    for(let y=y0;_decoOk&&y<=y1;y++)for(let x=x0;x<=x1;x++){ if(this.deco[y][x]<0) continue;
       const dimg=(this.deco[y][x]===42)?MAP_OBJ.flowers:MAP_OBJ.grass_tuft;
       if(dimg&&dimg.complete&&dimg.naturalWidth){ const cx=x*TS-camX+TS/2, cy=y*TS-camY+TS/2;
         const w=TS*1.15, h=w*(dimg.naturalHeight/dimg.naturalWidth);
@@ -1676,10 +1695,11 @@ const World = {
       else { const mimg=MATERIALS[n.mat].img; if(Assets.ready(mimg)){ const s=TS*0.92; ctx.drawImage(Assets.imgs[mimg], dx+(TS-s)/2, dy+(TS-s)/2, s, s); } } }
     // ----- 나무(페인티드, y정렬, 발끝 접지) -----
     const vis=this.trees.filter(t=>t.x>=x0-2&&t.x<=x1+2&&t.y>=y0-3&&t.y<=y1+2); // 이미 y정렬됨
-    for(const t of vis){ const timg=(t.type==='green')?MAP_OBJ.tree_green:MAP_OBJ.tree_orange;
+    const _th=zoneTheme();                                        // 존별 장애물(숲=나무 / 항구=화물·계선주 / 봉인고=진열장·기둥 / 달=오벨리스크·달바위)
+    for(const t of vis){ const timg=MAP_OBJ[(t.type==='green')?_th.obj[0]:_th.obj[1]];
       if(!(timg&&timg.complete&&timg.naturalWidth)) continue;
       const gx=Math.round(t.x*TS-camX)+TS/2, gy=Math.round(t.y*TS-camY)+TS;
-      const h=TS*2.9, w=h*(timg.naturalWidth/timg.naturalHeight);
+      const h=TS*(_th.objH||2.9), w=h*(timg.naturalWidth/timg.naturalHeight);
       ctx.drawImage(timg, gx-w/2, gy-h, w, h); }
     // ----- 퀘스트 NPC + 상태 마커(❗진행가능 / …진행중 / ✔완료) -----
     for(const np of (this.npcs||[])){ if(np.x<x0-1||np.x>x1+1||np.y<y0-2||np.y>y1+1) continue;
