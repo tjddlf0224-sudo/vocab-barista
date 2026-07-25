@@ -686,7 +686,7 @@ const SaveBridge = {
       equip:Object.assign({weapon:null,armor:null},ex.equip||{}),
       materials:ex.materials||{}, items:ex.items||[], companion:ex.companion||'none',
       map:ex.map||{zone:'forest'}, pos:ex.pos||null, steps:ex.steps||0,
-      quests:ex.quests||{}, questN:ex.questN||{}, events:ex.events||{}, explored:ex.explored||{}, maps:ex.maps||{}, zoneBoss:ex.zoneBoss||{},
+      quests:ex.quests||{}, questN:ex.questN||{}, events:ex.events||{}, explored:ex.explored||{}, maps:ex.maps||{}, zoneBoss:ex.zoneBoss||{}, monstersSeen:ex.monstersSeen||{},
       skillTier:(ex.skillTier&&typeof ex.skillTier==='object')?ex.skillTier:{} }; },  // 동행별 스킬 진화 티어(0~3)
   saveExplore(s){ localStorage.setItem(EXPLORE_KEY,JSON.stringify(s)); },
 };
@@ -1530,6 +1530,17 @@ const World = {
   },
   bossCleared(zoneId){ return !!(Explore.state.zoneBoss||{})[zoneId]; },
   markBossCleared(zoneId){ if(!Explore.state.zoneBoss) Explore.state.zoneBoss={}; Explore.state.zoneBoss[zoneId]=true; },
+  // [달 최종보스 조건] 달은 다음 존이 없어 관문 방식을 못 쓴다 — 대신 '이 곳의 모든 목소리를 듣고
+  //   (몬스터 3종 전부 조우) + 땅 전부를 봤을 때(자체 지도 90% 완성)' 가장 오래된 말이 응답한다.
+  moonMonstersSeen(){ const seen=Explore.state.monstersSeen||{};
+    return { have:(ZONES.moon.monsters||[]).filter(id=>seen[id]).length, need:(ZONES.moon.monsters||[]).length }; },
+  moonBossReady(){ const ms=this.moonMonstersSeen();
+    return ms.have>=ms.need && !!(Explore.state.maps||{}).moon; },
+  // 두 조건 중 나중에 채워지는 쪽에서 호출 — 그 순간 막 충족됐을 때만 1회 안내
+  announceMoonBossReady(){ if(Explore.state.map.zone!=='moon') return; if(this._moonBossAnnounced) return;
+    if(!this.moonBossReady()) return; this._moonBossAnnounced=true;
+    this.toast(`${UI_ICON.spark} 이 곳의 모든 목소리를 들었다… 땅 전부를 보았다.<br><span class="ko">무언가, <b>응답</b>하려 한다.</span>`);
+  },
   // 카페 진행도(드미타스 막) 조회 — 봉인고 개방 판정·팻말 표기에 공용
   demitasStage(){ try{ return (JSON.parse(localStorage.getItem('vb_save_v7')||'{}').demitasStage)||0; }catch(e){ return 0; } },
   // 지도 완성 진행도 — 달 개방 판정·팻말 표기에 공용
@@ -1616,7 +1627,8 @@ const World = {
       const prog = mp ? ` <span class="ko">(지도 조각 ${mp.have}/${mp.need})</span>` : '';
       this.toast(`${UI_ICON.map} <b>${zn} 지도 완성!</b><br><span class="ko">아이템에 지도가 추가됐어요</span>${prog}`);
     }
-    if(window.Sfx)Sfx.play('levelup'); if(window.exHaptic)exHaptic('success'); },
+    if(window.Sfx)Sfx.play('levelup'); if(window.exHaptic)exHaptic('success');
+    if(zone==='moon') this.announceMoonBossReady(); },
   // 미니맵 색도 존 테마를 따라간다(달인데 초록 미니맵이던 문제)
   _MM_COL:{ grass:['#4a6b3a','#84bd63'], harbor_ground:['#3d4a56','#6f7f8c'], vault_ground:['#2e2440','#544766'], moon_ground:['#5d5f78','#a9abc4'] },
   _mmColor(x,y){ const c=this._MM_COL[zoneTheme().ground]||this._MM_COL.grass;
@@ -2195,8 +2207,13 @@ const Battle = {
   _seed:777, _rand(){ this._seed=(this._seed*1103515245+12345)&0x7fffffff; return this._seed/0x7fffffff; },
   // [보스 관문 전환] 존 보스는 더 이상 랜덤 필드 조우로 뜨지 않는다 — World.tryZonePortal()에서
   //   다음 존으로 넘어가려 할 때 확정 조우로 막아선다(관문). 여기선 일반 몹만 뽑는다.
+  //   예외: 달(다음 존이 없는 포스트게임)은 조건 충족(moonBossReady) 후 확정 조우로 등장.
   maybeEncounter(){ if(this.active)return; const s=Explore.state; if((s.steps-this.lastStep)<25)return;
-    if(this._rand()<0.05){ this.start({}); } },
+    if(this._rand()<0.05){
+      const zid=s.map.zone, zone=ZONES[zid];
+      if(zone && !zone.next && zone.boss && World.moonBossReady() && !World.bossCleared(zid)){ this.start({boss:true}); return; }
+      this.start({});
+    } },
   // 몬스터를 플레이어 레벨에 맞춰 스케일(정체성=스탯비율 유지) — 신규 즉사·고렙 무의미화 방지
   scaleMonster(base, opts){
     opts = opts || {};
@@ -2231,6 +2248,10 @@ const Battle = {
       m = this.scaleMonster(base, opts);
     }
     this.enemy=m; this.eMax=m.hp; this.eHp=m.hp; this.active=true; this.busy=false; this.lastStep=Explore.state.steps;
+    // [달 최종보스 조건] 몬스터를 만난 적이 있는지 도감식으로 기록 — 달의 3종을 전부 만나야 하는
+    //   조건(moonBossReady)에 쓰인다. 승패 무관, '만남' 자체가 기준.
+    if(m.id){ if(!Explore.state.monstersSeen) Explore.state.monstersSeen={};
+      if(!Explore.state.monstersSeen[m.id]){ Explore.state.monstersSeen[m.id]=true; World.announceMoonBossReady(); } }
     // [값의 장막] 봉인고 보스 전용 — 값으로 두른 장막이 타격을 대부분 흘려보낸다.
     //   무력화·페널티는 없다(딜은 계속 들어감). 스킬의 '옛말 빛'이 닿을 때마다 한 겹씩 풀리고,
     //   전부 풀리면 갇힌 말이 해방되며 무방비가 된다 — 처치가 아니라 '봉인 해제'가 요령.
@@ -2506,9 +2527,11 @@ const Battle = {
     if(ups.length){ txt+=`<br><span class="lvlup">${UI_ICON.party} 레벨 업! Lv ${ups[ups.length-1]} (HP·공·방 상승, 체력 회복)</span>`; setTimeout(()=>Sfx.play('levelup'),450); }
     txt+=compSay('win'); if(ups.length) txt+=compSay('level'); this.msg(txt); this.renderBars(); Explore.refreshHUD(); Explore.persist(); this.setButtons(false);
     await this.wait(1500);
+    // [존 보스 클리어] 관문(gateTo)이든 달의 확정조우든, 현재 존이 지목한 보스를 이기면 그 존은 클리어.
+    if(e.isBoss){ const zid=Explore.state.map.zone; const z=ZONES[zid];
+      if(z && z.boss===e.id){ World.markBossCleared(zid); Explore.persist(); } }
     // [보스 관문] 이 보스가 다음 존 관문이었다면, 통과 처리하고 그대로 다음 존까지 이동시킨다.
-    if(this.gateTo){ const zid=Explore.state.map.zone; World.markBossCleared(zid); Explore.persist();
-      const dest=this.gateTo; this.gateTo=null; this.close(); World.travelZone(dest); return; }
+    if(this.gateTo){ const dest=this.gateTo; this.gateTo=null; this.close(); World.travelZone(dest); return; }
     this.close(); },   // 결과 잠깐 보여주고 자동으로 전투 종료(탭하면 즉시)
   // [광고] 전투 패배 시 리워드 광고로 그 자리 부활 제안(부활/포기 버튼)
   _askAdRevive(){ return new Promise(resolve=>{
