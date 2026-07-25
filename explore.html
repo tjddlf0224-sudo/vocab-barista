@@ -2099,7 +2099,7 @@ const MONSTERS = {
   golem:      { id:'golem',      name:'로스팅 골렘', emoji:'🪨', art:'monsters/golem.png', phased:true, lv:12, hp:92, atk:16, def:11, exp:109, gold:90, drops:[{mat:'berry',chance:0.9,count:2},{mat:'core',chance:0.45}] },
   // ※원두 숲 보스(신규 분리). base.lv=6은 예전 golem 공유정의가 원두숲 대상으로 내던 실측값
   //   (hp101/atk20/def13)을 역산해 그대로 재현 — 기존 난이도 보존, 정체성·기믹만 신규.
-  woodr:      { id:'woodr',      name:'묵은 로스팅정령, 우드르', emoji:'🔥', art:'monsters/golem.png', nonlethal:true, lv:6, hp:60, atk:12, def:8, exp:45, gold:37, drops:[{mat:'berry',chance:0.9,count:2},{mat:'core',chance:1}] },
+  woodr:      { id:'woodr',      name:'묵은 로스팅정령, 우드르', emoji:'🔥', art:'monsters/woodr.png', nonlethal:true, lv:6, hp:60, atk:12, def:8, exp:45, gold:37, drops:[{mat:'berry',chance:0.9,count:2},{mat:'core',chance:1}] },
   shadowwolf: { id:'shadowwolf', name:'그림자 늑대', emoji:'🐺', art:'monsters/shadowwolf.png', lv:7, hp:42, atk:16, def:4,  exp:32, gold:26, drops:[{mat:'berry',chance:0.85},{mat:'fang',chance:0.4}] },
   wisp:       { id:'wisp',       name:'도깨비불',   emoji:'🔵', art:'monsters/wisp.png',       lv:6, hp:28, atk:14, def:2,  exp:28, gold:24, drops:[{mat:'bean',chance:0.8},{mat:'ember',chance:0.45}] },
   echo:       { id:'echo',       name:'잊힌 메아리', emoji:'💬', art:'monsters/echo.png',       lv:8, hp:36, atk:15, def:3,  exp:34, gold:28, drops:[{mat:'berry',chance:0.8},{mat:'fang',chance:0.4}] },
@@ -2137,7 +2137,7 @@ const MONSTERS = {
   //   정복한 이해(R)만 이 어둠을 가른다 — 프메2 무신(전투기술 압도적, 마법만 약점)의 국지적 우회구조를 차용.
   // ※base.lv를 달의 보스 등장레벨(31)에 맞춰 f=diff2.6×1.7=4.42로 golem/curatorward와 동일 역산 패턴 적용.
   //   실측 hp700/atk84/def62(가장 오래된 말 hp575/atk71/def49보다 한 단계 위, 선택 컨텐츠라 정규 곡선 밖).
-  lunashadow: { id:'lunashadow', name:'루나의 어둠', emoji:'🌑', art:'monsters/eldestword.png', lv:31, hp:158, atk:19, def:14,
+  lunashadow: { id:'lunashadow', name:'루나의 어둠', emoji:'🌑', art:'monsters/lunashadow.png', lv:31, hp:158, atk:19, def:14,
     weakAxis:'R', weakThreshold:0.8, exp:600, gold:500, drops:[{mat:'lunamemory',chance:1},{mat:'goldbean',chance:1,count:2}] },
 };
 // 존(지역) 레지스트리 — 이름/해제레벨/난이도/틴트/몬스터풀/보스/이웃
