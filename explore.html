@@ -889,6 +889,8 @@ const MATERIALS = {
   // ---- 달(포스트게임) 드롭 ----
   moondust: { name:'달가루',      icon:'🌙', rare:true, loot:true },
   namelight:{ name:'이름의 불빛',  icon:'🕯️', rare:true, loot:true },
+  // ---- 루나의 어둠(비밀 초월보스) 전용 트로피 — 제작 용도 없음, 격파 증표 ----
+  lunamemory:{ name:'루나의 기억 조각', icon:'🌑', rare:true, loot:true },
 };
 // 채집 노드로 등장하는 재료(황금 원두는 제외 — 전투 보상으로만 획득)
 const GATHER_MATS = Object.keys(MATERIALS).filter(k => !MATERIALS[k].rare);
@@ -2128,6 +2130,15 @@ const MONSTERS = {
   // ※[지역 서열 재조정] def를 10→12로 올림(실측 37→45) — 잔향항구 보스(def40)보다 낮게 막던 역전을 해소,
   //   달 보스(def49)보다는 낮게 유지.
   curatorward:{ id:'curatorward',name:'큐레이터의 수호물', emoji:'⚖️', art:'monsters/curatorward.png', lv:25, hp:110, atk:17, def:12, exp:340, gold:260, veil:3, drops:[{mat:'sealshard',chance:1,count:2},{mat:'silentbell',chance:0.9},{mat:'pricechain',chance:0.9},{mat:'goldbean',chance:0.5}] },
+  // ---- 루나의 어둠(비밀 초월보스) — 가장 오래된 말을 꺾은 뒤에만 낮은 확률로 조우 ----
+  // 100년간 봉인 속에서 놓지 못한 기억이 짙어져 태어난 어둠(루나가 봉인에 바친 기억의 잔여물).
+  // ※[약점 축 게이팅] weakAxis:'R' — 오답정복(SRS졸업) 방어%가 자기 캡(25%)의 weakThreshold(80%) 미만이면
+  //   모든 피해를 5%로 짓누르는 '무지의 어둠'(사실상 벽). 얕은 암기(M)로는 못 뚫고, 오답을 끝까지 파헤쳐
+  //   정복한 이해(R)만 이 어둠을 가른다 — 프메2 무신(전투기술 압도적, 마법만 약점)의 국지적 우회구조를 차용.
+  // ※base.lv를 달의 보스 등장레벨(31)에 맞춰 f=diff2.6×1.7=4.42로 golem/curatorward와 동일 역산 패턴 적용.
+  //   실측 hp700/atk84/def62(가장 오래된 말 hp575/atk71/def49보다 한 단계 위, 선택 컨텐츠라 정규 곡선 밖).
+  lunashadow: { id:'lunashadow', name:'루나의 어둠', emoji:'🌑', art:'monsters/eldestword.png', lv:31, hp:158, atk:19, def:14,
+    weakAxis:'R', weakThreshold:0.8, exp:600, gold:500, drops:[{mat:'lunamemory',chance:1},{mat:'goldbean',chance:1,count:2}] },
 };
 // 존(지역) 레지스트리 — 이름/해제레벨/난이도/틴트/몬스터풀/보스/이웃
 const ZONES = {
@@ -2212,6 +2223,10 @@ const Battle = {
     if(this._rand()<0.05){
       const zid=s.map.zone, zone=ZONES[zid];
       if(zone && !zone.next && zone.boss && World.moonBossReady() && !World.bossCleared(zid)){ this.start({boss:true}); return; }
+      // [루나의 어둠] 달의 정식 보스(가장 오래된 말)를 이미 꺾었다면, 낮은 확률로 숨은 초월보스 조우(선택 컨텐츠)
+      if(zid==='moon' && World.bossCleared(zid) && !World.bossCleared('lunashadow') && this._rand()<0.35){
+        this.start({ base: MONSTERS.lunashadow, boss:true }); return;
+      }
       this.start({});
     } },
   // 몬스터를 플레이어 레벨에 맞춰 스케일(정체성=스탯비율 유지) — 신규 즉사·고렙 무의미화 방지
@@ -2277,7 +2292,11 @@ const Battle = {
     ExploreBgm.play(m.isBoss ? 'boss' : 'battle');
     void es.offsetWidth; es.classList.add('enter');
     this.setButtons(false);
+    const wgate = this.weakAxisGate();
     this.msg(this.veil>0 ? `${UI_ICON.atk} <b>${m.name}</b> — 값의 장막이 ${this.veil}겹 둘러쳐져 있다!<br><span class="ko">평타는 흘려보낸다… 필살기의 옛말 빛이라면 풀 수 있을 것 같다.</span>`
+           : m.weakAxis ? (wgate.gated
+               ? `${UI_ICON.atk} <b>${m.name}</b> — 100년 봉인 속에서 놓지 못한 기억이 짙어져 태어난 어둠.<br><span class="ko">얕은 앎으로는 닿지 않는다 — 오답을 끝까지 파헤쳐 정복해야 이 어둠을 가를 수 있다.</span>`
+               : `${UI_ICON.atk} <b>${m.name}</b> — 네가 완전히 정복한 오답들이 빛이 되어, 백 년 묵은 어둠을 꿰뚫을 준비가 됐다!`)
            : m.isBoss ? `${UI_ICON.atk} <b>${m.name}</b> — 보스가 길을 막아섰다!` : `${UI_ICON.paw} 앗! 야생 <b>${m.name}</b>이(가) 나타났다!`);
     clearTimeout(this._introT);
     this._introT=setTimeout(()=>{ battle.classList.remove('intro'); es.classList.remove('enter'); this.msg('무엇을 할까?'+compSay((this.enemy&&this.enemy.isBoss)?'boss':'start')); this.setButtons(true); }, 1400); },
@@ -2388,7 +2407,9 @@ const Battle = {
     //   전부 풀리는 순간 갇힌 말이 해방되며 무방비가 된다. 스킬이 곧 열쇠(학습=울림이 답).
     let veilBroken=false, veilCleared=false;
     if(this.veil>0){ this.veil--; veilBroken=true; veilCleared=(this.veil===0); base*=0.3; }
-    const total=Math.max(1,Math.round(base));
+    let total=Math.max(1,Math.round(base));
+    // [약점 축 게이팅] 루나의 어둠 전용 — 지정 축을 못 넘기면 총딜을 짓누름(최소 히트수는 보장)
+    const gate=this.weakAxisGate(); if(gate.gated) total=Math.max(hits, Math.round(total*gate.mult));
     // 히트 분할 애니메이션(다단히트 손맛)
     let dealt=0;
     for(let h=0; h<hits; h++){
@@ -2403,6 +2424,7 @@ const Battle = {
     const phaseMsg=this.updatePhase();
     let m=`${sk.name}! ${this.enemy.name}에게 <b>${total}</b> 피해!${crit?' 치명타!':''}${hits>1?` (${hits}연타)`:''}`;
     m+=phaseMsg;
+    if(gate.gated) m+=`<br><span class="ko">얕은 앎은 이 어둠에 닿지 않는다 — 오답을 끝까지 파헤쳐야 한다.</span>`;
     if(veilBroken){
       m += veilCleared
         ? `<br>${UI_ICON.spark} <b>값의 장막이 전부 풀렸다!</b> 갇혀 있던 말들이 쏟아져 나온다 — 이제 무방비다.`
@@ -2445,6 +2467,7 @@ const Battle = {
     if(this._rand()<miss){ Sfx.play('miss'); this.pop('e','MISS','miss'); this.msg('공격이 빗나갔다…'); await this.wait(650); }
     else { let {dmg,crit}=this.calc(p.atk,this.enemy.def,(power?1.7:1.0)*(this.atkBuff||1),(p.vocab&&p.vocab.critBonus)||0); // 울림 크리 보너스 반영(플레이어 공격만)
       const veiled = this.veil>0; if(veiled) dmg=Math.max(1,Math.round(dmg*0.3));   // 장막이 대부분 흘려보냄(0은 되지 않음)
+      const gate=this.weakAxisGate(); if(gate.gated) dmg=Math.max(1,Math.round(dmg*gate.mult));
       this.eHp-=dmg;
       if(veiled) this.eHp=Math.max(this.veilFloor, this.eHp);   // 봉인이 남아 있는 한 쓰러뜨릴 수 없다(해제가 곧 승리)
       const phaseMsg=this.updatePhase();
@@ -2452,6 +2475,7 @@ const Battle = {
       es.classList.add('hit'); this.shake(); this.hitFx('e-sprite', crit); this.pop('e','-'+dmg+(crit?'!':''),crit?'crit':null);
       this.msg(`${power?'강공격! ':''}${this.enemy.name}에게 <b>${dmg}</b> 피해!${crit?' 치명타!':''}`
                + (veiled?`<br><span class="ko">봉인이 타격을 흘려보낸다 — 이대로는 쓰러지지 않는다. (남은 겹 ${this.veil})</span>`:'')
+               + (gate.gated?`<br><span class="ko">얕은 앎은 이 어둠에 닿지 않는다 — 오답을 끝까지 파헤쳐야 한다.</span>`:'')
                + phaseMsg);
       this.renderBars(); await this.wait(550); es.classList.remove('hit'); }
     ps.classList.remove('lunge'); this.addGauge(22);
@@ -2494,6 +2518,14 @@ const Battle = {
     try{ Explore.persist(); }catch(e){}
     location.href='index.html';
   },
+  // [약점 축 게이팅] 루나의 어둠 전용 — 지정된 울림 축이 자기 캡의 threshold% 미만이면 피해를 짓누른다.
+  //   얕은 암기(M)로는 안 뚫리고, 지정 축(현재는 R=오답정복)만이 열쇠 — 프메2 무신(마법만 약점)식 우회구조.
+  weakAxisGate(){ const e=this.enemy; if(!e||!e.weakAxis) return { gated:false, mult:1 };
+    const vp=Explore.vocabPower();
+    const ratio = e.weakAxis==='R' ? (vp.defPct/0.25) : e.weakAxis==='M' ? (vp.atkPct/0.30) : e.weakAxis==='S' ? (vp.gaugePct/0.40) : 1;
+    const passed = ratio >= (e.weakThreshold!=null ? e.weakThreshold : 0.8);
+    return { gated:!passed, mult: passed?1:0.05 };
+  },
   // [3단계 페이즈] 깊은숲 로스팅 골렘 — 현재 HP비율로 atk/def를 원본 기준 재계산(1회성 중첩 방지).
   //   playerAttack/useSkill에서 데미지 반영 직후 호출 — 전환 시 문구를 반환해 호출부의 데미지 메시지에 덧붙인다
   //   (this.msg()를 여기서 바로 부르면 뒤이은 데미지 메시지가 그걸 덮어써 버린다).
@@ -2512,6 +2544,8 @@ const Battle = {
   async win(){ const e=this.enemy; Sfx.play('win'); exHaptic('success');
     // [비살상 보스] 우드르는 쓰러뜨리는 게 아니라 진정시킨다 — 죽음 연출(dead 클래스) 없이 다른 문구로 마무리.
     if(e.nonlethal){ this.msg(`${e.name}의 불씨가 서서히 잦아든다… 화덕이 식자, 그가 스스로 첫 로스팅 코어를 건넨다.`); }
+    else if(e.id==='lunashadow'){ document.getElementById('e-sprite').classList.add('dead');
+      this.msg(`어둠이 옅어지며 흩어진다… 그 안에서, 루나가 오래전 놓아버린 기억의 조각이 떠오른다.`); }
     else { document.getElementById('e-sprite').classList.add('dead'); this.msg(`${e.name}을(를) 쓰러뜨렸다!`); }
     await this.wait(700);
     if(this.storyBoss){ this.msg(`${UI_ICON.spark} 봉인이 자네를 가두지 못했다…`); await this.wait(1300); return this.endStoryBoss('win'); }
@@ -2529,7 +2563,8 @@ const Battle = {
     await this.wait(1500);
     // [존 보스 클리어] 관문(gateTo)이든 달의 확정조우든, 현재 존이 지목한 보스를 이기면 그 존은 클리어.
     if(e.isBoss){ const zid=Explore.state.map.zone; const z=ZONES[zid];
-      if(z && z.boss===e.id){ World.markBossCleared(zid); Explore.persist(); } }
+      if(z && z.boss===e.id){ World.markBossCleared(zid); Explore.persist(); }
+      else if(e.id==='lunashadow'){ World.markBossCleared('lunashadow'); Explore.persist(); } }
     // [보스 관문] 이 보스가 다음 존 관문이었다면, 통과 처리하고 그대로 다음 존까지 이동시킨다.
     if(this.gateTo){ const dest=this.gateTo; this.gateTo=null; this.close(); World.travelZone(dest); return; }
     this.close(); },   // 결과 잠깐 보여주고 자동으로 전투 종료(탭하면 즉시)
