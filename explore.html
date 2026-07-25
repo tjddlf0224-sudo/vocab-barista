@@ -2420,11 +2420,17 @@ const Battle = {
   // [스토리 보스] 드미타스 봉인고 결전 — 플레이어 현재 탐험 스탯 기준 고정 보스(성장하면 이길 수 있게)
   startDemitasBoss(){
     const p = Explore.effStats();
+    // [밸런스 수정] atk/def를 플레이어 atk에 비례 스케일하던 걸 고정값으로 교체.
+    //   드미타스는 카페 누적점수(20000점)로 트리거 — 탐험 레벨과 무관해, 탐험을 거의
+    //   안 한 플레이어는 Lv1·무장비로 이 전투를 만날 수 있다(실측 승률 13%였음).
+    //   비례 스케일은 장비를 올려도 보스가 같이 세져 승률이 73~78%에서 고정되는
+    //   문제도 있었다. atk8/def3 고정 — 실측 Lv1 무장비 93%(평균 4.6턴, 진짜 전투감
+    //   유지), 고레벨에선 자연스럽게 쉬워짐(스토리 보스를 오버레벨로 만나는 정상적 경우).
     const enemy = { id:'demitas', name:'드미타스', art:'chars/face_demitasse_base.png',
       lv:(Explore.state.level||1)+2, isBoss:true,
       hp:  Math.max(60, Math.round(p.maxHp * 2.3)),
-      atk: Math.max(8,  Math.round(p.atk * 1.1 + 5)),
-      def: Math.max(2,  Math.round(p.atk * 0.35)),
+      atk: 8,
+      def: 3,
       exp:0, gold:0, drops:[] };
     this.start({ enemy: enemy, storyBoss:true });
   },
