@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="wlg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f5ecd8"/><stop offset="1" stop-color="#dcc9a0"/>
+    </linearGradient>
+    <radialGradient id="wlwax" cx="0.4" cy="0.35" r="0.75">
+      <stop offset="0" stop-color="#e05a4a"/><stop offset="1" stop-color="#8f2418"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="32" cy="55" rx="18" ry="4.5" fill="#000" opacity="0.15"/>
+  <rect x="10" y="16" width="44" height="32" rx="2.5" fill="url(#wlg)" stroke="#8a7452" stroke-width="2.2"/>
+  <path d="M10 18 L32 34 L54 18" fill="none" stroke="#8a7452" stroke-width="2" stroke-linejoin="round"/>
+  <circle cx="32" cy="34" r="9" fill="url(#wlwax)" stroke="#5c140c" stroke-width="1.5"/>
+  <path d="M28 30 a4 4 0 1 0 8 0 a4 4 0 1 0 -8 0" fill="none" stroke="#fce0c8" stroke-width="1.2" opacity="0.6"/>
+</svg>

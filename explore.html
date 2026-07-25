@@ -306,6 +306,17 @@
   /* ===== 캐릭터별 스킬 이펙트 ===== */
   .b-skillfx{ position:absolute; inset:0; z-index:5; pointer-events:none; overflow:hidden; }
   .b-skillfx > *{ position:absolute; }
+  /* [티어 시각 차별화] 첫 방울→블렌드→시그니처→울림, 숫자(파티클 개수)만이 아니라 밝기·채도·크기로도
+     "세짐"이 즉시 보이게. filter는 host 하나에만 걸어 모든 하위 파티클/링에 일괄 적용된다. */
+  .b-skillfx.sfx-t0{ filter:brightness(1) saturate(1); }
+  .b-skillfx.sfx-t1{ filter:brightness(1.08) saturate(1.08); }
+  .b-skillfx.sfx-t2{ filter:brightness(1.18) saturate(1.22) contrast(1.04); transform:scale(1.08); }
+  .b-skillfx.sfx-t3{ filter:brightness(1.34) saturate(1.4) contrast(1.08); transform:scale(1.16); }
+  /* 최고 티어(울림) 전용 — 화면 전체를 한 번 은은하게 훑는 파동. 다른 티어엔 없음(정점 연출 독점). */
+  .b-skillfx.sfx-t3::after{ content:''; position:absolute; inset:0; background:radial-gradient(circle at 50% 45%, rgba(255,255,255,.22), transparent 70%);
+    animation:sfxT3Pulse .6s ease-out forwards; }
+  @keyframes sfxT3Pulse{ 0%{opacity:0; transform:scale(.6)} 35%{opacity:1} 100%{opacity:0; transform:scale(1.5)} }
+  @media (prefers-reduced-motion: reduce){ .b-skillfx.sfx-t3::after{ animation-duration:.01s } }
   /* [영단어 글리프] 스킬 이펙트에 섞여 위로 떠오르는 옛말(라떼하임=영어가 마법). 티어↑=개수↑ */
   .sfx-word{ left:var(--lx,50%); bottom:36%; transform:translateX(-50%); font-family:'Times New Roman',Georgia,serif;
     font-weight:800; font-size:16px; letter-spacing:1.5px; color:var(--wc,#fff); white-space:nowrap;
@@ -878,19 +889,19 @@ const MATERIALS = {
   fang:     { name:'그림자 송곳니', icon:'🦴', img:'sprites/fang.svg',    rare:true, loot:true },
   ember:    { name:'도깨비 불씨',  icon:'🔥', img:'sprites/ember.svg',   rare:true, loot:true },
   // ---- 잔향 항구 드롭(Lv12–17) ----
-  saltglass:{ name:'소금 유리',    icon:'🔷', rare:true, loot:true },   // 해무해파리
-  waxletter:{ name:'밀랍 편지',    icon:'✉️', rare:true, loot:true },   // 부두갈매기 도둑떼
-  sealtag:  { name:'봉인 표찰',    icon:'🏷️', rare:true, loot:true },   // 봉랍 인부
-  frostsalt:{ name:'서리 소금',    icon:'❄️', rare:true, loot:true },   // 서리망령
+  saltglass:{ name:'소금 유리',    icon:'🔷', img:'sprites/saltglass.svg', rare:true, loot:true },   // 해무해파리
+  waxletter:{ name:'밀랍 편지',    icon:'✉️', img:'sprites/waxletter.svg', rare:true, loot:true },   // 부두갈매기 도둑떼
+  sealtag:  { name:'봉인 표찰',    icon:'🏷️', img:'sprites/sealtag.svg',   rare:true, loot:true },   // 봉랍 인부
+  frostsalt:{ name:'서리 소금',    icon:'❄️', img:'sprites/frostsalt.svg', rare:true, loot:true },   // 서리망령
   // ---- 봉인고 드롭(Lv18–24, 최종) ----
-  sealshard:{ name:'봉인 파편',    icon:'🔮', rare:true, loot:true },   // 봉인된 말의 잔영
-  pricechain:{ name:'값의 사슬',   icon:'⛓️', rare:true, loot:true },   // 값의 사냥개
-  silentbell:{ name:'침묵의 유리종', icon:'🔔', rare:true, loot:true }, // 침묵의 문지기
+  sealshard:{ name:'봉인 파편',    icon:'🔮', img:'sprites/sealshard.svg',  rare:true, loot:true },   // 봉인된 말의 잔영
+  pricechain:{ name:'값의 사슬',   icon:'⛓️', img:'sprites/pricechain.svg', rare:true, loot:true },   // 값의 사냥개
+  silentbell:{ name:'침묵의 유리종', icon:'🔔', img:'sprites/silentbell.svg', rare:true, loot:true }, // 침묵의 문지기
   // ---- 달(포스트게임) 드롭 ----
-  moondust: { name:'달가루',      icon:'🌙', rare:true, loot:true },
-  namelight:{ name:'이름의 불빛',  icon:'🕯️', rare:true, loot:true },
+  moondust: { name:'달가루',      icon:'🌙', img:'sprites/moondust.svg',  rare:true, loot:true },
+  namelight:{ name:'이름의 불빛',  icon:'🕯️', img:'sprites/namelight.svg', rare:true, loot:true },
   // ---- 루나의 어둠(비밀 초월보스) 전용 트로피 — 제작 용도 없음, 격파 증표 ----
-  lunamemory:{ name:'루나의 기억 조각', icon:'🌑', rare:true, loot:true },
+  lunamemory:{ name:'루나의 기억 조각', icon:'🌑', img:'sprites/lunamemory.svg', rare:true, loot:true },
 };
 // 채집 노드로 등장하는 재료(황금 원두는 제외 — 전투 보상으로만 획득)
 const GATHER_MATS = Object.keys(MATERIALS).filter(k => !MATERIALS[k].rare);
@@ -980,7 +991,7 @@ const EQUIP_DB = {
     { id:'a_bean',    name:'원두 갑옷',     icon:'🧥', def:6,  hp:20, cost:{gold:600, bean:8, berry:8} },
     { id:'a_tusk',    name:'어금니 흉갑',   icon:'🛡️', def:10, hp:32, cost:{gold:900, tusk:3, berry:10} },
     { id:'a_feather', name:'깃털 로브',     icon:'🧥', def:13, hp:48, cost:{gold:1400, feather:5, milk:6} },
-    { id:'a_salt',    name:'소금유리 갑옷', icon:'🛡️', def:15, hp:56, cost:{gold:1700, saltglass:5, waxletter:3} },
+    { id:'a_salt',    name:'소금유리 갑옷', icon:'🛡️', def:15, hp:56, cost:{gold:1700, saltglass:5, waxletter:3, sealtag:2} },
     { id:'a_gel',     name:'젤 슈트',       icon:'🥋', def:17, hp:66, cost:{gold:2000, gel:6, core:2} },
     { id:'a_core',    name:'코어 플레이트', icon:'🦺', def:22, hp:90, cost:{gold:3000, core:4, fang:3, goldbean:1} },
     { id:'a_chain',   name:'풀린 사슬 갑주', icon:'⛓️', def:29, hp:120, cost:{gold:4200, pricechain:5, sealshard:3, goldbean:2} },
