@@ -217,11 +217,8 @@
   .b-arena.zone-vault{ background:#1c1a26 url('scenes/vault.png') center/cover no-repeat; }
   .b-arena.zone-vault .b-fog{ display:block; background:radial-gradient(ellipse 78% 100% at 50% 124%, rgba(176,150,224,.20), transparent 72%); }
   .b-arena.zone-vault .b-vignette{ background:radial-gradient(ellipse 80% 72% at 50% 46%, transparent 48%, rgba(10,6,20,.52) 100%); }
-  /* 달(포스트게임) — 가장 오래 잊힌 말들이 잠든 은빛 지평. 전용 배경 아트 전 CSS로 */
-  .b-arena.zone-moon{ background:linear-gradient(180deg,#0d1030 0%,#191d47 30%,#2b3160 58%,#4a4f7d 82%,#6f7099 100%); }
-  .b-arena.zone-moon::before{ content:''; position:absolute; inset:0; pointer-events:none; z-index:1;
-    background:radial-gradient(circle 92px at 78% 15%, rgba(255,252,235,.92), rgba(255,250,225,.35) 58%, transparent 70%),
-               radial-gradient(ellipse 120% 46% at 50% 104%, rgba(226,222,255,.22), transparent 68%); }
+  /* [에셋] 달(포스트게임) — 가장 오래 잊힌 말들이 잠든 은빛 지평(큰 달·부서진 기둥·흩날리는 달가루) */
+  .b-arena.zone-moon{ background:#171a35 url('scenes/moon.png') center/cover no-repeat; }
   .b-arena.zone-moon .b-fog{ display:block; background:radial-gradient(ellipse 86% 100% at 50% 126%, rgba(226,224,255,.26), transparent 72%); }
   .b-arena.zone-moon .b-vignette{ background:radial-gradient(ellipse 84% 76% at 50% 46%, transparent 54%, rgba(6,8,26,.46) 100%); }
   /* 스프라이트는 안개·비네트 위(선명하게 도드라지게) */
@@ -2068,12 +2065,12 @@ const MONSTERS = {
   pricehound: { id:'pricehound', name:'값의 사냥개',  emoji:'🐕‍🦺', art:'monsters/pricehound.png', lv:21, hp:100, atk:16, def:9,  exp:145, gold:96, drops:[{mat:'pricechain',chance:0.55},{mat:'fang',chance:0.35}] },
   silentward: { id:'silentward', name:'침묵의 문지기', emoji:'🗿', art:'monsters/silentward.png', lv:22, hp:150, atk:15, def:14, exp:170, gold:110, drops:[{mat:'silentbell',chance:0.55},{mat:'core',chance:0.35}] },
   // ---- 달(포스트게임, Lv25–30) — 가장 오래 잊힌 말들이 잠든 곳. 적이 아니라 '놓아주는' 존재들 ----
-  moondust:   { id:'moondust',   name:'달가루 나그네', emoji:'🌫️', art:null, lv:26, hp:120, atk:17, def:10, exp:210, gold:130, drops:[{mat:'moondust',chance:0.55},{mat:'sealshard',chance:0.3}] },
-  namewisp:   { id:'namewisp',   name:'이름 없는 불빛', emoji:'🕯️', art:null, lv:27, hp:105, atk:20, def:8,  exp:230, gold:150, drops:[{mat:'namelight',chance:0.55},{mat:'silentbell',chance:0.3}] },
-  centurymoth:{ id:'centurymoth',name:'백 년 나방',   emoji:'🦋', art:null, lv:28, hp:150, atk:18, def:13, exp:260, gold:170, drops:[{mat:'moondust',chance:0.5},{mat:'namelight',chance:0.4}] },
+  moondust:   { id:'moondust',   name:'달가루 나그네', emoji:'🌫️', art:'monsters/moondust.png', lv:26, hp:120, atk:17, def:10, exp:210, gold:130, drops:[{mat:'moondust',chance:0.55},{mat:'sealshard',chance:0.3}] },
+  namewisp:   { id:'namewisp',   name:'이름 없는 불빛', emoji:'🕯️', art:'monsters/namewisp.png', lv:27, hp:105, atk:20, def:8,  exp:230, gold:150, drops:[{mat:'namelight',chance:0.55},{mat:'silentbell',chance:0.3}] },
+  centurymoth:{ id:'centurymoth',name:'백 년 나방',   emoji:'🦋', art:'monsters/centurymoth.png', lv:28, hp:150, atk:18, def:13, exp:260, gold:170, drops:[{mat:'moondust',chance:0.5},{mat:'namelight',chance:0.4}] },
   // 달의 보스: 뜻을 잃고 형체만 남은 태초의 옛말 — 값의 장막보다 두꺼운 '침묵의 장막' 5겹
   // ※장막 5겹은 스킬 5번(게이지 재충전 3턴 주기)이라 ~15턴 지구전이 된다 → 공격력을 낮춰 버틸 여유를 준다
-  eldestword: { id:'eldestword', name:'가장 오래된 말', emoji:'🌙', art:null, lv:31, hp:130, atk:16, def:11, exp:520, gold:420, veil:5, drops:[{mat:'namelight',chance:1,count:2},{mat:'moondust',chance:1,count:2},{mat:'goldbean',chance:0.8}] },
+  eldestword: { id:'eldestword', name:'가장 오래된 말', emoji:'🌙', art:'monsters/eldestword.png', lv:31, hp:130, atk:16, def:11, exp:520, gold:420, veil:5, drops:[{mat:'namelight',chance:1,count:2},{mat:'moondust',chance:1,count:2},{mat:'goldbean',chance:0.8}] },
   // 존 보스: 드미타스가 남긴 수호물(드미타스 본인은 카페 크로스페이지 결전) — '값의 장막' 기믹 보유
   // ※밸런스: 존 배율(diff2.2×보스1.7=3.74)이 곱해지므로 base를 낮게 잡는다. 실측 Lv22+최상위장비 기준
   //   hp411/atk64/def37 → 장막 해제까지 ~9턴·처치 ~12턴, 회복 아이템 쓰면 클리어 가능한 최종보스 난이도.
