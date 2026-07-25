@@ -2096,7 +2096,9 @@ const MONSTERS = {
   //   base를 낮춰 실측 hp220/atk38/def26로 재조정 — 원두숲(hp102/atk20/def14)과 잔향항구
   //   (hp337/atk61/def40) 사이로 들어와 존 순서대로 단조증가하게 함. exp/gold(f는 lv/diff에만
   //   의존)는 안 바뀜.
-  golem:      { id:'golem',      name:'로스팅 골렘', emoji:'🪨', art:'monsters/golem.png', phased:true, lv:12, hp:92, atk:16, def:11, exp:109, gold:90, drops:[{mat:'berry',chance:0.9,count:2},{mat:'core',chance:0.45}] },
+  golem:      { id:'golem',      name:'로스팅 골렘', emoji:'🪨', art:'monsters/golem.png',
+    phased:true, phaseArt:{mist:'monsters/golem_mist.png', core:'monsters/golem.png', rampage:'monsters/golem_rampage.png'},
+    lv:12, hp:92, atk:16, def:11, exp:109, gold:90, drops:[{mat:'berry',chance:0.9,count:2},{mat:'core',chance:0.45}] },
   // ※원두 숲 보스(신규 분리). base.lv=6은 예전 golem 공유정의가 원두숲 대상으로 내던 실측값
   //   (hp101/atk20/def13)을 역산해 그대로 재현 — 기존 난이도 보존, 정체성·기믹만 신규.
   woodr:      { id:'woodr',      name:'묵은 로스팅정령, 우드르', emoji:'🔥', art:'monsters/woodr.png', nonlethal:true, lv:6, hp:60, atk:12, def:8, exp:45, gold:37, drops:[{mat:'berry',chance:0.9,count:2},{mat:'core',chance:1}] },
@@ -2281,7 +2283,7 @@ const Battle = {
     if(m.isBoss) this.gauge=this.GMAX; // [밸런스] 보스전은 필살기 게이지 만충으로 시작 — 첫 턴 버스트 보장(탱키 보스 완충). ※ 플레이테스트로 수치 조정 여지
     World.release();
     const es=document.getElementById('e-sprite'); es.className='sprite-enemy'+(m.isBoss?' boss':'');
-    if(m.art){ es.innerHTML='<img src="'+m.art+'">'; } else { es.classList.add('emoji'); es.textContent=m.emoji; }
+    this.updateEnemySprite();
     { const en=document.getElementById('e-name'); en.innerHTML=(m.isBoss?UI_ICON.skull+' ':'')+m.name; }
     document.getElementById('e-lv').textContent='Lv '+(m.lv||3);
     this.setSelfSprite(); this.setSkillLabel(); this.renderBars(); // 게이지는 전투 간 누적(리셋 안 함)
@@ -2305,6 +2307,12 @@ const Battle = {
     if(battle.classList.contains('intro')){ clearTimeout(this._introT); battle.classList.remove('intro');
       document.getElementById('e-sprite').classList.remove('enter'); this.msg('무엇을 할까?'+compSay((this.enemy&&this.enemy.isBoss)?'boss':'start')); this.setButtons(true); return; }
     if(this._skip){ clearTimeout(this._skipT); const r=this._skip; this._skip=null; r(); } },
+  // [페이즈 아트 교체] 골렘처럼 phaseArt가 있는 몬스터는 안개껍질/코어노출/잔열폭주마다 다른 스프라이트를 보여준다.
+  updateEnemySprite(){ const m=this.enemy; if(!m) return; const es=document.getElementById('e-sprite');
+    es.classList.remove('emoji'); es.innerHTML='';
+    const art=(m.phaseArt && m._phaseName && m.phaseArt[m._phaseName]) || m.art;
+    if(art){ es.innerHTML='<img src="'+art+'">'; } else { es.classList.add('emoji'); es.textContent=m.emoji; }
+  },
   setSelfSprite(){ const ckey=Explore.state.companion||'none'; const comp=COMPANIONS[ckey]; const ps=document.getElementById('p-self'); ps.className='sprite-self';
     let bi=comp&&(comp.battleImg||comp.img);
     // 기본(동료 없음) = 선택한 성별 바리스타 뒷모습
@@ -2536,6 +2544,7 @@ const Battle = {
     else if(ratio>0.3){ e.atk=e._baseAtk; e.def=e._baseDef; name='core'; }                        // 2단계: 코어 노출 — 평시
     else { e.atk=Math.round(e._baseAtk*1.3); e.def=e._baseDef; name='rampage'; }                  // 3단계: 잔열폭주 — 공격 보정
     if(name!==e._phaseName){ e._phaseName=name;
+      if(e.phaseArt) this.updateEnemySprite();   // 페이즈별 스프라이트 교체(골렘 등)
       if(name==='core') return `<br>${e.name}의 안개 껍질이 갈라지며, 달아오른 코어가 드러난다!`;
       if(name==='rampage') return `<br>${UI_ICON.atk} ${e.name}이(가) 잔열을 폭주시킨다! 공격이 거세진다!`;
     }
@@ -2566,8 +2575,11 @@ const Battle = {
       if(z && z.boss===e.id){ World.markBossCleared(zid); Explore.persist(); }
       else if(e.id==='lunashadow'){ World.markBossCleared('lunashadow'); Explore.persist(); } }
     // [보스 관문] 이 보스가 다음 존 관문이었다면, 통과 처리하고 그대로 다음 존까지 이동시킨다.
-    if(this.gateTo){ const dest=this.gateTo; this.gateTo=null; this.close(); World.travelZone(dest); return; }
-    this.close(); },   // 결과 잠깐 보여주고 자동으로 전투 종료(탭하면 즉시)
+    const finish=()=>{ if(this.gateTo){ const dest=this.gateTo; this.gateTo=null; this.close(); World.travelZone(dest); return; } this.close(); };
+    // [보스 격파 CG] 깊은숲 골렘 전용 — 안식을 얻은 골렘의 짧은 컷신(도감에도 자동 기록됨)
+    if(e.id==='golem'){ showExCutsceneCG('assets/art/cg_golem_defeat.jpg', '고맙다, 다시 데워줘서.', finish); }
+    else finish();
+    },   // 결과 잠깐 보여주고 자동으로 전투 종료(탭하면 즉시)
   // [광고] 전투 패배 시 리워드 광고로 그 자리 부활 제안(부활/포기 버튼)
   _askAdRevive(){ return new Promise(resolve=>{
     const cmds=document.querySelector('#battle .b-cmds'); if(!cmds){ resolve(false); return; }
