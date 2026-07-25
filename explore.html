@@ -1149,13 +1149,6 @@ const EVENT_DEFS = [
       { label:'잔을 채워두고 간다', reward:{gold:260,exp:70}, cost:{mat:'bean',count:2},
         result:'빈 잔마다 내가 내린 커피를 조금씩 따라두고 왔다.<br><span class="ko">며칠 뒤 좌판 자리엔, 답례인 듯 동전이 놓여 있었다.</span>' } ] },
   // ── 잔향 항구 ──
-  { id:'wax_letter', zone:'harbor', type:'choice', at:{x:0.26,y:0.36}, icon:'✉', name:'닿지 못한 밀랍편지',
-    text:'봉랍이 찍힌 편지 한 통이 부두에 떨어져 있다.<br>겉면엔 <b>‘품목: 어머니가 부르던 이름 / 매입가: 협의’</b>라고 적혀 있다.',
-    choices:[
-      { label:'읽어본다', reward:{gold:280,exp:80},
-        result:'안쪽은 매입 제안서였다. 서명란엔 큐레이터의 인장이 찍혀 있다.<br><span class="ko">이름조차 값으로 사들이고 있었다.</span>' },
-      { label:'주인을 찾아 돌려준다', reward:{exp:130,item:'cr_heal'},
-        result:'수소문 끝에 편지를 되돌려주었다. 노인은 봉랍을 뜯지도 않고 품에 넣었다.<br><span class="ko">“이 말… 오랜만이네요.” 등불집에서 따뜻한 걸 한 잔 얻었다.</span>' } ] },
   { id:'frost_cellar', zone:'harbor', type:'treasure', at:{x:0.72,y:0.70}, icon:'✦', name:'서리 창고의 언 잔들',
     text:'창고 선반마다 잔들이 서리에 얼어붙어 있다.<br>안에 든 말들이 아직 희미하게 빛난다.',
     choices:[
@@ -1166,13 +1159,6 @@ const EVENT_DEFS = [
       { label:'전부 풀어준다', reward:{exp:200,gold:120},
         result:'선반을 통째로 열어 언 잔들을 골목으로 흘려보냈다.<br><span class="ko">녹은 말들이 항구 사람들에게로 되돌아간다. 울림이 깊어졌다.</span>' } ] },
   // ── 봉인고 ──
-  { id:'price_or_grain', zone:'vault', type:'choice', at:{x:0.50,y:0.30}, icon:'⚖', name:'값이냐, 결이냐',
-    text:'진열장 한 칸이 비어 있고, 그 앞에 저울과 빈 장부가 놓여 있다.<br>장부 첫 줄엔 이렇게 적혀 있다 — <b>‘여기 둘 말의 값을 적으시오.’</b>',
-    choices:[
-      { label:'값 대신 ‘나눔’이라 적는다', reward:{exp:260,mat:'sealshard',matCount:2},
-        result:'장부에 값 대신 한 단어를 적었다. 저울이 균형을 잃고 기울더니, 진열장 한 칸이 스스로 열렸다.<br><span class="ko">갇혀 있던 말들이 조금 숨을 쉬었다.</span>' },
-      { label:'가장 높은 값을 적는다', reward:{gold:900,exp:80},
-        result:'터무니없이 높은 값을 적자, 저울이 만족스럽게 내려앉으며 금화를 게워냈다.<br><span class="ko">…진열장은 더 굳게 닫혔다.</span>' } ] },
   { id:'last_bargain', zone:'vault', type:'trial', at:{x:0.28,y:0.64}, icon:'❖', name:'마지막 흥정',
     text:'봉인된 잔 하나가 유독 밝게 떨린다. 안에서 누군가 같은 말을 되풀이하고 있다.<br>정확히 되짚어주면 풀려날 것 같다.<br><span class="ko">(옛말 4문제 · 실패해도 잃는 건 없다)</span>',
     total:4, pass:3, reward:{gold:700,exp:280,mat:'silentbell',matCount:2},
