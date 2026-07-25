@@ -213,11 +213,8 @@
                radial-gradient(ellipse 60% 30% at 22% 78%, rgba(210,220,232,.14), transparent 70%); }
   .b-arena.zone-harbor .b-fog{ display:block; background:radial-gradient(ellipse 82% 100% at 50% 122%, rgba(202,216,230,.24), transparent 74%); }
   .b-arena.zone-harbor .b-vignette{ background:radial-gradient(ellipse 82% 74% at 50% 46%, transparent 52%, rgba(18,26,40,.40) 100%); }
-  /* 봉인고(최종) — 갇힌 말들이 잠든 검은 큐레이터의 진열장. 전용 배경 아트 전, 자수정빛 금고 홀을 CSS로 */
-  .b-arena.zone-vault{ background:linear-gradient(180deg,#191026 0%,#241733 34%,#2e1f3f 62%,#3a2b47 100%); }
-  .b-arena.zone-vault::before{ content:''; position:absolute; inset:0; pointer-events:none; z-index:1;
-    background:radial-gradient(ellipse 70% 44% at 50% 8%, rgba(190,160,255,.20), transparent 70%),
-               repeating-linear-gradient(90deg, rgba(150,120,200,.10) 0 2px, transparent 2px 96px); }
+  /* [에셋] 봉인고(최종) — 갇힌 말들이 잠든 검은 큐레이터의 진열장(bg_vault_interior 재사용, 워터마크 제거) */
+  .b-arena.zone-vault{ background:#1c1a26 url('scenes/vault.png') center/cover no-repeat; }
   .b-arena.zone-vault .b-fog{ display:block; background:radial-gradient(ellipse 78% 100% at 50% 124%, rgba(176,150,224,.20), transparent 72%); }
   .b-arena.zone-vault .b-vignette{ background:radial-gradient(ellipse 80% 72% at 50% 46%, transparent 48%, rgba(10,6,20,.52) 100%); }
   /* 스프라이트는 안개·비네트 위(선명하게 도드라지게) */
@@ -1904,13 +1901,13 @@ const MONSTERS = {
   saffran:    { id:'saffran',    name:'회색 경매인, 사프란', emoji:'🎩', art:'monsters/saffran.png', lv:18, hp:110, atk:20, def:13, exp:210, gold:160, drops:[{mat:'saltglass',chance:1,count:2},{mat:'frostsalt',chance:0.8},{mat:'sealtag',chance:0.8}] },
   // ---- 봉인고(Lv18–24, 최종) — 전용 아트 전 이모지 폴백 ----
   // ※base lv를 존 중앙(21)에 맞춰 밴드 편차를 줄이고, diff 2.2가 곱해지는 걸 감안해 base atk/def를 낮게 잡는다
-  sealedecho: { id:'sealedecho', name:'봉인된 말의 잔영', emoji:'🫥', art:null, lv:21, hp:90,  atk:14, def:8,  exp:130, gold:78, drops:[{mat:'sealshard',chance:0.55},{mat:'sealtag',chance:0.3}] },
-  pricehound: { id:'pricehound', name:'값의 사냥개',  emoji:'🐕‍🦺', art:null, lv:21, hp:100, atk:16, def:9,  exp:145, gold:96, drops:[{mat:'pricechain',chance:0.55},{mat:'fang',chance:0.35}] },
-  silentward: { id:'silentward', name:'침묵의 문지기', emoji:'🗿', art:null, lv:22, hp:150, atk:15, def:14, exp:170, gold:110, drops:[{mat:'silentbell',chance:0.55},{mat:'core',chance:0.35}] },
+  sealedecho: { id:'sealedecho', name:'봉인된 말의 잔영', emoji:'🫥', art:'monsters/sealedecho.png', lv:21, hp:90,  atk:14, def:8,  exp:130, gold:78, drops:[{mat:'sealshard',chance:0.55},{mat:'sealtag',chance:0.3}] },
+  pricehound: { id:'pricehound', name:'값의 사냥개',  emoji:'🐕‍🦺', art:'monsters/pricehound.png', lv:21, hp:100, atk:16, def:9,  exp:145, gold:96, drops:[{mat:'pricechain',chance:0.55},{mat:'fang',chance:0.35}] },
+  silentward: { id:'silentward', name:'침묵의 문지기', emoji:'🗿', art:'monsters/silentward.png', lv:22, hp:150, atk:15, def:14, exp:170, gold:110, drops:[{mat:'silentbell',chance:0.55},{mat:'core',chance:0.35}] },
   // 존 보스: 드미타스가 남긴 수호물(드미타스 본인은 카페 크로스페이지 결전) — '값의 장막' 기믹 보유
   // ※밸런스: 존 배율(diff2.2×보스1.7=3.74)이 곱해지므로 base를 낮게 잡는다. 실측 Lv22+최상위장비 기준
   //   hp411/atk64/def37 → 장막 해제까지 ~9턴·처치 ~12턴, 회복 아이템 쓰면 클리어 가능한 최종보스 난이도.
-  curatorward:{ id:'curatorward',name:'큐레이터의 수호물', emoji:'⚖️', art:null, lv:25, hp:110, atk:17, def:10, exp:340, gold:260, veil:3, drops:[{mat:'sealshard',chance:1,count:2},{mat:'silentbell',chance:0.9},{mat:'pricechain',chance:0.9},{mat:'goldbean',chance:0.5}] },
+  curatorward:{ id:'curatorward',name:'큐레이터의 수호물', emoji:'⚖️', art:'monsters/curatorward.png', lv:25, hp:110, atk:17, def:10, exp:340, gold:260, veil:3, drops:[{mat:'sealshard',chance:1,count:2},{mat:'silentbell',chance:0.9},{mat:'pricechain',chance:0.9},{mat:'goldbean',chance:0.5}] },
 };
 // 존(지역) 레지스트리 — 이름/해제레벨/난이도/틴트/몬스터풀/보스/이웃
 const ZONES = {
