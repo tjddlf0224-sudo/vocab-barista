@@ -3382,8 +3382,6 @@ const game = {
                 if(greet){ const _gf = (mainNameKnown(charObj.id) && this.affTier(charObj.id)==='high') ? faceFor(charObj.id,'smile') : ''; this.showDialogue(charObj.id, greet, { duration: 99999, face:_gf, onDismiss: () => { this.startTimer(); } }); }
                 else { this.startTimer(); }
             };
-            const cross = this.getDueCrossScene(charObj.id);
-            if(cross){ this.playCrossScene(cross, doGreet); return; }
             if(greet){ doGreet(); return; }
         }
         this.startTimer();
@@ -3736,6 +3734,16 @@ const game = {
                     if(el) el.classList.add('leaving');
                     this.playMoonOpenScene();
                     return;
+                }
+                // [교차 이벤트] 메인 캐릭터 단어를 맞춘 직후에 다른 메인과의 교차 씬을 띄운다
+                //   (예전엔 손님 등장 즉시 떴는데, 입장부터 대화가 겹쳐 정신없다는 피드백으로 정답 이후로 이동)
+                if(cust && cust.char && cust.char.kind === 'main') {
+                    const cross = this.getDueCrossScene(cust.char.id);
+                    if(cross){
+                        if(el) el.classList.add('leaving');
+                        this.playCrossScene(cross, () => this.scheduleNextTurn(420));
+                        return;
+                    }
                 }
                 // 이미 아는 메인 캐릭터 재방문 — 작별 대사를 대화창으로 표시
                 if(cust && cust.char && cust.char.kind === 'main') {
