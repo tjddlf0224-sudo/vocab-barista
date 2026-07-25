@@ -21,16 +21,23 @@
   .topbar > *{ pointer-events:auto; }
   .back-btn{ background:linear-gradient(180deg,#8d6e63,#5d4037); color:#fff8e1; border:none;
     border-radius:11px; padding:7px 12px; font-family:inherit; font-size:.9rem; box-shadow:0 3px 0 rgba(0,0,0,.4);
-    display:inline-flex; align-items:center; gap:6px; }
+    display:inline-flex; align-items:center; gap:6px; white-space:nowrap; flex:none; }
   .back-btn svg{ width:16px; height:16px; display:block; flex:none; }
   .back-btn:active{ transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.4); }
   .hud-stats{ display:flex; gap:6px; margin-left:auto; font-size:.85rem; flex-wrap:wrap; justify-content:flex-end; }
   .hud-stats .chip{ background:rgba(0,0,0,.42); padding:4px 9px; border-radius:20px; white-space:nowrap; }
   .zone-name{ background:rgba(0,0,0,.42); padding:4px 10px; border-radius:20px; font-size:.82rem; color:var(--gold); }
   /* ===== 미니맵 ===== */
-  #minimap-wrap{ position:absolute; top:54px; right:12px; z-index:4; text-align:center; cursor:pointer; }
-  #minimap{ width:120px; height:85px; image-rendering:pixelated; image-rendering:crisp-edges; border:2px solid rgba(255,255,255,.55); border-radius:8px; background:#10121a; box-shadow:0 3px 8px rgba(0,0,0,.45); display:block; }
-  .mm-badge{ margin-top:3px; font-size:.66rem; color:#fff; background:rgba(0,0,0,.55); border-radius:8px; padding:1px 8px; display:inline-block; font-family:'Jua',sans-serif; }
+  #minimap-wrap{ position:absolute; top:54px; right:12px; z-index:4; text-align:center; cursor:pointer; padding:5px; border-radius:14px;
+    background:rgba(16,14,22,.38); backdrop-filter:blur(2px); -webkit-backdrop-filter:blur(2px);
+    box-shadow:0 4px 12px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.08); transition:background .2s; }
+  #minimap-wrap:active{ background:rgba(16,14,22,.55); }
+  #minimap-inner{ position:relative; width:120px; height:85px; border-radius:10px; overflow:hidden;
+    box-shadow:0 0 0 2px rgba(20,16,10,.65), 0 0 0 3.5px rgba(255,207,77,.65), 0 3px 10px rgba(0,0,0,.5); }
+  #minimap{ width:120px; height:85px; image-rendering:pixelated; image-rendering:crisp-edges; display:block; background:#10121a; opacity:.86; }
+  #minimap-inner::after{ content:''; position:absolute; inset:0; pointer-events:none; border-radius:10px;
+    background:radial-gradient(ellipse at center, transparent 42%, rgba(6,4,10,.55) 100%); }
+  .mm-badge{ margin-top:4px; font-size:.66rem; color:#fff; background:rgba(0,0,0,.55); border-radius:8px; padding:1px 8px; display:inline-block; font-family:'Jua',sans-serif; }
   .mm-badge.done{ background:#e0761f; }
   /* ===== 전체 지도 뷰 ===== */
   .mv-box{ background:linear-gradient(180deg,#fffdf7,#fff2d8); border:3px solid #caa26a; border-radius:20px; padding:16px; text-align:center; font-family:'Jua','Nunito',sans-serif; box-shadow:0 12px 30px rgba(0,0,0,.4); max-width:92vw; }
@@ -270,7 +277,7 @@
   .dmg-pop{ position:absolute; font-size:1.8rem; font-weight:bold; color:#fff; pointer-events:none; text-shadow:0 2px 3px #000; animation:dpop 1s forwards; z-index:6; }
   .dmg-pop.crit{ color:#ffd54f; font-size:2.3rem; } .dmg-pop.miss{ color:#eee; }
   @keyframes dpop{ 0%{ transform:translateY(0) scale(.6); opacity:0 } 20%{ transform:translateY(-10px) scale(1.15); opacity:1 } 100%{ transform:translateY(-54px) scale(1); opacity:0 } }
-  .b-bottom{ background:linear-gradient(180deg,#3a2620,#2b1a16); border-top:3px solid var(--gold); padding:10px 14px calc(10px + env(safe-area-inset-bottom)); }
+  .b-bottom{ background:linear-gradient(180deg,#3a2620,#2b1a16); border-top:3px solid var(--gold); padding:10px calc(14px + env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left)); }
   .b-msg{ min-height:2.1em; color:#fff8e1; font-size:1.02rem; line-height:1.35; margin-bottom:9px; padding:1px 3px; }
   .b-cmds{ display:grid; grid-template-columns:1fr 1.3fr 0.85fr 0.85fr; gap:8px; transition:opacity .3s; }
   .cmd-item{ background:linear-gradient(180deg,#a5d6a7,#66bb6a); box-shadow:0 4px 0 #2e7d32; color:#173b1a; }
@@ -425,13 +432,13 @@
       <div class="chip">Lv <span id="hud-level">1</span></div>
       <div class="chip"><svg class="uic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 20.5S3.6 15 3.6 9.3A4.6 4.6 0 0 1 12 6.6a4.6 4.6 0 0 1 8.4 2.7c0 5.7-8.4 11.2-8.4 11.2z" fill="#ff6b7a" stroke="#c62839" stroke-width="1.2" stroke-linejoin="round"/></svg> <span id="hud-hp">0</span></div>
       <div class="chip" id="hud-mats"><svg class="uic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 8h12l1 12.5H5z" fill="#c98a4a" stroke="#7a5020" stroke-width="1.3" stroke-linejoin="round"/><path d="M8.5 9V6.8a3.5 3.5 0 0 1 7 0V9" fill="none" stroke="#7a5020" stroke-width="1.6"/><rect x="4.5" y="7.5" width="15" height="3" rx="1.4" fill="#e0a86a" stroke="#7a5020" stroke-width="1.1"/></svg> <span id="hud-mats-n">0</span></div>
-      <div class="chip" id="hud-vocab" title="울림 지수 — 정확한 옛말을 되살릴수록 커피의 울림이 깊어져 전투력이 오른다"><svg class="uic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5 8.5h11V13a4.5 4.5 0 0 1-4.5 4.5h-2A4.5 4.5 0 0 1 5 13z" fill="#ffcf4d" stroke="#b8860b" stroke-width="1.2"/><path d="M16 10h1.6a2.2 2.2 0 0 1 0 4.4H16" fill="none" stroke="#b8860b" stroke-width="1.3"/><path d="M8 5.4c0 .9-1 1.1-1 2M11 4.8c0 1-1 1.2-1 2.2" fill="none" stroke="#e0a83a" stroke-width="1.2" stroke-linecap="round"/></svg> 울림 <span id="hud-vocab-n">+0%</span></div>
+      <div class="chip" id="hud-vocab" title="울림 지수 — 정확한 옛말을 되살릴수록 커피의 울림이 깊어져 전투력이 오른다" style="cursor:pointer" onclick="World.explainVocabPower()"><svg class="uic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5 8.5h11V13a4.5 4.5 0 0 1-4.5 4.5h-2A4.5 4.5 0 0 1 5 13z" fill="#ffcf4d" stroke="#b8860b" stroke-width="1.2"/><path d="M16 10h1.6a2.2 2.2 0 0 1 0 4.4H16" fill="none" stroke="#b8860b" stroke-width="1.3"/><path d="M8 5.4c0 .9-1 1.1-1 2M11 4.8c0 1-1 1.2-1 2.2" fill="none" stroke="#e0a83a" stroke-width="1.2" stroke-linecap="round"/></svg> 울림 <span id="hud-vocab-n">+0%</span></div>
     </div>
   </div>
 
   <div id="toast"></div>
 
-  <div id="minimap-wrap" title="탭하면 전체 지도" onclick="World.openMap()"><canvas id="minimap"></canvas><div id="mm-badge" class="mm-badge">0%</div></div>
+  <div id="minimap-wrap" title="탭하면 전체 지도" onclick="World.openMap()"><div id="minimap-inner"><canvas id="minimap"></canvas></div><div id="mm-badge" class="mm-badge">0%</div></div>
 
   <div id="stick-zone">
     <div id="stick-base"></div>
@@ -960,8 +967,6 @@ const ZONE_THEME = {
 function zoneTheme(){ return ZONE_THEME[(Explore.state&&Explore.state.map&&Explore.state.map.zone)||'forest'] || ZONE_THEME.forest; }
 // 채집 노드는 SVG 아이콘 사용(사용자 선호) — 페인티드 노드 아트 미사용
 const NODE_ART = {};
-// [체리 다람쥐] 비전투 상호작용 크리터 — monsters/ 폴더 공용 에셋 재사용
-const CRITTER_IMG = new Image(); CRITTER_IMG.src = 'monsters/squirrel.png';
 const LUNASHADOW_IMG = new Image(); LUNASHADOW_IMG.src = 'monsters/lunashadow.png';   // 달의 뒷면에 서 있는 모습(걷기맵용)
 // 잔디 반복용 사전 축소 캔버스(반복 크기 GR마다 1회 생성)
 let _grassCv=null;
@@ -1128,20 +1133,6 @@ const DARK_MERCHANT = { name:'어둠의 상인', img:'chars/npc_merchant.png',
 //   choices[].reward 는 Explore.grantReward 스키마({gold,exp,item,mat,matCount}) 그대로.
 const EVENT_DEFS = [
   // ── 원두 숲 ──
-  { id:'shiny_tree', zone:'forest', type:'treasure', at:{x:0.22,y:0.66}, icon:'✦', name:'반짝이는 빈 나무',
-    text:'가지 끝에 황금빛 원두 한 알이 매달려 반짝인다.<br>나무 밑동엔 <b>‘값’</b>이라는 한 글자만 적힌 빈 지갑이 떨어져 있다.',
-    choices:[
-      { label:'원두를 딴다', reward:{mat:'goldbean',matCount:1,exp:24},
-        result:'황금 원두를 조심스레 땄다.<br><span class="ko">지갑 옆으로, 깊은 숲 쪽으로 향한 발자국이 하나 나 있다.</span>' },
-      { label:'지갑을 조사한다', reward:{gold:140,exp:36},
-        result:'지갑 안엔 동전 대신 잘게 찢긴 종잇조각뿐이었다. 조각마다 옛말이 한 글자씩 적혀 있다.<br><span class="ko">누군가 말을 사 모으고 있다. 발자국은 깊은 숲으로 이어진다.</span>' } ] },
-  { id:'flora_cup', zone:'forest', type:'choice', at:{x:0.74,y:0.52}, icon:'❦', name:'식어가는 잔',
-    text:'길가 그루터기에 누군가 놓고 간 커피 한 잔이 식어가고 있다.<br>잔에는 <span class="en">warmth</span> 라고 적힌 쪽지가 감겨 있다.',
-    choices:[
-      { label:'데워서 그 자리에 둔다', reward:{exp:40,gold:60},
-        result:'잔을 데워 다시 그루터기에 올려두었다.<br><span class="ko">돌아서는 등 뒤로, 잔에서 김이 다시 피어올랐다.</span>' },
-      { label:'가져간다', reward:{mat:'bean',matCount:3,gold:120},
-        result:'잔을 챙겨 원두 몇 알을 얻었다.<br><span class="ko">…그루터기 위가 조금 허전해 보인다.</span>' } ] },
   // ── 깊은 숲 ──
   { id:'fog_name', zone:'deepwood', type:'trial', at:{x:0.30,y:0.30}, icon:'❖', name:'안개가 삼킨 이름',
     text:'안개 속에서 누군가 이름을 부르다 만 소리가 맴돈다.<br>잔의 김을 불어넣으면 삼켜진 말을 되찾을 수 있을 것 같다.<br><span class="ko">(옛말 3문제 · 실패해도 잃는 건 없다)</span>',
@@ -1331,7 +1322,7 @@ const World = {
     const clearAround=(x,y,r)=>{ for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){ const xx=x+dx,yy=y+dy;
       if(xx<1||xx>=this.WT-1||yy<2||yy>=this.HT-1)continue; this.barrier.delete(key(xx,yy)); this.trees=this.trees.filter(t=>!(t.x===xx&&t.y===yy)); }
       this.nodes=this.nodes.filter(n=>!(Math.abs(n.x-x)<=r&&Math.abs(n.y-y)<=r)); };
-    this.secret=null; this.forge=null; this.critter=null; this.arenaBoss=null; this.gateBack=null;
+    this.secret=null; this.forge=null; this.arenaBoss=null; this.gateBack=null;
     if(Explore.state.map.zone==='forest'){
       const spots=[ {x:Math.floor(this.WT*0.26), y:Math.floor(this.HT*0.34)},
                     {x:Math.floor(this.WT*0.72), y:Math.floor(this.HT*0.30)},
@@ -1348,10 +1339,6 @@ const World = {
         this.nodes=this.nodes.filter(n=>!(n.x===xx&&n.y===yy));
       }
       this.barrier.add(key(fx,fy)); this.forge={ x:fx, y:fy };
-      // ----- 체리 다람쥐(비전투 상호작용) — 원두 숲에만, 채집 노드처럼 재생(스텝 경과 후 재등장) -----
-      const crx=Math.floor(this.WT*0.64), cry=Math.floor(this.HT*0.20);
-      clearAround(crx,cry,1);
-      this.critter={ x:crx, y:cry, taken:false, reSteps:-1 };
     }
     if(Explore.state.map.zone==='deepwood'){
       // ----- 숨겨진 어둠의 상인(좌상단 비밀 공간, 진입로만 살짝 트여있음) — 깊은 숲에만 -----
@@ -1392,7 +1379,7 @@ const World = {
   generateArena(zone){
     this._seed = 77713; this._orangeRatio = 0;
     this.barrier=new Set(); this.trees=[]; this.nodes=[]; this.base=[]; this.deco=[];
-    this.npcs=[]; this.events=[]; this.portals=[]; this.secret=null; this.forge=null; this.critter=null; this.rift=null;
+    this.npcs=[]; this.events=[]; this.portals=[]; this.secret=null; this.forge=null; this.rift=null;
     for(let y=0;y<this.HT;y++){ this.base[y]=[]; this.deco[y]=[];
       for(let x=0;x<this.WT;x++){ const r=this.rnd(); this.base[y][x]= r<0.86?0:(r<0.94?1:2); this.deco[y][x]=-1; } }
     const key=(x,y)=>x+','+y;
@@ -1479,8 +1466,6 @@ const World = {
     // 2.6) 경로 이벤트(보물/선택/시련/흥정)
     { const ev=(this.events||[]).find(e=>Math.abs(e.x-ptx)+Math.abs(e.y-pty)<=1);
       if(ev){ if(typeof GameEvent!=='undefined') GameEvent.open(ev.def); return; } }
-    // 2.7) 체리 다람쥐(비전투 상호작용) — 원두 숲 한정
-    if(this.critter && !this.critter.taken && Math.abs(this.critter.x-ptx)+Math.abs(this.critter.y-pty)<=1){ this.meetSquirrel(); return; }
     // 3) 채집
     let best=null,bd=99;
     for(const n of this.nodes){ if(n.taken)continue; const d=Math.abs(n.x-ptx)+Math.abs(n.y-pty);
@@ -1497,23 +1482,20 @@ const World = {
     const w=this.pickWord();
     this.toast(`<img class="mi" src="${mat.img}" alt=""> <b>${mat.name}</b> +1<br><span class="en">${w.w}</span> · <span class="ko">${w.m}</span>`+compSay('gather',0.4));
   },
-  // [체리 다람쥐] 비전투 상호작용 — 채집 노드처럼 재생, 전투 없이 재료+소량 골드
-  meetSquirrel(){
-    const c=this.critter; c.taken=true; c.reSteps=(Explore.state.steps||0)+50;
-    Explore.state.materials.berry=(Explore.state.materials.berry||0)+1;
-    Explore.cafe.wallet=(Explore.cafe.wallet||0)+15; Explore.persist();
-    Sfx.play('gather'); exHaptic('light');
-    Explore.refreshHUD(); this.updateActionBtn();
-    this.toast(`🐿️ <b>체리 다람쥐</b>가 커피 체리를 나눠줬어요!<br><img class="mi" src="${MATERIALS.berry.img}" alt=""> +1 · <img src="sprites/coin.svg" style="width:14px;height:14px;vertical-align:-2px;"> +15`);
-  },
   pickWord(){
     const due=(Explore.cafe.myWords||[]).filter(v=>(v.due||0)<=(Explore.cafe.turnCount||0));
     if(due.length) return due[Math.floor(this.rnd()*due.length)]; // 매번 첫 단어만 나오던 문제 수정
     const pool=window.wordData?[].concat(wordData.easy,wordData.normal,wordData.hard):[];
     return pool.length?pool[Math.floor(this.rnd()*pool.length)]:{w:'coffee',m:'커피'};
   },
-  toast(html){ const el=document.getElementById('toast'); el.innerHTML=html; el.classList.add('show');
-    clearTimeout(this._tt); this._tt=setTimeout(()=>el.classList.remove('show'),1600); },
+  toast(html, ms){ const el=document.getElementById('toast'); el.innerHTML=html; el.classList.add('show');
+    clearTimeout(this._tt); this._tt=setTimeout(()=>el.classList.remove('show'), ms||1600); },
+  // [HUD 설명] 울림/크리/방어/가속 — 모바일은 title 툴팁이 안 보이므로 탭하면 풀이를 띄운다
+  explainVocabPower(){
+    const chip=document.getElementById('hud-vocab');
+    const txt=(chip&&chip.title) || '울림 지수 — 정확한 옛말을 되살릴수록 커피의 울림이 깊어져 전투력이 오른다';
+    this.toast(`<b>울림 지수란?</b><br><span class="ko">${txt}</span>`, 4200);
+  },
 
   // ----- 이동/업데이트 -----
   // 오버레이(스탯/조합/스펠/동행/전투)가 떠 있으면 이동·인카운터 정지
@@ -1652,8 +1634,6 @@ const World = {
     if(this._accum>=1){ this._accum=0; Explore.state.steps=(Explore.state.steps||0)+1;
       // 채집 노드 재생
       for(const n of this.nodes){ if(n.taken && Explore.state.steps>=n.reSteps){ n.taken=false; } }
-      // 체리 다람쥐 재등장
-      if(this.critter && this.critter.taken && Explore.state.steps>=this.critter.reSteps){ this.critter.taken=false; }
       // 랜덤 인카운터 (전투 다음 Stage서 구도 재설계)
       if(window.Battle) Battle.maybeEncounter();
     }
@@ -1675,8 +1655,7 @@ const World = {
     const evNear = !battle && (this.events||[]).some(e=>Math.abs(e.x-ptx)+Math.abs(e.y-pty)<=1);
     const shadow = !battle && this.arenaBoss && Math.abs(this.arenaBoss.x-ptx)+Math.abs(this.arenaBoss.y-pty)<=1;
     const talk = !!(npc||secret||forge||evNear||shadow);
-    const critter = !battle && this.critter && !this.critter.taken && Math.abs(this.critter.x-ptx)+Math.abs(this.critter.y-pty)<=1;
-    const near = !battle && !talk && (critter || this.nodes.some(n=>!n.taken && (Math.abs(n.x-ptx)+Math.abs(n.y-pty))<=1));
+    const near = !battle && !talk && this.nodes.some(n=>!n.taken && (Math.abs(n.x-ptx)+Math.abs(n.y-pty))<=1);
     b.classList.toggle('ready', near); b.classList.toggle('talk', talk);
     const tx=b.querySelector('.ab-tx'); if(tx) tx.textContent = forge ? '대장간' : evNear ? '살펴본다' : talk ? '대화' : '채집'; },
   release(){ this.stick.active=false; this.stick.dx=0; this.stick.dy=0; this.keys={}; },
@@ -1738,7 +1717,6 @@ const World = {
     for(const n of (this.nodes||[])) if(!n.taken){ blk(n.x,n.y,'#403008',1,true); dot(n.x,n.y,'#ffe066'); }
     // 어둠의 상인은 미니맵에 표시하지 않음(진짜 숨겨진 이벤트) — 직접 발견해야 함
     if(this.forge && seen(this.forge.x,this.forge.y)){ blk(this.forge.x,this.forge.y,'#3a2410',3); blk(this.forge.x,this.forge.y,'#ffb03a',2); } // 대장간은 유용한 랜드마크라 표시
-    if(this.critter && !this.critter.taken && seen(this.critter.x,this.critter.y)){ blk(this.critter.x,this.critter.y,'#4a2e10',1,true); dot(this.critter.x,this.critter.y,'#ffb85e'); } // 체리 다람쥐 — 재료 노드급 소소한 마커
     for(const ev of (this.events||[])){ if(!seen(ev.x,ev.y))continue; blk(ev.x,ev.y,'#4a3a08',2); blk(ev.x,ev.y,'#ffe066',1); } // 경로 이벤트 — 발견 시 표시
     // 퀘스트 NPC — 발견 시 크고 선명하게(어두운 테두리+빨강 코어)
     for(const np of (this.npcs||[])){ if(!seen(np.x,np.y))continue; blk(np.x,np.y,'#20060a',3); blk(np.x,np.y,'#ff4d4d',2); }
@@ -1768,7 +1746,6 @@ const World = {
     for(const np of (this.npcs||[])) mark(np.x,np.y,'#ff6b6b',true);
     // 어둠의 상인은 전체지도에도 표시 안 함(숨겨진 이벤트). 대장간은 랜드마크라 표시.
     if(this.forge) mark(this.forge.x,this.forge.y,'#ffb03a',true);
-    if(this.critter && !this.critter.taken) mark(this.critter.x,this.critter.y,'#ffb85e');
     for(const ev of (this.events||[])) mark(ev.x,ev.y,'#ffe066',true);
     const px=Math.round(this.px),py=Math.round(this.py); ctx.fillStyle='#fff'; ctx.fillRect(px*S-1,py*S-1,S+2,S+2);
     const t=document.getElementById('mapview-title'); if(t){ const zn=(ZONES[Explore.state.map.zone]||{}).name||''; const done=(Explore.state.maps||{})[Explore.state.map.zone];
@@ -1895,20 +1872,6 @@ const World = {
       ctx.fillText(ev.def.icon||'✦', dx, dy - TS*0.12 + Math.sin(this.bob*1.6)*TS*0.07);
       ctx.restore();
       this.drawNameTag(dx, dy-TS*0.72, ev.def.name, '#ffe9a8');
-    }
-    // ----- 체리 다람쥐(비전투 상호작용): 채집 노드처럼 재생, taken 동안엔 자리를 비운 것처럼 안 보임 -----
-    if(this.critter && !this.critter.taken && !(this.critter.x<x0-1||this.critter.x>x1+1||this.critter.y<y0-2||this.critter.y>y1+1)){
-      const c=this.critter, gx=Math.round(c.x*TS-camX)+TS/2, gy=Math.round(c.y*TS-camY)+TS;
-      let topY=gy-TS*1.6;
-      if(CRITTER_IMG.complete && CRITTER_IMG.naturalWidth){
-        const h=TS*1.3, w=h*(CRITTER_IMG.naturalWidth/CRITTER_IMG.naturalHeight);
-        ctx.drawImage(CRITTER_IMG, gx-w/2, gy-h*0.92, w, h);
-        topY=gy-h*1.05;
-      } else {
-        ctx.font=Math.round(TS*0.9)+'px serif'; ctx.textAlign='center'; ctx.textBaseline='alphabetic';
-        ctx.fillText('🐿️', gx, gy-TS*0.3);
-      }
-      this.drawNameTag(gx, topY, '체리 다람쥐', '#ffcf9e');
     }
     // 팻말(마을로 가는 길 / 비밀 공간에선 원래 존으로 돌아가는 길)
     if(this.sign && this.sign.x>=x0-1 && this.sign.x<=x1+1 && this.sign.y>=y0-1 && this.sign.y<=y1+2){
@@ -2833,9 +2796,12 @@ const DarkDuel = {
     for(let i=0;i<this.total && i<p.length;i++){ const ans=p[i]; const opts=[ans.m]; let g=0;
       while(opts.length<4 && g<300){ g++; const c=p[Math.floor(this._rand()*p.length)]; if(c.m!==ans.m && !opts.includes(c.m)) opts.push(c.m); }
       this._shuffle(opts); this.rounds.push({ w:ans.w, m:ans.m, opts }); } },
-  meet(){ document.getElementById('dm-portrait').src=DARK_MERCHANT.portrait||DARK_MERCHANT.img; this.buildRounds(); this.q=0; this.score=0; this._cgShown=false;
-    document.getElementById('dark-duel').classList.add('show'); this.intro();
-    if(window.ExploreBgm) try{ExploreBgm.play('boss');}catch(e){} },
+  meet(){ document.getElementById('dm-portrait').src=DARK_MERCHANT.portrait||DARK_MERCHANT.img; this.buildRounds(); this.q=0; this.score=0; this._cgShown=true;
+    document.getElementById('dark-duel').classList.add('show');
+    if(window.ExploreBgm) try{ExploreBgm.play('boss');}catch(e){}
+    // [정리] 말풍선보다 CG가 먼저 — 메인 캐릭터 조우처럼 얼굴부터 보여준 뒤 대사로 이어진다
+    var self=this;
+    showExCutsceneCG('assets/art/cg_dark_merchant_duel.jpg', '어둠 속에서, 낯선 상인이 잔을 내밀었다.', function(){ self.intro(); }, 'cg_dark_merchant_meet'); },
   intro(){ var _beaten=!!((Explore.state.events||{}).darkMerchant);
     // [반전] 카페 드미타스 진행도에 따라 정체를 흘림 — 만난 뒤 첫 조우=reveal(1회), 구원 후=dissolve
     var _stage=0; try{ _stage=(JSON.parse(localStorage.getItem('vb_save_v7')||'{}').demitasStage)||0; }catch(e){}
@@ -2849,10 +2815,7 @@ const DarkDuel = {
     document.getElementById('dm-body').innerHTML=
     `<div class="dm-say">${_say}<br><small style="opacity:.8">${this.total}문제 중 <b>4개 이상</b> 맞히면 큰 보상!</small></div>
      <div class="dm-acts"><button class="q-btn ok" onclick="DarkDuel.begin()">${UI_ICON.atk} 대결한다</button><button class="q-btn ghost" onclick="DarkDuel.close()">도망친다</button></div>`; },
-  begin(){ this.q=0; this.score=0;
-    // 결투 개시 시네마틱 CG (한 번만 — 재도전 시엔 생략)
-    if(!this._cgShown){ this._cgShown=true; var self=this; showExCutsceneCG('assets/art/cg_dark_merchant_duel.jpg', '어둠의 상인이 잔을 내밀었다.', function(){ self.render(); }); }
-    else this.render(); },
+  begin(){ this.q=0; this.score=0; this.render(); },
   render(){ const body=document.getElementById('dm-body'); if(this.q>=this.rounds.length) return this.finish();
     const r=this.rounds[this.q]; this.answered=false;
     body.innerHTML=`<div class="dm-prog">${this.q+1} / ${this.total} · 점수 ${this.score}</div>
@@ -2910,9 +2873,10 @@ const GameEvent = {
                    +`<button class="q-btn ghost" onclick="GameEvent.close()">지나친다</button>`;
     } else {
       text.innerHTML=def.text;
+      // [정리] 선택지 중 하나만 'ok'(강조색)로 칠하면 "정답"처럼 보여 혼동을 준다 — 정답 없는 선택이므로 전부 동일한 톤으로.
       act.innerHTML=(def.choices||[]).map((c,i)=>{
         const ok=this._canPay(c.cost);
-        return `<button class="q-btn ${i===0?'ok':'ghost'}"${ok?'':' disabled style="opacity:.5"'} onclick="GameEvent.pick(${i})">${c.label}${this._costLabel(c.cost)}</button>`;
+        return `<button class="q-btn ghost"${ok?'':' disabled style="opacity:.5"'} onclick="GameEvent.pick(${i})">${c.label}${this._costLabel(c.cost)}</button>`;
       }).join('') + `<button class="q-btn ghost" onclick="GameEvent.close()">그냥 지나친다</button>`;
     }
     if(window.Sfx)Sfx.play('gather');
@@ -3039,10 +3003,11 @@ const SpellQuiz = {
     document.getElementById('sp-mean').textContent=this.meaning;
     this.build(); this.render(); this.msg('','');
     document.getElementById('spell-screen').classList.add('show'); },
+  // [난이도] 조합 스펠링은 손으로 직접 맞추는 관문이라 너무 긴 단어는 피로도만 높인다 — 3~6글자로 제한.
   pickWord(){ const tc=Explore.cafe.turnCount||0;
-    const due=(Explore.cafe.myWords||[]).filter(v=>v.w && /^[a-zA-Z]+$/.test(v.w) && v.w.length>=3 && v.w.length<=9 && (v.due||0)<=tc);
+    const due=(Explore.cafe.myWords||[]).filter(v=>v.w && /^[a-zA-Z]+$/.test(v.w) && v.w.length>=3 && v.w.length<=6 && (v.due||0)<=tc);
     if(due.length){ const w=due[Math.floor(Math.random()*due.length)]; return {...w,_review:true}; }
-    const pool=window.wordData ? [].concat(wordData.easy,wordData.normal,wordData.hard).filter(o=>/^[a-zA-Z]+$/.test(o.w)&&o.w.length>=3&&o.w.length<=8) : [];
+    const pool=window.wordData ? [].concat(wordData.easy,wordData.normal,wordData.hard).filter(o=>/^[a-zA-Z]+$/.test(o.w)&&o.w.length>=3&&o.w.length<=6) : [];
     const o=pool.length?pool[Math.floor(Math.random()*pool.length)]:{w:'coffee',m:'커피'}; return {...o,_review:false}; },
   build(){ const letters=this.word.split('');
     for(let i=letters.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [letters[i],letters[j]]=[letters[j],letters[i]]; }
