@@ -26,7 +26,7 @@
   .back-btn:active{ transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.4); }
   .hud-stats{ display:flex; gap:6px; margin-left:auto; font-size:.85rem; flex-wrap:wrap; justify-content:flex-end; }
   .hud-stats .chip{ background:rgba(0,0,0,.42); padding:4px 9px; border-radius:20px; white-space:nowrap; }
-  .zone-name{ background:rgba(0,0,0,.42); padding:4px 10px; border-radius:20px; font-size:.82rem; color:var(--gold); }
+  .zone-name{ background:rgba(0,0,0,.42); padding:4px 10px; border-radius:20px; font-size:.82rem; color:var(--gold); white-space:nowrap; flex:none; }
   /* ===== 미니맵 ===== */
   #minimap-wrap{ position:absolute; top:54px; right:12px; z-index:4; text-align:center; cursor:pointer; padding:5px; border-radius:14px;
     background:rgba(16,14,22,.38); backdrop-filter:blur(2px); -webkit-backdrop-filter:blur(2px);
@@ -279,8 +279,8 @@
   .dmg-pop{ position:absolute; font-size:1.8rem; font-weight:bold; color:#fff; pointer-events:none; text-shadow:0 2px 3px #000; animation:dpop 1s forwards; z-index:6; }
   .dmg-pop.crit{ color:#ffd54f; font-size:2.3rem; } .dmg-pop.miss{ color:#eee; }
   @keyframes dpop{ 0%{ transform:translateY(0) scale(.6); opacity:0 } 20%{ transform:translateY(-10px) scale(1.15); opacity:1 } 100%{ transform:translateY(-54px) scale(1); opacity:0 } }
-  .b-bottom{ background:linear-gradient(180deg,#3a2620,#2b1a16); border-top:3px solid var(--gold); padding:10px calc(14px + env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left)); }
-  .b-msg{ min-height:2.1em; color:#fff8e1; font-size:1.02rem; line-height:1.35; margin-bottom:9px; padding:1px 3px; }
+  .b-bottom{ background:linear-gradient(180deg,#3a2620,#2b1a16); border-top:3px solid var(--gold); padding:7px calc(14px + env(safe-area-inset-right)) calc(7px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left)); }
+  .b-msg{ min-height:1.7em; color:#fff8e1; font-size:1.02rem; line-height:1.35; margin-bottom:6px; padding:1px 3px; }
   .b-cmds{ display:grid; grid-template-columns:1fr 1.3fr 0.85fr 0.85fr; gap:8px; transition:opacity .3s; }
   .cmd-item{ background:linear-gradient(180deg,#a5d6a7,#66bb6a); box-shadow:0 4px 0 #2e7d32; color:#173b1a; }
   .cmd-item:active{ box-shadow:0 2px 0 #2e7d32; }
@@ -293,8 +293,8 @@
   .bi-use:active{ transform:translateY(2px); box-shadow:none; }
   .bi-empty{ background:rgba(255,255,255,.95); border-radius:13px; padding:12px; margin:0 14px 8px; text-align:center; color:#7a5a2a; font-size:.88rem; }
   .b-cmd{ position:relative; overflow:hidden; border:none; border-radius:15px; font-family:inherit; cursor:pointer;
-    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; padding:9px 6px 8px; line-height:1.05; }
-  .b-cmd .cmd-ic{ font-size:1.45rem; height:1.55rem; display:flex; align-items:center; justify-content:center; } .b-cmd .cmd-lb{ font-size:.92rem; font-weight:bold; }
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; padding:7px 6px 6px; line-height:1.05; }
+  .b-cmd .cmd-ic{ font-size:1.4rem; height:1.5rem; display:flex; align-items:center; justify-content:center; } .b-cmd .cmd-lb{ font-size:.9rem; font-weight:bold; }
   .b-cmd .cmd-ic svg{ width:1.5rem; height:1.5rem; display:block; filter:drop-shadow(0 1px 0 rgba(0,0,0,.12)); }  /* [버튼] 이모지 대신 깔끔한 SVG 아이콘 */
   .b-cmd:active{ transform:scale(.94) translateY(2px); }
   .b-cmd:disabled{ opacity:.55; }
@@ -1241,7 +1241,7 @@ const World = {
     const valid = p && !this.isBarrier(Math.round(p.x), Math.round(p.y));
     this.px = valid ? p.x : this.start.x;
     this.py = valid ? p.y : this.start.y;
-    this._portalArmed = true;
+    this._portalArmed = true; this._riftArmed = true; this._gateArmed = true;
     this.updateZoneName();
     this.resize();
     window.addEventListener('resize', ()=>applyOrientation());
@@ -1311,8 +1311,8 @@ const World = {
     // 팻말 세우기(통과 불가) — 게이트 옆
     this.sign={ x:gateX-2, y:this.HT-4 };
     this.barrier.add(key(this.sign.x,this.sign.y));
-    // 상단 가장자리: 이웃 존 포털(들). next=앞으로(레벨잠금)·prev=되돌아가기(자유).
-    //   중간 존(예: 깊은 숲)은 양쪽 이웃이 있어 포털 2개(좌=prev, 우=next)를 나란히 연다.
+    // 상단 가장자리: 다음 존(next, 레벨잠금)으로 가는 포털만 연다.
+    //   되돌아가기(prev)는 이제 하단 게이트가 전담 — 위쪽에 중복 게이트를 두지 않는다.
     this.portals=[];
     const mkPortal=(target, portalX)=>{
       for(let yy=0; yy<=4; yy++) for(let dx=-2; dx<=2; dx++){ const xx=portalX+dx;
@@ -1322,9 +1322,7 @@ const World = {
       const signX=Math.max(1,portalX-2); this.barrier.add(key(signX,3));
       this.portals.push({ x:portalX, y:0, target, signX, signY:3 });
     };
-    if(zone.next && zone.prev){ mkPortal(zone.prev, Math.floor(this.WT*0.32)); mkPortal(zone.next, Math.floor(this.WT*0.68)); }
-    else if(zone.next){ mkPortal(zone.next, Math.floor(this.WT/2)); }
-    else if(zone.prev){ mkPortal(zone.prev, Math.floor(this.WT/2)); }
+    if(zone.next){ mkPortal(zone.next, Math.floor(this.WT/2)); }
     // ----- 퀘스트 NPC 배치(걷기 가능 지점, 주변 정리) -----
     this.npcs=[];
     const clearAround=(x,y,r)=>{ for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){ const xx=x+dx,yy=y+dy;
@@ -1536,11 +1534,16 @@ const World = {
       if(!this.isBarrier(Math.round(nx), Math.round(this.py))) this.px=nx;
       if(!this.isBarrier(Math.round(this.px), Math.round(ny))) this.py=ny;
       this.onMove();
-      // 하단 게이트 — 보통은 마을(카페)로, 비밀 공간(gateBack)에서는 원래 존으로 되돌아간다
+      // 하단 게이트 — 비밀 공간(gateBack)은 원래 존으로, 이전 지역(prev)이 있으면 그 지역으로, 없으면 마을(카페)로.
+      //   prev 이동은 포털처럼 재진입 스팸 방지 가드(_gateArmed)가 필요 — leaveToVillage는 _leaving 자체가 가드 역할.
       if(this.gate && Math.round(this.py)>=this.gate.y && Math.abs(Math.round(this.px)-this.gate.x)<=2){
         if(this.gateBack){ const back=this.gateBack; this.gateBack=null; this.travelZone(back); }
-        else this.leaveToVillage();
-      }
+        else{
+          const prevZone=(ZONES[Explore.state.map.zone]||{}).prev;
+          if(prevZone){ if(this._gateArmed!==false){ this._gateArmed=false; this.travelZone(prevZone); } }
+          else this.leaveToVillage();
+        }
+      } else if(this.gate && Math.round(this.py) < this.gate.y-2){ this._gateArmed=true; }
       // [숨은 틈] 달 오른쪽 복도 끝 — 맵 바깥(달의 뒷면)으로 넘어간다. 포털과 같은 재진입 가드 사용.
       if(this.rift){
         const onRift = Math.round(this.py)<=this.rift.y && Math.abs(Math.round(this.px)-this.rift.x)<=1;
@@ -1641,7 +1644,7 @@ const World = {
     this.generate();
     this.px=this.start.x; this.py=this.start.y; // 도착은 해당 존 하단 시작점
     Explore.state.pos={x:this.px,y:this.py};
-    this._portalArmed=true; this._riftArmed=true; this.updateZoneName(); this.updateActionBtn(); this.reveal(); this.drawMinimap(); Explore.persist();
+    this._portalArmed=true; this._riftArmed=true; this._gateArmed=true; this.updateZoneName(); this.updateActionBtn(); this.reveal(); this.drawMinimap(); Explore.persist();
     const z=ZONES[zoneId];
     if(z.arena) this.toast(`${UI_ICON.spark} <b>${z.name}</b> — 지도에 없는 곳.<br><span class="ko">달빛이 닿지 않는 쪽. 저 앞에 무언가 서 있다.</span>`);
     else this.toast(`${z.name}에 도착했어요!`+compSay('move'));
@@ -1649,6 +1652,10 @@ const World = {
   updateZoneName(){ const z=ZONES[Explore.state.map.zone]||ZONES.forest; const el=document.getElementById('zone-name'); if(el) el.textContent=z.name; const ic=document.getElementById('zone-ic'); if(ic) ic.innerHTML=z.icon||''; },
   _accum:0, _saveT:0,
   onMove(){
+    if(this._leaving) return;   // [버그수정] 게이트 밟고 나가는 중엔 위치 자동저장을 멈춰야 한다 —
+                                 //   안 멈추면 조이스틱을 계속 누르고 있을 때 주기저장(30틱마다)이
+                                 //   leaveToVillage가 저장한 '시작점'을 다시 게이트 옆 좌표로 덮어써서,
+                                 //   재입장 시 팻말 바로 옆에서 시작해 한 걸음만 움직여도 다시 튕겨나갔다.
     this._accum += 0.085;
     if(this._accum>=1){ this._accum=0; Explore.state.steps=(Explore.state.steps||0)+1;
       // 채집 노드 재생
@@ -1735,16 +1742,16 @@ const World = {
     // 재료 노드 — 어두운 3x3 테두리 + 밝은 코어(1px → 3x3, 여러 개라 과하지 않게)
     for(const n of (this.nodes||[])) if(!n.taken){ blk(n.x,n.y,'#403008',1,true); dot(n.x,n.y,'#ffe066'); }
     // 어둠의 상인은 미니맵에 표시하지 않음(진짜 숨겨진 이벤트) — 직접 발견해야 함
-    if(this.forge && seen(this.forge.x,this.forge.y)){ blk(this.forge.x,this.forge.y,'#3a2410',3); blk(this.forge.x,this.forge.y,'#ffb03a',2); } // 대장간은 유용한 랜드마크라 표시
+    if(this.forge && seen(this.forge.x,this.forge.y)){ blk(this.forge.x,this.forge.y,'#3a2410',2); blk(this.forge.x,this.forge.y,'#ffb03a',1); } // 대장간은 유용한 랜드마크라 표시
     for(const ev of (this.events||[])){ if(!seen(ev.x,ev.y))continue; blk(ev.x,ev.y,'#4a3a08',2); blk(ev.x,ev.y,'#ffe066',1); } // 경로 이벤트 — 발견 시 표시
     // 퀘스트 NPC — 발견 시 크고 선명하게(어두운 테두리+빨강 코어)
-    for(const np of (this.npcs||[])){ if(!seen(np.x,np.y))continue; blk(np.x,np.y,'#20060a',3); blk(np.x,np.y,'#ff4d4d',2); }
+    for(const np of (this.npcs||[])){ if(!seen(np.x,np.y))continue; blk(np.x,np.y,'#20060a',2); blk(np.x,np.y,'#ff4d4d',1); }
     // 달의 뒷면 — 루나의 어둠은 숨기지 않는다(들어온 순간부터 목표가 보여야 함)
-    if(this.arenaBoss){ blk(this.arenaBoss.x,this.arenaBoss.y,'#0b0716',3); blk(this.arenaBoss.x,this.arenaBoss.y,'#b9a6ff',2); }
+    if(this.arenaBoss){ blk(this.arenaBoss.x,this.arenaBoss.y,'#0b0716',2); blk(this.arenaBoss.x,this.arenaBoss.y,'#b9a6ff',1); }
     // 달의 '틈'은 미니맵에 표시하지 않는다 — 직접 걸어서 찾아야 하는 숨은 길
     // 내 캐릭터 — 항상 가장 눈에 띄게(어두운 테두리 + 밝은 청록 코어)
     const px=Math.round(this.px), py=Math.round(this.py);
-    blk(px,py,'#00131c',3); blk(px,py,'#39e6ff',2);
+    blk(px,py,'#00131c',2); blk(px,py,'#39e6ff',1);
     this._miniDirty=false;
     const badge=document.getElementById('mm-badge'); if(badge){ const done=(Explore.state.maps||{})[Explore.state.map.zone];
       badge.textContent = done?'완성':(Math.round(this.exploredCount/(WT*HT)*100)+'%'); badge.classList.toggle('done', !!done); } },
@@ -1892,11 +1899,12 @@ const World = {
       ctx.restore();
       this.drawNameTag(dx, dy-TS*0.72, ev.def.name, '#ffe9a8');
     }
-    // 팻말(마을로 가는 길 / 비밀 공간에선 원래 존으로 돌아가는 길)
+    // 팻말(마을로 가는 길 / 이전 지역이 있으면 그리로 / 비밀 공간에선 원래 존으로 돌아가는 길)
     if(this.sign && this.sign.x>=x0-1 && this.sign.x<=x1+1 && this.sign.y>=y0-1 && this.sign.y<=y1+2){
-      const backName = this.gateBack ? ((ZONES[this.gateBack]||{}).name||'') : '';
+      const prevZone=(ZONES[Explore.state.map.zone]||{}).prev;
+      const backName = this.gateBack ? ((ZONES[this.gateBack]||{}).name||'') : (prevZone ? ((ZONES[prevZone]||{}).name||'') : '');
       this.drawSign(Math.round(this.sign.x*TS-camX), Math.round(this.sign.y*TS-camY), TS,
-                    backName ? `${backName}으로 돌아가기` : undefined); }
+                    backName ? `${backName}으로 가는 길` : undefined); }
     // 포털 팻말(들 — 이웃 존)
     for(const pt of (this.portals||[])){
       if(!(pt.signX>=x0-1 && pt.signX<=x1+1 && pt.signY>=y0-2 && pt.signY<=y1+1)) continue;
@@ -2400,11 +2408,11 @@ const Battle = {
                : `${UI_ICON.atk} <b>${m.name}</b> — 네가 완전히 정복한 오답들이 빛이 되어, 백 년 묵은 어둠을 꿰뚫을 준비가 됐다!`)
            : m.isBoss ? `${UI_ICON.atk} <b>${m.name}</b> — 보스가 길을 막아섰다!` : `${UI_ICON.paw} 앗! 야생 <b>${m.name}</b>이(가) 나타났다!`);
     clearTimeout(this._introT);
-    this._introT=setTimeout(()=>{ battle.classList.remove('intro'); es.classList.remove('enter'); this.msg('무엇을 할까?'+compSay((this.enemy&&this.enemy.isBoss)?'boss':'start')); this.setButtons(true); }, 1400); },
+    this._introT=setTimeout(()=>{ battle.classList.remove('intro'); es.classList.remove('enter'); this.msg('무엇을 할까?'); this.setButtons(true); }, 1400); },
   // 메시지/아레나 탭 → 등장 연출이나 현재 대기를 빨리 넘김
   skipTap(){ const battle=document.getElementById('battle');
     if(battle.classList.contains('intro')){ clearTimeout(this._introT); battle.classList.remove('intro');
-      document.getElementById('e-sprite').classList.remove('enter'); this.msg('무엇을 할까?'+compSay((this.enemy&&this.enemy.isBoss)?'boss':'start')); this.setButtons(true); return; }
+      document.getElementById('e-sprite').classList.remove('enter'); this.msg('무엇을 할까?'); this.setButtons(true); return; }
     if(this._skip){ clearTimeout(this._skipT); const r=this._skip; this._skip=null; r(); } },
   // [페이즈 아트 교체] 골렘처럼 phaseArt가 있는 몬스터는 안개껍질/코어노출/잔열폭주마다 다른 스프라이트를 보여준다.
   updateEnemySprite(){ const m=this.enemy; if(!m) return; const es=document.getElementById('e-sprite');
