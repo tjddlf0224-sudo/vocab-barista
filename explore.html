@@ -251,11 +251,12 @@
   /* [정리] 몬스터 원본 PNG마다 캔버스 비율·여백이 제각각이라(안개두꺼비는 가로로 넓고 여백이 적어
      width:100%+height:auto로는 유독 작고 위로 붕 뜸) — 폭·높이를 둘 다 고정한 정사각 박스 +
      object-fit:contain(잘리지 않게 비율 유지 축소)+바닥 기준 정렬로 몬스터마다 크기·바닥선을 통일. */
-  .sprite-enemy{ position:absolute; bottom:30%; right:12%; width:33%; max-width:148px; height:33%; max-height:148px; filter:drop-shadow(0 8px 6px rgba(0,0,0,.4)); }
+  /* --espr-scale: 몬스터별 체감 크기 보정(기본 1) — 원본 캔버스 비율 차이로 유독 작아 보이는 개체 전용 */
+  .sprite-enemy{ position:absolute; bottom:30%; right:12%; width:calc(33% * var(--espr-scale,1)); max-width:calc(148px * var(--espr-scale,1)); height:calc(33% * var(--espr-scale,1)); max-height:calc(148px * var(--espr-scale,1)); filter:drop-shadow(0 8px 6px rgba(0,0,0,.4)); }
   .sprite-enemy img{ width:100%; height:100%; object-fit:contain; object-position:center bottom; display:block; }
   .sprite-enemy.emoji{ font-size:4.6rem; text-align:center; }
   /* 보스: 더 크고 위협적인 붉은 오라 */
-  .sprite-enemy.boss{ width:44%; max-width:200px; height:44%; max-height:200px; bottom:30%; right:9%; filter:drop-shadow(0 10px 8px rgba(0,0,0,.5)) drop-shadow(0 0 18px rgba(255,60,60,.7)); animation:bossPulse 1.6s ease-in-out infinite; }
+  .sprite-enemy.boss{ width:calc(44% * var(--espr-scale,1)); max-width:calc(200px * var(--espr-scale,1)); height:calc(44% * var(--espr-scale,1)); max-height:calc(200px * var(--espr-scale,1)); bottom:30%; right:9%; filter:drop-shadow(0 10px 8px rgba(0,0,0,.5)) drop-shadow(0 0 18px rgba(255,60,60,.7)); animation:bossPulse 1.6s ease-in-out infinite; }
   @keyframes bossPulse{ 0%,100%{ filter:drop-shadow(0 10px 8px rgba(0,0,0,.5)) drop-shadow(0 0 14px rgba(255,60,60,.6)); } 50%{ filter:drop-shadow(0 10px 8px rgba(0,0,0,.5)) drop-shadow(0 0 26px rgba(255,90,90,.9)); } }
   .sprite-self{ position:absolute; bottom:4%; left:6%; width:40%; max-width:185px; filter:drop-shadow(0 8px 6px rgba(0,0,0,.4)); }
   .sprite-self img{ width:100%; height:auto; display:block; }
@@ -2223,7 +2224,7 @@ const MONSTERS = {
   // ---- 잔향 항구(Lv12–17) — 전용 아트 전 이모지 폴백 ----
   seafog:     { id:'seafog',     name:'해무 해파리', emoji:'🎐', art:'monsters/seafog.png', lv:14, hp:60, atk:18, def:6,  exp:64, gold:40, drops:[{mat:'saltglass',chance:0.55},{mat:'gel',chance:0.35}] },
   dockgull:   { id:'dockgull',   name:'부두 갈매기 떼', emoji:'🕊️', art:'monsters/dockgull.png', lv:14, hp:50, atk:23, def:4,  exp:66, gold:52, drops:[{mat:'waxletter',chance:0.55},{mat:'feather',chance:0.4}] },
-  waxman:     { id:'waxman',     name:'봉랍 인부',  emoji:'🕴️', art:'monsters/waxman.png', lv:15, hp:95, atk:19, def:13, exp:80, gold:58, drops:[{mat:'sealtag',chance:0.55},{mat:'core',chance:0.3}] },
+  waxman:     { id:'waxman',     name:'봉랍 인부',  emoji:'🕴️', art:'monsters/waxman.png', spriteScale:1.35, lv:15, hp:95, atk:19, def:13, exp:80, gold:58, drops:[{mat:'sealtag',chance:0.55},{mat:'core',chance:0.3}] },
   frostwraith:{ id:'frostwraith',name:'서리 망령',  emoji:'👻', art:'monsters/frostwraith.png', lv:16, hp:70, atk:25, def:7,  exp:92, gold:66, drops:[{mat:'frostsalt',chance:0.55},{mat:'fang',chance:0.3}] },
   saffran:    { id:'saffran',    name:'회색 경매인, 사프란', emoji:'🎩', art:'monsters/saffran.png', lv:18, hp:110, atk:20, def:13, exp:210, gold:160, drops:[{mat:'saltglass',chance:1,count:2},{mat:'frostsalt',chance:0.8},{mat:'sealtag',chance:0.8}] },
   // ---- 봉인고(Lv18–24, 최종) — 전용 아트 전 이모지 폴백 ----
@@ -2429,6 +2430,7 @@ const Battle = {
   // [페이즈 아트 교체] 골렘처럼 phaseArt가 있는 몬스터는 안개껍질/코어노출/잔열폭주마다 다른 스프라이트를 보여준다.
   updateEnemySprite(){ const m=this.enemy; if(!m) return; const es=document.getElementById('e-sprite');
     es.classList.remove('emoji'); es.innerHTML='';
+    es.style.setProperty('--espr-scale', m.spriteScale || 1);
     const art=(m.phaseArt && m._phaseName && m.phaseArt[m._phaseName]) || m.art;
     if(art){ es.innerHTML='<img src="'+art+'">'; } else { es.classList.add('emoji'); es.textContent=m.emoji; }
   },
