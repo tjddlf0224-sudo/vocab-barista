@@ -454,6 +454,12 @@
     overflow-y: auto;
     animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
+/* [정리] 손님 도감 같은 곳은 '영업 안내' 제목이 맥락과 안 맞고, 가운데 정렬도 안 어울려서
+   좌측 정렬 전용 스타일을 추가(showGameAlert(msg, cb, {plain:true})). */
+.alert-box.plain h2 { display: none; }
+.alert-box.plain #custom-alert-msg { text-align: left; word-break: keep-all; overflow-wrap: break-word; }
+/* 도감 알림창 안의 '1막 · 대사' 줄들 — 내어쓰기(줄바꿈돼도 라벨이 아니라 본문 시작 위치에 맞춰짐) */
+.alert-box .ab-li { display: block; padding-left: 1.6em; text-indent: -1.6em; text-align: left; word-break: keep-all; overflow-wrap: break-word; }
 /* 커스텀 알림 확인 버튼(테마 통일) */
 .btn-primary {
     background: linear-gradient(180deg, #ffd54f, #ffb300);
@@ -476,7 +482,10 @@
     box-shadow:0 3px 0 rgba(0,0,0,.32), 0 5px 8px rgba(0,0,0,.22); }
 #pause-screen .pause-menu .pause-cta { padding:16px 10px; font-size:1.3rem; border-radius:14px; }
 #pause-screen .pause-menu .pause-reset { background:none; border:none; color:#9b8e84; text-decoration:underline;
-    box-shadow:none; padding:8px; font-size:0.82rem; margin-top:2px; }
+    box-shadow:none; padding:8px; font-size:0.82rem; margin-top:2px;
+    /* [정리] 부모의 button{width:100%}·align-items:stretch 때문에 글자보다 훨씬 넓게 눌렸음 —
+       실수로 초기화를 누를까 걱정된다는 피드백. 글자 크기만큼만 탭되게 좁힘. */
+    width:auto; align-self:center; }
 /* [신규] TTS 속도 선택 버튼 */
 .tts-rate-btn { width:auto !important; padding:5px 12px !important; font-size:0.85rem !important; border-radius:14px !important;
     border:1.5px solid #c8a87a; background:#fff8ee; color:#7a5c3a; cursor:pointer; font-family:'Jua',sans-serif; box-shadow:none !important; }
@@ -1923,7 +1932,7 @@ function showCutsceneCG(src, caption, onDone, opts){
     };
     setTimeout(function(){ el.addEventListener('click', done); }, 500);
 }
-function showGameAlert(msg, callback) {
+function showGameAlert(msg, callback, opts) {
     const m = document.getElementById('custom-alert-msg'), a = document.getElementById('custom-alert');
     if(!m || !a){ if(callback) callback(); return; }   // 요소 미준비 시 콜백만 실행(무해)
     // game은 최상위 const라 window.game이 아님 — 직접 참조(정의 전 호출 대비 typeof 가드)
@@ -1933,6 +1942,10 @@ function showGameAlert(msg, callback) {
         }
     }catch(e){}
     m.innerHTML = msg;
+    // [정리] '영업 안내' 고정 제목은 손님 도감처럼 맥락과 안 맞는 곳도 있어, opts.plain이면 제목 없이
+    // 좌측 정렬(어절 단위 줄바꿈)로 표시 — 기존 호출부는 opts 안 넘기니 그대로 유지됨.
+    const box = a.querySelector('.alert-box');
+    if(box) box.classList.toggle('plain', !!(opts && opts.plain));
     a.classList.remove('hidden');
     onAlertClose = callback; // 확인 버튼 누르면 이 함수 실행
 }
@@ -4771,8 +4784,8 @@ equipItem: function(category, level) {
                         //   같은 CG는 이미 도감의 '이벤트' 탭에서 볼 수 있어 텍스트 요약만 남긴다.
                         const acts = AFFECTION_STORY[ch.id] || [];
                         for(let i=0;i<acts.length;i++){
-                            if(i < seen){ extra += `<div style="font-size:0.8rem;color:#7b1fa2;font-style:italic;margin-top:6px;">${i+1}막 · ${affStoryLine(ch.id, i)}</div>`; }
-                            else { extra += `<div style="font-size:0.78rem;color:#aaa;margin-top:6px;">${UI_ICON.lock} ${i+1}막 — 호감도 ${AFFECTION_TIERS[i]} 필요</div>`; break; }
+                            if(i < seen){ extra += `<div class="ab-li" style="font-size:0.8rem;color:#7b1fa2;font-style:italic;margin-top:6px;">${i+1}막 · ${affStoryLine(ch.id, i)}</div>`; }
+                            else { extra += `<div class="ab-li" style="font-size:0.78rem;color:#aaa;margin-top:6px;">${UI_ICON.lock} ${i+1}막 — 호감도 ${AFFECTION_TIERS[i]} 필요</div>`; break; }
                         }
                     } else if(ch.story) {
                         extra = `<br><br><span style="font-size:0.82rem;color:#7b1fa2;font-style:italic;">${ch.story}</span>`;
@@ -4781,7 +4794,8 @@ equipItem: function(category, level) {
                         `<b style="color:${col};font-size:1.15rem;">${mainDisplayName(ch)}</b>`+
                         (ch.title ? `<br><span style="font-size:0.8rem;color:#888;">${ch.title}</span>` : '')+
                         `<br><br><span style="font-size:0.9rem;color:#444;">${ch.desc||''}</span>`+
-                        extra
+                        extra,
+                        null, {plain:true}
                     );
                 };
             } else {

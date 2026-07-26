@@ -289,11 +289,13 @@
   /* 전투 아이템 미니 메뉴 */
   #b-itemmenu{ position:absolute; left:0; right:0; bottom:100%; margin-bottom:8px; display:none; z-index:8; }
   #b-itemmenu.show{ display:block; }
-  .bi-card{ display:flex; align-items:center; gap:10px; background:#fff; border-radius:13px; padding:9px 12px; margin:0 14px 8px; box-shadow:0 5px 14px rgba(0,0,0,.35); }
+  .bi-card{ display:flex; align-items:center; gap:10px; background:#fff; border-radius:13px; padding:9px 12px;
+    margin:0 calc(14px + env(safe-area-inset-right)) 8px calc(14px + env(safe-area-inset-left)); box-shadow:0 5px 14px rgba(0,0,0,.35); }
   .bi-ic{ font-size:1.5rem; } .bi-ic .bi-ic-img{ width:30px; height:30px; object-fit:contain; display:block; } .bi-nm{ font-weight:bold; color:#3a2a16; font-size:.95rem; } .bi-bn{ font-size:.78rem; color:#7a5a2a; }
   .bi-use{ margin-left:auto; border:none; border-radius:11px; padding:7px 14px; font-family:inherit; font-weight:bold; color:#fff; background:linear-gradient(180deg,#66bb6a,#388e3c); box-shadow:0 3px 0 #2e7d32; cursor:pointer; }
   .bi-use:active{ transform:translateY(2px); box-shadow:none; }
-  .bi-empty{ background:rgba(255,255,255,.95); border-radius:13px; padding:12px; margin:0 14px 8px; text-align:center; color:#7a5a2a; font-size:.88rem; }
+  .bi-empty{ background:rgba(255,255,255,.95); border-radius:13px; padding:12px;
+    margin:0 calc(14px + env(safe-area-inset-right)) 8px calc(14px + env(safe-area-inset-left)); text-align:center; color:#7a5a2a; font-size:.88rem; }
   .b-cmd{ position:relative; overflow:hidden; border:none; border-radius:15px; font-family:inherit; cursor:pointer;
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; padding:7px 6px 6px; line-height:1.05; }
   .b-cmd .cmd-ic{ font-size:1.4rem; height:1.5rem; display:flex; align-items:center; justify-content:center; } .b-cmd .cmd-lb{ font-size:.9rem; font-weight:bold; }
@@ -2692,7 +2694,7 @@ const Battle = {
     const ups=[]; while(Explore.state.exp>=expNeed(Explore.state.level)){ Explore.state.exp-=expNeed(Explore.state.level); Explore.state.level++;
       const st=Explore.state.stats; st.maxHp+=8; st.atk+=3; st.def+=2; st.hp=st.maxHp; ups.push(Explore.state.level); }
     if(ups.length){ txt+=`<br><span class="lvlup">${UI_ICON.party} 레벨 업! Lv ${ups[ups.length-1]} (HP·공·방 상승, 체력 회복)</span>`; setTimeout(()=>Sfx.play('levelup'),450); }
-    txt+=compSay('win'); if(ups.length) txt+=compSay('level'); this.msg(txt); this.renderBars(); Explore.refreshHUD(); Explore.persist(); this.setButtons(false);
+    this.msg(txt); this.renderBars(); Explore.refreshHUD(); Explore.persist(); this.setButtons(false);
     await this.wait(1500);
     // [존 보스 클리어] 관문(gateTo)이든 달의 확정조우든, 현재 존이 지목한 보스를 이기면 그 존은 클리어.
     if(e.isBoss){ const zid=Explore.state.map.zone; const z=ZONES[zid];
@@ -2723,7 +2725,7 @@ const Battle = {
       this.msg(`${UI_ICON.hp} 부활! 다시 싸우자!`); this.renderBars(); Explore.refreshHUD(); Explore.persist();
       await this.wait(700); this.busy=false; this.setButtons(true); return; }
     // 거절/실패 → 기존 마을 부활
-    this.msg('정신을 잃었다… 카페 근처에서 깨어났다. (체력 회복)'+compSay('lose')); Explore.state.stats.hp=Math.max(1,Math.round(Explore.state.stats.maxHp*0.5));
+    this.msg('정신을 잃었다… 카페 근처에서 깨어났다. (체력 회복)'); Explore.state.stats.hp=Math.max(1,Math.round(Explore.state.stats.maxHp*0.5));
     // 마을 입구(시작점) 근처로 이동 — 쓰러진 자리에 그대로 두지 않음
     if(window.World && World.start){ World.px=World.start.x; World.py=World.start.y;
       Explore.state.pos={x:World.px,y:World.py}; if(World.updateActionBtn) World.updateActionBtn(); }
@@ -2930,6 +2932,9 @@ const GameEvent = {
     this._pay(c.cost);
     const rwtxt=Explore.grantReward(c.reward||{});
     this._markDone(def.id);
+    // [버그수정] done 플래그만으론 부족하다 — 그건 '다음 존 재생성' 때만 걸러진다.
+    // 지금 떠 있는 월드의 events 배열에서도 바로 빼야 같은 자리에 돌아왔을 때 즉시 사라져 보인다.
+    if(window.World && World.events){ World.events = World.events.filter(e => e.id !== def.id); World._miniDirty = true; }
     const {text,act}=this._els();
     text.innerHTML=`${c.result}${rwtxt?`<br><span class="lvlup">${rwtxt}</span>`:''}`;
     act.innerHTML=`<button class="q-btn ok" onclick="GameEvent.close()">좋아</button>`;
