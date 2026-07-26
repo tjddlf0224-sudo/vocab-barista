@@ -432,7 +432,7 @@
       <div class="chip" onclick="Explore.cheatChipTap('level')">Lv <span id="hud-level">1</span></div>
       <div class="chip" onclick="Explore.cheatChipTap('hp')"><svg class="uic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 20.5S3.6 15 3.6 9.3A4.6 4.6 0 0 1 12 6.6a4.6 4.6 0 0 1 8.4 2.7c0 5.7-8.4 11.2-8.4 11.2z" fill="#ff6b7a" stroke="#c62839" stroke-width="1.2" stroke-linejoin="round"/></svg> <span id="hud-hp">0</span></div>
       <div class="chip" id="hud-mats"><svg class="uic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 8h12l1 12.5H5z" fill="#c98a4a" stroke="#7a5020" stroke-width="1.3" stroke-linejoin="round"/><path d="M8.5 9V6.8a3.5 3.5 0 0 1 7 0V9" fill="none" stroke="#7a5020" stroke-width="1.6"/><rect x="4.5" y="7.5" width="15" height="3" rx="1.4" fill="#e0a86a" stroke="#7a5020" stroke-width="1.1"/></svg> <span id="hud-mats-n">0</span></div>
-      <div class="chip" id="hud-vocab" title="울림 지수 — 정확한 옛말을 되살릴수록 커피의 울림이 깊어져 전투력이 오른다" style="cursor:pointer" onclick="World.explainVocabPower()"><svg class="uic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5 8.5h11V13a4.5 4.5 0 0 1-4.5 4.5h-2A4.5 4.5 0 0 1 5 13z" fill="#ffcf4d" stroke="#b8860b" stroke-width="1.2"/><path d="M16 10h1.6a2.2 2.2 0 0 1 0 4.4H16" fill="none" stroke="#b8860b" stroke-width="1.3"/><path d="M8 5.4c0 .9-1 1.1-1 2M11 4.8c0 1-1 1.2-1 2.2" fill="none" stroke="#e0a83a" stroke-width="1.2" stroke-linecap="round"/></svg> 울림 <span id="hud-vocab-n">+0%</span></div>
+      <div class="chip" id="hud-vocab" title="울림 지수 — 정확한 옛말을 되살릴수록 커피의 울림이 깊어져 전투력이 오른다" style="cursor:pointer" onclick="World.explainVocabPower(); Explore.cheatChipTap('vocab')"><svg class="uic" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5 8.5h11V13a4.5 4.5 0 0 1-4.5 4.5h-2A4.5 4.5 0 0 1 5 13z" fill="#ffcf4d" stroke="#b8860b" stroke-width="1.2"/><path d="M16 10h1.6a2.2 2.2 0 0 1 0 4.4H16" fill="none" stroke="#b8860b" stroke-width="1.3"/><path d="M8 5.4c0 .9-1 1.1-1 2M11 4.8c0 1-1 1.2-1 2.2" fill="none" stroke="#e0a83a" stroke-width="1.2" stroke-linecap="round"/></svg> 울림 <span id="hud-vocab-n">+0%</span></div>
     </div>
   </div>
 
@@ -848,12 +848,12 @@ const Explore = {
     while(this.state.exp>=expNeed(this.state.level)){ this.state.exp-=expNeed(this.state.level); this.state.level++;
       const st=this.state.stats; st.maxHp+=8; st.atk+=3; st.def+=2; st.hp=st.maxHp; ups++; }
     return ups; },
-  // [개발용 치트] 골드 1번 → 레벨 2번 → 하트 3번, 순서대로 탭(2.5초 안에) — 레벨업 노가다 없이 밸런스 테스트하려고
+  // [개발용 치트] 골드 1번 → 레벨 2번 → 하트 3번 → 울림 2번, 순서대로 탭(2.5초 안에) — 레벨업 노가다 없이 밸런스 테스트하려고
   _cheatSeq:[], _cheatSeqT:0,
-  _cheatCode:['gold','level','level','hp','hp','hp'],
+  _cheatCode:['gold','level','level','hp','hp','hp','vocab','vocab'],
   cheatChipTap(chip){
     const now=Date.now();
-    if(now - (this._cheatSeqT||0) > 2500) this._cheatSeq = [];
+    if(now - (this._cheatSeqT||0) > 3500) this._cheatSeq = [];
     this._cheatSeqT = now;
     this._cheatSeq.push(chip);
     const need=this._cheatCode.length;
@@ -1498,11 +1498,21 @@ const World = {
   },
   toast(html, ms){ const el=document.getElementById('toast'); el.innerHTML=html; el.classList.add('show');
     clearTimeout(this._tt); this._tt=setTimeout(()=>el.classList.remove('show'), ms||1600); },
-  // [HUD 설명] 울림/크리/방어/가속 — 모바일은 title 툴팁이 안 보이므로 탭하면 풀이를 띄운다
+  // [HUD 설명] 울림/크리/방어/가속 — 모바일은 title 툴팁이 안 보이므로 탭하면 풀이를 띄운다(자세한 4축 설명)
   explainVocabPower(){
-    const chip=document.getElementById('hud-vocab');
-    const txt=(chip&&chip.title) || '울림 지수 — 정확한 옛말을 되살릴수록 커피의 울림이 깊어져 전투력이 오른다';
-    this.toast(`<b>울림 지수란?</b><br><span class="ko">${txt}</span>`, 4200);
+    const vp=(typeof Explore!=='undefined' && Explore.vocabPower) ? Explore.vocabPower() : null;
+    const cur = vp ? `<br><br><b>지금 내 수치</b><br>`
+      + `공격 +${Math.round(vp.atkPct*100)}% · 크리 +${Math.round(vp.critBonus*100)}%p · `
+      + `방어 +${Math.round(vp.defPct*100)}% · 가속 +${Math.round(vp.gaugePct*100)}%` : '';
+    this.toast(
+      `<b>울림 지수란?</b><br><span class="ko">카페에서 옛말(영단어)을 공부한 만큼, 탐험 전투력이 자동으로 올라가는 시스템이에요.</span><br><br>`
+      + `<b>${UI_ICON.atk} 공격</b> — 마스터한(완전히 외운) 단어 수가 많을수록 상승 (최대 +30%)<br>`
+      + `<b>✦ 크리</b> — 카페 최근 40문제 정답률이 50%를 넘으면 그만큼 상승 (최대 +15%p, 50% 이하는 페널티 없이 0)<br>`
+      + `<b>${UI_ICON.def} 방어</b> — 오답노트 단어를 완전히 정복(SRS 졸업)한 개수만큼 상승 (최대 +25%)<br>`
+      + `<b>⚡ 가속</b> — 카페 VIP 손님 스펠링을 직접 입력해서 맞힌 누적 횟수만큼, 탐험 스킬 게이지 차는 속도 상승 (최대 +40%)`
+      + cur,
+      6500
+    );
   },
 
   // ----- 이동/업데이트 -----
