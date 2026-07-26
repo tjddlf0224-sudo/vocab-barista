@@ -1494,6 +1494,7 @@
 <script src="shared/worddata.js"></script>
 <script src="shared/worddata_csat.js"></script>
 <script src="shared/ads.js"></script>
+<script src="shared/back-gesture.js"></script>
 <script>
 // ==========================================
 // [0] 카페 BGM 엔진 (MP3 파일 버전)
@@ -5818,6 +5819,25 @@ document.addEventListener('visibilitychange', function() {
     }
 });
 
+// [뒤로가기 제스처] 지금 열려 있는 팝업형 모달 중 '가장 위'로 보이는 것 하나만 닫는다. 닫았으면 true.
+// 시작화면/일시정지/난이도선택/영업종료 같은 진행 흐름 화면은 일부러 빼놓았다 —
+// 실수로 스와이프·백버튼에 닫히면 오히려 헷갈린다(전용 버튼으로만 넘어가게 유지).
+function dismissTopCafeLayer(){
+    const vis = id => { const e=document.getElementById(id); return e && !e.classList.contains('hidden'); };
+    if(vis('custom-alert')){ closeCustomAlert(); return true; }
+    if(vis('inventory-screen-item')){ game.closeSkinSelector(); return true; }
+    if(vis('inventory-screen')){
+        document.getElementById('inventory-screen').classList.add('hidden');
+        game.isActive=true; if(game.currentCust && !game.currentCust.solved) game.startTimer();
+        return true;
+    }
+    if(vis('settings-screen')){ vbCloseSettings(); return true; }
+    if(vis('quest-screen') || vis('ach-screen') || vis('stats-screen') || vis('shop-screen')){ game.closeOverlays(); return true; }
+    if(vis('wordbook-screen')){ document.getElementById('wordbook-screen').classList.add('hidden'); return true; }
+    if(vis('dex-screen')){ document.getElementById('dex-screen').classList.add('hidden'); return true; }
+    return false;
+}
+document.addEventListener('DOMContentLoaded', () => window.initBackGesture(dismissTopCafeLayer));
 </script>
 
 <div id="custom-alert" class="hidden" onclick="if(event.target===this) closeCustomAlert()">

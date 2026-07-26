@@ -587,6 +587,7 @@
 </div><!-- /rotator -->
 <script src="shared/worddata.js"></script>
 <script src="shared/ads.js"></script>
+<script src="shared/back-gesture.js"></script>
 <script>
 // ============================================================
 // Vocab Barista — 탐험 (가로 / 스크롤 맵 / 조이스틱 / 전투)
@@ -3084,7 +3085,24 @@ window.Battle=Battle; window.World=World; window.Explore=Explore; window.GameEve
 // 마을로 나가는 중(leaveToVillage)이면 위치를 덮어쓰지 않는다 — 게이트 좌표가 저장되면
 // 다음 입장 때 게이트 위에서 시작해 조금만 움직여도 다시 마을로 튕긴다.
 window.addEventListener('pagehide', ()=>{ try{ if(World._leaving) return; Explore.state.pos={x:World.px,y:World.py}; Explore.persist(); }catch(e){} });
-window.addEventListener('DOMContentLoaded', ()=>{ Explore.init(); ExploreBgm.init(); });
+
+// [뒤로가기 제스처] 지금 열려 있는 모달 중 '가장 위'로 보이는 것 하나만 닫는다. 닫았으면 true.
+// 순서는 다른 모달 위에 겹쳐 뜰 수 있는 것부터(스펠링 조합은 조합소 위에, 대화창들은 여러 화면 위에 뜬다).
+// 전투(Battle)는 일부러 빼놓았다 — 뒤로가기로 전투를 이탈할 수 있게 하면 안 된다(도망 버튼으로만).
+function dismissTopExploreLayer(){
+  const vis = id => { const e=document.getElementById(id); return e && e.classList.contains('show'); };
+  if(vis('spell-screen')){ SpellQuiz.cancel(); return true; }
+  if(vis('dark-duel')){ DarkDuel.close(); return true; }
+  if(vis('event-dlg')){ GameEvent.close(); return true; }
+  if(vis('quest-dlg')){ Quest.close(); return true; }
+  if(vis('map-view')){ World.closeMap(); return true; }
+  if(vis('craft-screen')){ World.closeCraft(); return true; }
+  if(vis('forge-screen')){ World.closeForge(); return true; }
+  if(vis('stats-screen')){ World.closeStats(); return true; }
+  if(vis('comp-select')){ World.closeCompanionSelect(); return true; }
+  return false;
+}
+window.addEventListener('DOMContentLoaded', ()=>{ Explore.init(); ExploreBgm.init(); window.initBackGesture(dismissTopExploreLayer); });
 </script>
 </body>
 </html>
