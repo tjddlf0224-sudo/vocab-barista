@@ -248,11 +248,14 @@
   /* 임팩트 플래시(히트스탑 느낌) */
   .impact-flash{ position:absolute; inset:0; pointer-events:none; z-index:6; background:rgba(255,255,255,.5); animation:impflash .13s ease-out forwards; }
   @keyframes impflash{ 0%{opacity:.55} 100%{opacity:0} }
-  .sprite-enemy{ position:absolute; top:24%; right:12%; width:33%; max-width:148px; filter:drop-shadow(0 8px 6px rgba(0,0,0,.4)); }
-  .sprite-enemy img{ width:100%; height:auto; display:block; }
+  /* [정리] 몬스터 원본 PNG마다 캔버스 비율·여백이 제각각이라(안개두꺼비는 가로로 넓고 여백이 적어
+     width:100%+height:auto로는 유독 작고 위로 붕 뜸) — 폭·높이를 둘 다 고정한 정사각 박스 +
+     object-fit:contain(잘리지 않게 비율 유지 축소)+바닥 기준 정렬로 몬스터마다 크기·바닥선을 통일. */
+  .sprite-enemy{ position:absolute; bottom:30%; right:12%; width:33%; max-width:148px; height:33%; max-height:148px; filter:drop-shadow(0 8px 6px rgba(0,0,0,.4)); }
+  .sprite-enemy img{ width:100%; height:100%; object-fit:contain; object-position:center bottom; display:block; }
   .sprite-enemy.emoji{ font-size:4.6rem; text-align:center; }
   /* 보스: 더 크고 위협적인 붉은 오라 */
-  .sprite-enemy.boss{ width:44%; max-width:200px; top:16%; right:9%; filter:drop-shadow(0 10px 8px rgba(0,0,0,.5)) drop-shadow(0 0 18px rgba(255,60,60,.7)); animation:bossPulse 1.6s ease-in-out infinite; }
+  .sprite-enemy.boss{ width:44%; max-width:200px; height:44%; max-height:200px; bottom:30%; right:9%; filter:drop-shadow(0 10px 8px rgba(0,0,0,.5)) drop-shadow(0 0 18px rgba(255,60,60,.7)); animation:bossPulse 1.6s ease-in-out infinite; }
   @keyframes bossPulse{ 0%,100%{ filter:drop-shadow(0 10px 8px rgba(0,0,0,.5)) drop-shadow(0 0 14px rgba(255,60,60,.6)); } 50%{ filter:drop-shadow(0 10px 8px rgba(0,0,0,.5)) drop-shadow(0 0 26px rgba(255,90,90,.9)); } }
   .sprite-self{ position:absolute; bottom:4%; left:6%; width:40%; max-width:185px; filter:drop-shadow(0 8px 6px rgba(0,0,0,.4)); }
   .sprite-self img{ width:100%; height:auto; display:block; }
