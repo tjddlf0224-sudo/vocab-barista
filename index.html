@@ -2677,6 +2677,8 @@ const ACHIEVEMENTS = [
       progress:()=>(game.dailyStreak||0),                 threshold:7 },
     { id:'a_streak30',  cat:'출석',  name:'개근 30일',       desc:'30일 연속 출석',            icon:ACH_ICON.a_streak30, grade:'gold',      reward:{gold:2000},
       progress:()=>(game.dailyStreak||0),                 threshold:30 },
+    { id:'a_streak100', cat:'출석',  name:'개근 100일',      desc:'100일 연속 출석',           icon:ACH_ICON.a_streak30, grade:'legendary', reward:{gold:6000},
+      progress:()=>(game.dailyStreak||0),                 threshold:100 },
     // 💝 캐릭터
     { id:'a_char5',     cat:'캐릭터',name:'캐릭터 발굴',     desc:'캐릭터 도감 5종 수집',      icon:ACH_ICON.a_char5, grade:'bronze',    reward:{gold:150},
       progress:()=>(game.collectedChars||[]).length,      threshold:5 },
@@ -2688,16 +2690,24 @@ const ACHIEVEMENTS = [
       progress:()=>Math.max(0,...['m_roa','m_luna','m_sera'].map(id=>(game.affection&&game.affection[id])||0)), threshold:30 },
     { id:'a_aff100',    cat:'캐릭터',name:'영원한 인연',     desc:'메인 캐릭터 호감도 100',    icon:ACH_ICON.a_aff100, grade:'gold',      reward:{gold:1500},
       progress:()=>Math.max(0,...['m_roa','m_luna','m_sera'].map(id=>(game.affection&&game.affection[id])||0)), threshold:100 },
+    { id:'a_aff_all100',cat:'캐릭터',name:'세 마음 모두',    desc:'메인 캐릭터 3명 모두 호감도 100', icon:ACH_ICON.a_aff100, grade:'legendary', reward:{gold:3500},
+      progress:()=>Math.min(...['m_roa','m_luna','m_sera'].map(id=>(game.affection&&game.affection[id])||0)), threshold:100 },
     // 🛍️ 장식
     { id:'a_deco1',     cat:'장식',  name:'인테리어 시작',   desc:'카페 장식 첫 구매',         icon:ACH_ICON.a_deco1, grade:'bronze',    reward:{gold:100},
       progress:()=>{const s=game.shopLevels||{}; return ((s.counter||0)+(s.pet||0)+(s.wall||0))>0?1:0;}, threshold:1 },
     { id:'a_deco_all',  cat:'장식',  name:'카페 꾸미기',     desc:'카운터·펫·벽 전부 장착',   icon:ACH_ICON.a_deco_all, grade:'silver',    reward:{gold:300},
       progress:()=>{const s=game.shopLevels||{}; return ((s.counter||0)>0&&(s.pet||0)>0&&(s.wall||0)>0)?1:0;}, threshold:1 },
+    { id:'a_deco_max',  cat:'장식',  name:'궁극의 인테리어', desc:'카운터·펫·벽 전부 최고 등급(5티어)', icon:ACH_ICON.a_deco_all, grade:'legendary', reward:{gold:1800},
+      progress:()=>{const s=game.shopLevels||{}; return ((s.counter||0)>=5&&(s.pet||0)>=5&&(s.wall||0)>=5)?1:0;}, threshold:1 },
     // 🗺️ 탐험
     { id:'a_explore1',  cat:'탐험',  name:'첫 탐험',         desc:'탐험 화면 첫 방문',         icon:ACH_ICON.a_explore1, grade:'bronze',    reward:{gold:100},
       progress:()=>(game.exploreVisits||0),               threshold:1 },
     { id:'a_explore5',  cat:'탐험',  name:'탐험 마니아',     desc:'탐험 5회 방문',             icon:ACH_ICON.a_explore5, grade:'silver',    reward:{gold:300},
       progress:()=>(game.exploreVisits||0),               threshold:5 },
+    { id:'a_explore20', cat:'탐험',  name:'탐험가',          desc:'탐험 20회 방문',            icon:ACH_ICON.a_explore5, grade:'gold',      reward:{gold:800},
+      progress:()=>(game.exploreVisits||0),               threshold:20 },
+    { id:'a_explore50', cat:'탐험',  name:'전설의 탐험가',   desc:'탐험 50회 방문',            icon:ACH_ICON.a_explore5, grade:'legendary', reward:{gold:2200},
+      progress:()=>(game.exploreVisits||0),               threshold:50 },
 ];
 
 function charSVG(c) {
@@ -5261,11 +5271,11 @@ equipItem: function(category, level) {
         { cat:'카페',   ids:['a_combo10','a_combo20'] },
         { cat:'카페',   ids:['a_fever1','a_fever10'] },
         { cat:'카페',   ids:['a_rank_staff','a_rank_mgr','a_rank_god'] },
-        { cat:'출석',   ids:['a_streak3','a_streak7','a_streak30'] },
+        { cat:'출석',   ids:['a_streak3','a_streak7','a_streak30','a_streak100'] },
         { cat:'캐릭터', ids:['a_char5','a_char10','a_char_all'] },
-        { cat:'캐릭터', ids:['a_aff30','a_aff100'] },
-        { cat:'장식',   ids:['a_deco1','a_deco_all'] },
-        { cat:'탐험',   ids:['a_explore1','a_explore5'] },
+        { cat:'캐릭터', ids:['a_aff30','a_aff100','a_aff_all100'] },
+        { cat:'장식',   ids:['a_deco1','a_deco_all','a_deco_max'] },
+        { cat:'탐험',   ids:['a_explore1','a_explore5','a_explore20','a_explore50'] },
     ],
 
     toggleAchChain: function(key) {
