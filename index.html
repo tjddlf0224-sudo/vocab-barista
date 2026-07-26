@@ -1516,6 +1516,11 @@ const BGM_JINGLES = {
 
 // 네이티브(AppDelegate)가 백그라운드 전환 직전에 호출한다 — 최상위 const라 window.BgMusic은 없으므로 별도 노출.
 window.__vbReleaseAudio = function(){ try{ BgMusic.hardStop(); }catch(e){} };
+// [버그수정] 포그라운드 복귀 시 BGM이 안 돌아오는 문제 — 지금까진 복귀 감지를 전적으로
+// document.visibilitychange/Capacitor appStateChange(웹 쪽 이벤트)에만 맡겼는데, WKWebView에서는
+// 앱이 백그라운드→포그라운드로 전환돼도 이 이벤트들이 항상 신뢰성 있게 발화한다는 보장이 없다.
+// 그래서 release와 대칭으로, 네이티브가 포그라운드 복귀 직후 직접 호출하는 훅을 추가해 이중 보장한다.
+window.__vbResumeAudio = function(){ try{ BgMusic.restore(); }catch(e){} };
 const BgMusic = {
     // ★ Web Audio API 기반(5차). HTML5 <audio>를 쓰는 한 iOS가 잠금화면 Now Playing에
     // 등록하는 걸 막을 수 없어서(WebContent 프로세스가 등록 → 앱에서 못 지움) 재생 방식을 바꿨다.

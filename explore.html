@@ -595,6 +595,10 @@
 // ===== 탐험 BGM =====
 // 네이티브(AppDelegate)가 백그라운드 전환 직전에 호출 — 최상위 const라 window.ExploreBgm은 없다.
 window.__vbReleaseAudio = function(){ try{ ExploreBgm.hardStop(); }catch(e){} };
+// [버그수정] index.html BgMusic과 동일 — 포그라운드 복귀를 웹 이벤트에만 의존하지 않고
+// 네이티브가 직접 호출하는 훅을 추가해 이중 보장(WKWebView에서 visibilitychange가 항상 신뢰성 있게
+// 발화하지는 않는다).
+window.__vbResumeAudio = function(){ try{ ExploreBgm.restore(); }catch(e){} };
 const ExploreBgm = {
   // ★ Web Audio API 기반(index.html의 BgMusic과 같은 이유·같은 방식).
   // <audio>는 iOS 잠금화면 Now Playing에 등록돼 앱을 꺼도 남는다. AudioContext는 안 남는다.
