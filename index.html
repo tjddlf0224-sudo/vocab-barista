@@ -1297,7 +1297,7 @@
       .set-del-actions .set-btn{ margin-top:0; }
       .set-link{ color:#494fec; font-size:.92rem; text-decoration:none; word-break:break-all; }
     </style>
-    <div id="settings-screen" class="overlay hidden">
+    <div id="settings-screen" class="overlay hidden" onclick="if(event.target===this) vbCloseSettings()">
       <div class="panel settings-panel">
         <h2><svg class="bic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2.8l1.5 2.6 3-.4.5 3 2.6 1.5-1.6 2.5 1.6 2.5-2.6 1.5-.5 3-3-.4L12 21.2l-1.5-2.6-3 .4-.5-3L4.4 14.5 6 12 4.4 9.5l2.6-1.5.5-3 3 .4z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg> 설정</h2>
         <div class="set-sec">
@@ -1338,7 +1338,7 @@
       </div>
     </div>
 
-    <div id="inventory-screen" class="overlay hidden">
+    <div id="inventory-screen" class="overlay hidden" onclick="if(event.target===this){ this.classList.add('hidden'); game.isActive=true; if(game.currentCust && !game.currentCust.solved) game.startTimer(); }">
         <div class="panel" style="max-height:80vh; display:flex; flex-direction:column;">
             <h2 id="inventory-title">스킨 변경</h2>
             <div id="inventory-list" class="inventory-list" style="overflow-y:auto; flex:1;">
@@ -1348,19 +1348,19 @@
         </div>
     </div>
 
-    <div class="overlay hidden" id="quest-screen">
+    <div class="overlay hidden" id="quest-screen" onclick="if(event.target===this) game.closeOverlays()">
         <h2>도전 과제</h2>
         <div class="quest-list" id="quest-list-el"></div>
         <button class="btn-mini close-btn" onclick="game.closeOverlays()">닫기</button>
     </div>
 
-    <div class="overlay hidden" id="ach-screen">
+    <div class="overlay hidden" id="ach-screen" onclick="if(event.target===this) game.closeOverlays()">
         <h2><svg class="bic" viewBox="0 0 24 24"><circle cx="12" cy="15" r="5.6" fill="#ffcf4d" stroke="#b8860b" stroke-width="1.3"/><path d="M12 12.4l1 2.1 2.3.3-1.7 1.6.4 2.3-2-1.1-2 1.1.4-2.3-1.7-1.6 2.3-.3z" fill="#fff6d8"/><path d="M8 3h3l1 5H9zM16 3h-3l-1 5h3z" fill="#e05c5c"/></svg> 업적 · 배지</h2>
         <div class="ach-list" id="ach-list-el"></div>
         <button class="btn-mini close-btn" onclick="game.closeOverlays()">닫기</button>
     </div>
 
-    <div class="overlay hidden" id="stats-screen">
+    <div class="overlay hidden" id="stats-screen" onclick="if(event.target===this) game.closeOverlays()">
         <h2><svg class="bic" viewBox="0 0 24 24"><rect x="4" y="12" width="4" height="8" rx="1" fill="currentColor"/><rect x="10" y="7" width="4" height="13" rx="1" fill="currentColor"/><rect x="16" y="10" width="4" height="10" rx="1" fill="currentColor"/></svg> 학습 통계</h2>
         <div id="stats-body" class="quest-list" style="width:90%; max-width:430px;"></div>
         <button class="btn-mini close-btn" onclick="game.closeOverlays()">닫기</button>
@@ -1375,7 +1375,7 @@
         </div>
     </div>
 
-    <div class="overlay hidden" id="shop-screen">
+    <div class="overlay hidden" id="shop-screen" onclick="if(event.target===this) game.closeOverlays()">
         <h2>잡화점</h2>
         <p>내 지갑: <span id="shop-gold" style="color:var(--gold); font-weight:bold;">0</span> G</p>
         
@@ -1390,7 +1390,7 @@
         <button class="btn-mini close-btn" onclick="game.closeOverlays()">닫기</button>
     </div>
 
-    <div class="overlay hidden" id="inventory-screen-item"> 
+    <div class="overlay hidden" id="inventory-screen-item" onclick="if(event.target===this) game.closeSkinSelector()">
     <h2 id="inv-title">아이템 교체</h2>
     <p style="color:#ddd; font-size:0.9rem; margin-bottom:15px;">보유 중인 아이템을 선택하세요.</p>
     
@@ -1399,7 +1399,7 @@
     <button class="btn-mini" onclick="game.closeSkinSelector()" style="margin-top:20px;">닫기</button>
 </div>
 
-    <div class="overlay hidden" id="wordbook-screen">
+    <div class="overlay hidden" id="wordbook-screen" onclick="if(event.target===this) this.classList.add('hidden')">
         <h2>오답 노트</h2>
         <div style="background:#e3f2fd; padding:10px; border-radius:10px; color:#333; margin-bottom:10px;">
             졸업한 단어: <b id="master-count" style="color:var(--blue);">0</b> 개
@@ -1409,7 +1409,7 @@
         <button class="btn-mini close-btn" onclick="document.getElementById('wordbook-screen').classList.add('hidden')">닫기</button>
     </div>
 
-    <div class="overlay hidden" id="dex-screen">
+    <div class="overlay hidden" id="dex-screen" onclick="if(event.target===this) this.classList.add('hidden')">
         <h2>도감</h2>
         <div class="dex-tabs">
             <button class="dex-tab active" id="dex-tab-word" onclick="game.switchDexTab('word')"><svg class="bic" viewBox="0 0 24 24"><path d="M4 4.5h6.2A1.8 1.8 0 0 1 12 6.3v13a1.5 1.5 0 0 0-1.5-1.3H4z" fill="currentColor"/><path d="M20 4.5h-6.2A1.8 1.8 0 0 0 12 6.3v13a1.5 1.5 0 0 1 1.5-1.3H20z" fill="currentColor" opacity=".7"/></svg> 단어</button>

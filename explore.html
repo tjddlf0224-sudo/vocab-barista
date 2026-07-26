@@ -151,7 +151,6 @@
   .cm-chip .cm-ic{ width:24px; height:24px; object-fit:contain; }
   .cm-chip .cm-nm{ font-size:.8rem; color:#5a4326; font-weight:bold; }
   .cm-chip .cm-ct{ font-size:.82rem; font-weight:900; color:#2e7d32; min-width:16px; text-align:right; }
-  .cm-chip.zero{ opacity:.42; filter:grayscale(.6); }
   .cm-chip.rare{ border-color:var(--gold); background:linear-gradient(180deg,#fff8e1,#ffeaa7); }
   .eq-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
   .eq-card{ background:rgba(255,253,245,.96); border:2px solid #b9a87e; border-radius:12px; padding:8px 10px; text-align:left; display:flex; align-items:center; gap:9px; }
@@ -451,7 +450,7 @@
 
 
 <!-- 동행 선택 -->
-<div id="comp-select" class="ex-overlay">
+<div id="comp-select" class="ex-overlay" onclick="if(event.target===this) World.closeCompanionSelect()">
   <div class="cs-panel">
     <div class="cs-title"><span data-ic="people"></span> 동행 선택</div>
     <div class="cs-grid" id="cs-grid"></div>
@@ -460,7 +459,7 @@
 </div>
 
 <!-- 스탯 & 장비 -->
-<div id="stats-screen" class="ex-overlay">
+<div id="stats-screen" class="ex-overlay" onclick="if(event.target===this) World.closeStats()">
   <div class="cs-panel" style="max-width:760px; max-height:92%; overflow-y:auto; padding-bottom:calc(14px + env(safe-area-inset-bottom));">
     <div class="cs-title"><span data-ic="chart"></span> 스탯</div>
     <div id="stats-body"></div>
@@ -469,7 +468,7 @@
 </div>
 
 <!-- 대장간(장비 제작/장착) — 맵의 대장간 건물에서만 열림 -->
-<div id="forge-screen" class="ex-overlay">
+<div id="forge-screen" class="ex-overlay" onclick="if(event.target===this) World.closeForge()">
   <div class="cs-panel" style="max-width:760px; max-height:92%; overflow-y:auto; padding-bottom:calc(14px + env(safe-area-inset-bottom));">
     <div class="cs-title"><span data-ic="forge"></span> 대장간</div>
     <div style="font-size:.82rem; color:#cdbf9e; margin-bottom:10px;">골드와 재료로 무기·방어구를 <b style="color:#ffd54f">제작·장착</b>해요. 제작 즉시 장착돼요.</div>
@@ -479,7 +478,7 @@
 </div>
 
 <!-- 조합소 -->
-<div id="craft-screen" class="ex-overlay">
+<div id="craft-screen" class="ex-overlay" onclick="if(event.target===this) World.closeCraft()">
   <div class="cs-panel" style="max-width:700px; max-height:92%; overflow-y:auto; padding-bottom:calc(14px + env(safe-area-inset-bottom));">
     <div class="cs-title"><span data-ic="heal"></span> 조합소</div>
     <div style="font-size:.82rem; color:#cdbf9e; margin-bottom:10px;">재료를 모아 특별 아이템을 만들어요. 마지막에 <b style="color:#ffd54f">스펠링 조합</b>을 완성해야 성공!<br>(만든 건 카페 잡화점에서 사용)</div>
@@ -491,7 +490,7 @@
 </div>
 
 <!-- 스펠링 조합 퀴즈 -->
-<div id="spell-screen" class="ex-overlay">
+<div id="spell-screen" class="ex-overlay" onclick="if(event.target===this) SpellQuiz.cancel()">
   <div class="cs-panel" id="sp-panel" style="max-width:600px;">
     <div class="sp-head"><span data-ic="hammer"></span> <span id="sp-item">아이템</span> 조합 — 스펠링을 맞춰라!</div>
     <div class="sp-prompt">뜻: <b id="sp-mean">...</b></div>
@@ -507,7 +506,7 @@
 </div>
 
 <!-- 퀘스트 대화 -->
-<div id="quest-dlg" class="ex-overlay">
+<div id="quest-dlg" class="ex-overlay" onclick="if(event.target===this) Quest.close()">
   <img id="q-portrait" class="q-portrait" src="" alt="">
   <div class="q-panel">
     <div class="q-name" id="q-name"></div>
@@ -516,7 +515,7 @@
   </div>
 </div>
 <!-- 경로 이벤트(보물/선택/시련/흥정) — 퀘스트 대화창과 같은 톤, 초상 없이 패널만 -->
-<div id="event-dlg" class="ex-overlay">
+<div id="event-dlg" class="ex-overlay" onclick="if(event.target===this) GameEvent.close()">
   <div class="q-panel" style="bottom:50%; transform:translate(-50%,50%);">
     <div class="q-name" id="ev-name"></div>
     <div class="q-text" id="ev-text"></div>
@@ -524,7 +523,7 @@
   </div>
 </div>
 <!-- 어둠의 상인 영어 대결 -->
-<div id="dark-duel" class="ex-overlay">
+<div id="dark-duel" class="ex-overlay" onclick="if(event.target===this) DarkDuel.close()">
   <div class="dm-box">
     <div class="dm-top"><img id="dm-portrait" class="dm-portrait" src="" alt=""><div class="dm-title"><span data-ic="sk_moon"></span> 어둠의 상인</div></div>
     <div class="dm-body" id="dm-body"></div>
@@ -535,7 +534,7 @@
 <div id="ex-cutscene" class="csc-hidden"><div class="csc-blur"></div><img class="csc-img" src="" alt=""><div class="csc-caption"></div><div class="csc-hint">탭하여 계속 ▼</div></div>
 
 <!-- 전체 지도 뷰 -->
-<div id="map-view" class="ex-overlay">
+<div id="map-view" class="ex-overlay" onclick="if(event.target===this) World.closeMap()">
   <div class="mv-box">
     <div class="mv-title" id="mapview-title">지도</div>
     <canvas id="mapview-canvas" class="mv-canvas"></canvas>
@@ -2130,8 +2129,11 @@ const World = {
     document.getElementById('craft-body').innerHTML=h+'</div>'; },
   // 보유 재료 스트립(전체 재료 + 개수, 0개는 흐리게, 황금원두는 금테)
   renderMats(){ const m=Explore.state.materials||{}; const el=document.getElementById('craft-mats'); if(!el)return;
-    el.innerHTML=Object.entries(MATERIALS).map(([k,mat])=>{ const c=m[k]||0;
-      return `<div class="cm-chip${c?'':' zero'}${mat.rare?' rare':''}"><img class="cm-ic" src="${mat.img}" onerror="this.replaceWith(document.createTextNode('${mat.icon}'))"><span class="cm-nm">${mat.name}</span><span class="cm-ct">${c}</span></div>`; }).join(''); },
+    // [정리] 하나도 없는 재료는 목록에서 아예 숨긴다(0개로 흐리게 표시하던 것 대신)
+    const owned=Object.entries(MATERIALS).filter(([k])=>(m[k]||0)>0);
+    el.innerHTML = owned.length ? owned.map(([k,mat])=>{ const c=m[k]||0;
+      return `<div class="cm-chip${mat.rare?' rare':''}"><img class="cm-ic" src="${mat.img}" onerror="this.replaceWith(document.createTextNode('${mat.icon}'))"><span class="cm-nm">${mat.name}</span><span class="cm-ct">${c}</span></div>`; }).join('')
+      : `<div style="font-size:.8rem; color:#a89880; padding:6px 2px;">아직 모은 재료가 없어요 — 탐험하며 채집해보세요.</div>`; },
   // 레시피 비용: 재료별 보유/필요를 색으로(충분=초록, 부족=빨강)
   costDetail(cost){ if(!cost)return''; const parts=[];
     if(cost.gold) parts.push(`${UI_ICON.coin}${cost.gold}`);
@@ -2669,6 +2671,13 @@ const Battle = {
     // 몬스터별 확률 드롭 테이블
     const drops=e.drops||(e.drop?[{mat:e.drop,chance:1}]:[]); const dparts=[];
     drops.forEach(d=>{ if(this._rand() < (d.chance==null?1:d.chance)){ const cnt=d.count||1; Explore.state.materials[d.mat]=(Explore.state.materials[d.mat]||0)+cnt; const m=MATERIALS[d.mat]||{}; dparts.push(`${MAT_ICON[d.mat]||''}${m.name||d.mat}+${cnt}`); } });
+    // [퀘스트 구제] 로스팅 코어(core)는 원래 우드르(1회·100%)·골렘(1회·45%)에서만 나와, 골렘 확률이 빗나가면
+    //   리코 퀘스트(코어 2개 필요)를 영영 못 깨는 사각지대가 있었다 — 골렘을 잡은 뒤에는 깊은 숲 일반 몬스터도
+    //   낮은 확률로 코어를 떨어뜨려 막힌 진행을 풀어준다.
+    if(!e.isBoss && Explore.state.map.zone==='deepwood' && World.bossCleared('deepwood') && this._rand()<0.12){
+      Explore.state.materials.core=(Explore.state.materials.core||0)+1;
+      dparts.push(`${MAT_ICON.core||''}${(MATERIALS.core||{}).name||'core'}+1`);
+    }
     let txt=`승리! ${UI_ICON.coin}+${gold}${dparts.length?' · '+dparts.join(' · '):''} · ${UI_ICON.exp}EXP+${e.exp}`; Explore.state.exp+=e.exp;
     // 황금 원두 희귀 드롭(보스 35% · 일반 12%) — 골든 블렌드 조합 재료
     if(this._rand() < (e.isBoss?0.35:0.12)){ Explore.state.materials.goldbean=(Explore.state.materials.goldbean||0)+1; txt+=`<br><span class="lvlup">${MAT_ICON.goldbean} 황금 원두를 발견했다! (+1)</span>`; }
