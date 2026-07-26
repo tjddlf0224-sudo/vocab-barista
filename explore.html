@@ -52,6 +52,8 @@
     opacity:0; transition:opacity .25s; pointer-events:none; text-align:left; max-width:80%; }
   #toast.show{ opacity:1; }
   #toast .en{ color:var(--gold); font-weight:bold; } #toast .ko{ color:#cde; opacity:.85; font-size:.85rem; }
+  #toast .toast-li{ display:block; padding-left:1.3em; text-indent:-1.3em; margin-top:2px; }
+  #toast .toast-sub{ display:block; padding-left:2.2em; text-indent:-1.1em; margin-top:2px; }
 
   /* 조이스틱 (좌하단) */
   #stick-zone{ position:absolute; left:0; bottom:0; width:46%; height:62%; z-index:4; touch-action:none; }
@@ -1504,11 +1506,11 @@ const World = {
       + `방어 +${Math.round(vp.defPct*100)}% · 가속 +${Math.round(vp.gaugePct*100)}%` : '';
     this.toast(
       `<b>울림 지수란?</b><br><span class="ko">카페에서 옛말(영단어)을 공부한 만큼, 탐험 전투력이 자동으로 올라가는 시스템이에요.</span><br><br>`
-      + `<b>${UI_ICON.atk} 공격</b> — 마스터한(완전히 외운) 단어 수가 많을수록 상승 (최대 +30%)<br>`
-      + `<b>✦ 크리</b> — 카페 최근 40문제 정답률이 50%를 넘으면 그만큼 상승 (최대 +15%p, 50% 이하는 페널티 없이 0)<br>`
-      + `<b>${UI_ICON.def} 방어</b> — 오답노트 단어를 완전히 정복(SRS 졸업)한 개수만큼 상승 (최대 +25%)<br>`
-      + `<b>⚡ 가속</b> — 카페 VIP 손님 스펠링을 직접 입력해서 맞힌 누적 횟수만큼, 탐험 스킬 게이지 차는 속도 상승 (최대 +40%)<br>`
-      + `<span class="ko">　→ 게이지가 빨리 찰수록 캐릭터 고유 스킬을 더 자주 쓸 수 있어요. 스킬은 기본 공격보다 훨씬 세서, 특히 오래 끄는 보스전에서 체감 화력 차이가 커요.</span>`
+      + `<div class="toast-li"><b>${UI_ICON.atk} 공격</b> — 마스터한(완전히 외운) 단어 수가 많을수록 상승 (최대 +30%)</div>`
+      + `<div class="toast-li"><b>✦ 크리</b> — 카페 최근 40문제 정답률이 50%를 넘으면 그만큼 상승 (최대 +15%p, 50% 이하는 페널티 없이 0)</div>`
+      + `<div class="toast-li"><b>${UI_ICON.def} 방어</b> — 오답노트 단어를 완전히 정복(SRS 졸업)한 개수만큼 상승 (최대 +25%)</div>`
+      + `<div class="toast-li"><b>⚡ 가속</b> — 카페 VIP 손님 스펠링을 직접 입력해서 맞힌 누적 횟수만큼, 탐험 스킬 게이지 차는 속도 상승 (최대 +40%)</div>`
+      + `<div class="toast-sub ko">→ 게이지가 빨리 찰수록 캐릭터 고유 스킬을 더 자주 쓸 수 있어요. 스킬은 기본 공격보다 훨씬 세서, 특히 오래 끄는 보스전에서 체감 화력 차이가 커요.</div>`
       + cur,
       6500
     );
