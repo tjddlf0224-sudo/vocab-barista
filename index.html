@@ -2490,6 +2490,87 @@ DEMITAS_SCENES[2].introCg = 'assets/art/cg_dmitasse_vault.jpg'; DEMITAS_SCENES[2
 DEMITAS_SCENES[2].fx = 'assets/art/fx_seal1.png'; DEMITAS_SCENES[2].fxKind = 'seal'; // 봉인고 개봉 — 봉인 파열 이펙트
 DEMITAS_SCENES[3].introCg = 'assets/art/cg_dmitasse_young_memory.jpg'; DEMITAS_SCENES[3].introCaption = '오래전, 누군가 그에게 처음 커피를 내려주던 날.';
 
+// ===== [위기 아크] 봉인 강화 — crisisStage 별도 축 =====
+// 5막 구조에서 비어 있던 '위기'를 2막(8000)과 봉인고(20000) 사이에 신설.
+// DEMITAS_SCENES 배열 인덱스는 일절 건드리지 않는다(중간 삽입 시 REQ·boss위치·introCg·explore reqDemitas·
+// 어둠의상인 reveal/dissolve·세이브 demitasStage까지 최소 8곳이 연쇄로 깨짐 — 별도 축이 안전).
+// 단계: 0=미발동 / 1=통보(+탐험NPC 1단계) / 2=세라 이름 상실(+NPC 2단계) / 3=루나·로아 결의(봉인고행) / 4=회복 완료
+// 세라의 이름 상실은 charActs를 되돌리지 않는다 — mainNameKnown()이 crisisSeraLost 플래그 하나만 보고
+// 이름표·초상화·인사 티어가 전부 자동으로 뒤집힌다(비파괴 · 플래그만 끄면 즉시 복구).
+const CRISIS_THRESHOLDS = [13000, 15500, 17500];
+// [원인] 2막 끝의 "자네가 옳을까 봐 두렵다"가 방아쇠 — 플레이어가 잘하고 있어서 위기가 온다.
+const CRISIS_OPEN = [
+  { who:'q_demitas', text:"…또 왔네. 오늘은 제안이 아니라, 통보를 하러 왔지.", face:"chars/face_demitasse_base.png" },
+  { who:'q_demitas', text:"자네 커피가 골목을 넘어 항구까지 번지고 있더군. 나눠진 말은 자라고, 자란 말은… 내 봉인을 흔들지.", face:"chars/face_demitasse_base.png" },
+  { who:'q_demitas', text:"그래서 조였네. 더 깊이, 더 단단히. 이제 봉인고는 흘러든 말을 돌려보내지 않아.", face:"chars/face_demitasse_base.png" },
+  { who:'boss', text:"그게 무슨…" },
+  { who:'q_demitas', text:"곧 알게 될 걸세. 말이란 건, 잃고 나서야 있었다는 걸 아는 물건이니.", face:"chars/face_demitasse_smile.png" },
+  { who:'q_demitas', text:"자네가 옳을까 봐 두렵다고 했었지. …두려움은 사람을 서두르게 하더군. 나 같은 늙은이도.", face:"chars/face_demitasse_base.png" }
+];
+// [상실] 세라가 이름을 잃는다 — 재생 시점에 crisisSeraLost가 이미 true라서
+// 대화창 이름표는 '아이돌 에코', 초상은 sera_hidden(모자)으로 시스템이 먼저 말해준다.
+// "사람 잘못 보셨어요"는 1막 대사 그대로 — 그땐 거짓말이었고, 지금은 진심이다.
+const CRISIS_SERA = [
+  { who:'m_sera', text:"(문이 열리고, 파란 모자를 깊게 눌러쓴 채) 저기… 여기, 커피 되나요?" },
+  { who:'boss', text:"세라?" },
+  { who:'m_sera', text:"…네?" },
+  { who:'m_sera', text:"아, 저요? …사람 잘못 보셨어요. 저 그냥 손님이에요." },
+  { who:'boss', text:"……" },
+  { who:'m_sera', text:"(익숙하게 안쪽 자리로 걸어가 앉는다) …이상하다. 처음 온 가게인데, 자리가 발에 익어요." },
+  { who:'m_sera', text:"따뜻한 라떼 하나 주세요. …제가 이걸 좋아했었나? 왜 이게 먼저 나오지." },
+  { who:'m_sera', text:"(잔을 두 손으로 감싼다) ……." },
+  { who:'m_sera', text:"죄송해요, 우는 거 아니에요. 김이 눈에 들어가서." },
+  { who:'m_sera', text:"(아주 작게, 뜻도 모르는 노래를 흥얼거리다 뚝 멈춘다) …이 노래, 뭐더라. 어디까지 불렀는지도 모르겠어요." },
+  { who:'boss', text:"…천천히 생각해도 돼요." },
+  { who:'m_sera', text:"……그 말." },
+  { who:'m_sera', text:"그 말, 어디서 들어봤는데." }
+];
+// [바닥+진단] 루나 — 유일하게 이걸 겪어본 사람. 3막의 백 년 서사가 여기서 회수된다.
+const CRISIS_LUNA = [
+  { who:'boss', text:"(그날 내린 커피는 전부 밍밍했다. 단어 하나 피어오르지 않는 김만 올랐다.)" },
+  { who:'m_luna', text:"…커피에서 김이 안 올라. 아니, 김은 올라. 말이 안 올라.", face:"chars/face_luna_sorrow.png" },
+  { who:'boss', text:"세라가… 절 못 알아봐요." },
+  { who:'m_luna', text:"이름부터 갔구나. …순서까지 똑같네." },
+  { who:'m_luna', text:"백 년 전에, 내가 이랬어. 사람들 이름이 먼저 흐려지고, 그다음엔 내 이름이 흐려졌지.", face:"chars/face_luna_sorrow.png" },
+  { who:'m_luna', text:"그때 나는 봉인 안쪽에 있었고, 지금 너희는 바깥에 있어. 다른 건 그거 하나야." },
+  { who:'m_luna', text:"…그러니까 이번엔, 늦지 않을 수 있어." },
+  { who:'boss', text:"어디로 가면 돼요?" },
+  { who:'m_luna', text:"봉인고. 실려 간 말은 전부 거기 모여. 세라의 이름도… 지금쯤 어느 잔에 담겨 있을 거야." },
+  { who:'m_luna', text:"혼자 가지 마. 혼자 지는 싸움은, 백 년 전에 내가 이미 해봤거든.", face:"chars/face_luna_grateful.png" }
+];
+// [결의] 로아 — 도망쳐 본 사람이라서 안다. 5막의 '스스로 두르는 앞치마'가 여기서 쓰인다.
+const CRISIS_ROA = [
+  { who:'m_roa', text:"(문을 열고 들어와, 말없이 카운터 안쪽의 앞치마를 집어 두른다)" },
+  { who:'boss', text:"…로아?" },
+  { who:'m_roa', text:"가게 문 닫고 갈 순 없잖아. 네가 없는 동안, 여긴 내가 내려." },
+  { who:'m_roa', text:"…나는 한 번 도망쳐 본 사람이야. 그래서 알아. 지금 안 가면, 너 평생 후회해.", face:"chars/face_roa_confess.png" },
+  { who:'m_roa', text:"커피는 식으면 다시 내리면 돼. 사람은… 그게 안 되는 경우가 있더라." },
+  { who:'m_roa', text:"가. 등은 내가 맡아." }
+];
+// [절정 보강] 봉인고 3막 "저들은 자네 편이 아니야. 그저 구경하러 온 사람들이지." 직후에 삽입.
+// 세 단골이 각자 다른 이유로 나타나 '구경꾼'을 부순다 — 세라는 이름을 잃은 채(에코 표기)로 온다.
+// 로아는 CRISIS_ROA에서 가게를 지킨다고 했다가 결국 닫고 왔다 — 형식보다 곁을 택하는 게 그의 아크.
+const CRISIS_VAULT_CUTS = [
+  { who:'boss', text:"(봉인고의 문이 열린다.)" },
+  { who:'m_roa', text:"구경? …단골인데." },
+  { who:'m_roa', text:"가게는 하루 닫았어. 이런 날 내린 커피는 맛이 없거든." },
+  { who:'m_luna', text:"백 년 전엔 나 혼자 이 봉인을 졌어. 그래서 알아 — 혼자 지는 무게라는 걸. …이번엔 나눠 질 거야." },
+  { who:'m_sera', text:"저는… 이 사람이 누군지 기억 안 나요. 제 이름도요." },
+  { who:'m_sera', text:"근데 발이 여기로 왔어요. 이 사람 커피 맛은… 지워지질 않아서." },
+  { who:'m_sera', text:"그러니까 돌려줘요. 뭘 잃었는지는 몰라도, 잃은 게 있다는 건 아니까." },
+  { who:'q_demitas', text:"…이름을 잃고도 찾아오는가. 값도 매기지 않았는데.", face:"chars/face_demitasse_crack.png" }
+];
+// [회복] 보스전 승리 직후 — 재생 시점에 crisisSeraLost는 이미 false(이름표 '세라' 복귀).
+// "앞으로도 세라라고 부를게요"(2막의 약속)가 이름이 돌아오는 길이 된다.
+const CRISIS_RECOVER = [
+  { who:'m_sera', text:"(모자를 벗고 서 있다. 오랜만에 보는 얼굴이다.) 사장님." },
+  { who:'boss', text:"……" },
+  { who:'m_sera', text:"저 왔어요. …세라, 왔어요." },
+  { who:'m_sera', text:"봉인고에서 잔이 열리는 순간, 머릿속에서 목소리가 났어요. '앞으로도 세라라고 부를게요' — 사장님 목소리요." },
+  { who:'m_sera', text:"이름이 돌아온 게 아니에요. 불러준 사람이 있어서, 돌아올 데가 있었던 거예요." },
+  { who:'m_sera', text:"(잔을 두 손으로 감싸며) …한 곡 불러도 돼요? 오늘은, 안 틀릴 것 같아서." }
+];
+
 // ===== 리코 케미 씬 (2인) — 로아 무시·루나 쫄음·세라 팬심·순자여사 손주 =====
 const RICO_CHEMISTRY = {
   roa: [ { who:'q_rico', text:"로아 선배! 오늘 제 라떼 어때요? 밤새 연습했어요.", face:"chars/face_rico_hype.png" }, { who:"m_roa", text:"(한 모금 마시고, 말없이 잔을 내려놓고 나간다)", face:"chars/face_roa_rival.png" }, { who:'q_rico', text:"...평가가 너무 깊어서 방금 한 수 배웠어. 무슨 뜻인지는 모르겠지만.", face:"chars/face_rico_scolded.png" } ],
@@ -2560,7 +2641,11 @@ function resolveGenderLines(v){ if(v && !Array.isArray(v) && (v.m||v.f)){ return
 // 막 해금 스토리 한 줄 — {m,f} 객체면 성별별, 아니면 문자열 그대로
 function affStoryLine(id, i){ var v=(AFFECTION_STORY[id]||[])[i]; if(v && typeof v==='object'){ return v[vbGender()] || v.m || v.f || ''; } return v||''; }
 // 메인 캐릭터 이름 공개 여부: 2막(호감 40) 해금 전에는 ??? 로 가림 (1막=첫만남 직후라 너무 이름)
-function mainNameKnown(id){ return ((game && game.charActs && game.charActs[id])||0) >= 2; }
+function mainNameKnown(id){
+    // [위기 아크] 세라 이름 상실 중엔 '모르는 상태'로 되돌린다 — charActs는 건드리지 않고 플래그 하나로
+    // 이름표(아이돌 에코)·초상(sera_hidden)·인사 티어·리코 케미 대상 제외까지 전부 자동 연동.
+    if(id === 'm_sera' && game && game.crisisSeraLost) return false;
+    return ((game && game.charActs && game.charActs[id])||0) >= 2; }
 // 이름 공개(2막) 전 표기: alias가 있으면 그걸(세라=세상이 아는 예명 '아이돌 에코'), 없으면 ???(로아·루나는 진짜 무명)
 function mainDisplayName(ch){ if(ch && ch.kind==='main' && !mainNameKnown(ch.id)) return ch.alias || '???'; return ch ? ch.name : ''; }
 // 이름 공개 전 초상: hidden(변장)이 있으면 그걸 쓴다(세라=베레모+마스크). 대화창·카페 스프라이트 공통.
@@ -3010,6 +3095,8 @@ const game = {
             this.exploreVisits = data.exploreVisits || 0;
             this.demitasStage = data.demitasStage || 0;   // [버그수정] 드미타스 컷신 진행도 복원
             this._demitasRetry = data.demitasRetry || 0;  // [보스전] 봉인고 패배 후 재도전 쿨다운(점수 기준)
+            this.crisisStage = data.crisisStage || 0;      // [위기 아크] 진행도 복원
+            this.crisisSeraLost = !!data.crisisSeraLost;   // [위기 아크] 세라 이름 상실 플래그 복원
             this.seenCgs = Array.isArray(data.seenCgs) ? data.seenCgs : [];   // [CG 도감] 감상 목록 복원
             this.crossPlayed = (data.crossPlayed && typeof data.crossPlayed === 'object') ? data.crossPlayed : {};   // [버그수정] 교차 씬 하루1회 기록 복원 — 저장 안 하면 재실행 시 같은 날 재발동
             this._ricoSincereSeen = !!data.ricoSincereSeen;   // [영속] 리코 '재능 고백' 1회성 플래그 복원 — 재실행마다 반복되던 문제 방지
@@ -3113,6 +3200,8 @@ const game = {
             exploreVisits: this.exploreVisits || 0,
             demitasStage: this.demitasStage || 0,   // [버그수정] 드미타스 컷신 진행도 — 저장 안 하면 매 세션 이미 본 막이 재발동
             demitasRetry: this._demitasRetry || 0,   // [보스전] 봉인고 재도전 쿨다운
+            crisisStage: this.crisisStage || 0,      // [위기 아크] 진행도(0~4) — explore도 이 값을 읽어 NPC 붕괴 대사 전환
+            crisisSeraLost: !!this.crisisSeraLost,   // [위기 아크] 세라 이름 상실 플래그(비파괴 — charActs는 그대로)
             crossPlayed: this.crossPlayed || {},     // [버그수정] 교차 씬 하루1회 기록(날짜 키, 다음날 자연 만료)
             ricoSincereSeen: !!this._ricoSincereSeen,  // [영속] 리코 '재능 고백' 1회성 플래그
 
@@ -3167,6 +3256,37 @@ const game = {
         }
     },
 
+    // [위기 아크] 누적점수 마일스톤에서 위기 3단계 순차 발생 — maybeDemitasEvent보다 먼저 검사
+    maybeCrisisEvent: function(){
+        if(this.gameMode !== 'normal') return false;
+        // 이미 봉인고를 이긴 구세이브 — 위기의 전제(결전 전) 자체가 지나갔으니 아크 통째로 건너뜀
+        if((this.demitasStage||0) >= 3){ if((this.crisisStage||0) < 4) this.crisisStage = 4; return false; }
+        var st = this.crisisStage || 0;
+        if(st >= 3) return false;
+        if((this.lifetimeScore||0) < CRISIS_THRESHOLDS[st]) return false;
+        var self = this;
+        if(st === 0){   // [통보] 드미타스가 봉인을 조였다 — 탐험 NPC 1단계 붕괴 개시
+            this.crisisStage = 1; this.saveData();
+            this.playCutscene({ cuts: CRISIS_OPEN }, function(){ self.nextTurn(true); });
+            return true;
+        }
+        if(st === 1){   // [상실] 세라의 이름
+            if(!mainNameKnown('m_sera')) return false;   // 이름을 알기 전엔 잃을 것도 없다 — 세라 2막까지 대기(점수 유지, 충족 시 자연 발생)
+            this.crisisSeraLost = true;                   // 컷신 재생 전에 뒤집어야 대화창이 '아이돌 에코'+모자 초상으로 뜬다
+            this.crisisStage = 2; this.saveData();
+            this.playCutscene({ cuts: CRISIS_SERA }, function(){
+                showGameAlert("'세라'라는 이름이 봉인고로 실려 갔다.<br><br><span style=\"font-size:0.9rem;color:#666;\">잃어버린 사람만, 잃은 줄을 모른다.</span>",
+                              function(){ self.nextTurn(true); }, {plain:true});
+            });
+            return true;
+        }
+        // st === 2 — [바닥+결의] 루나(진단) → 로아(등) 연속 재생. 이후 봉인고 결전이 열린다.
+        this.crisisStage = 3; this.saveData();
+        this.playCutscene({ cuts: CRISIS_LUNA }, function(){
+            self.playCutscene({ cuts: CRISIS_ROA }, function(){ self.nextTurn(true); });
+        });
+        return true;
+    },
     // [드미타스] 누적점수 마일스톤에서 4막 컷신 순차 발생
     maybeDemitasEvent: function(){
         if(this.gameMode !== 'normal') return false;
@@ -3180,8 +3300,16 @@ const game = {
         // [보스전] 봉인고 막 = 탐험 결전. stage는 아직 전진 안 함(승리해야 전진). 전투 전 대사만 재생 후 탐험으로 이동.
         if(scene.boss){
             if(this._demitasRetry && (this.lifetimeScore||0) < this._demitasRetry) return false; // 패배 후 재도전 쿨다운
+            // [위기 아크] 위기(세라 상실→루나·로아 결의)를 다 거치기 전엔 결전을 열지 않는다 — 삽입 컷의 전제
+            if((this.crisisStage||0) < 3) return false;
             var self0 = this;
-            this.playCutscene({ cuts: scene.cuts, introCg: scene.introCg, introCaption: scene.introCaption, fx: scene.fx, fxKind: scene.fxKind },
+            // [절정 보강] "저들은 그저 구경하러 온 사람들이지" 직후에 세 단골 등장 컷을 끼운다.
+            //   원본 배열은 건드리지 않고 재생용 사본에만 삽입(인덱스·세이브 영향 없음).
+            var bossCuts = scene.cuts;
+            var vi = scene.cuts.findIndex(function(c){ return (c.text||'').indexOf('구경하러') >= 0; });
+            if(vi < 0) vi = scene.cuts.length - 2;   // 대사가 수정돼도 최소한 마지막 선언 앞에는 들어가게
+            bossCuts = scene.cuts.slice(0, vi+1).concat(CRISIS_VAULT_CUTS, scene.cuts.slice(vi+1));
+            this.playCutscene({ cuts: bossCuts, introCg: scene.introCg, introCaption: scene.introCaption, fx: scene.fx, fxKind: scene.fxKind },
                               function(){ self0._startDemitasBattle(); });
             return true;
         }
@@ -3206,8 +3334,19 @@ const game = {
         try{ localStorage.removeItem('vb_story_boss_result'); }catch(e){}   // 실제 처리 시점에 소진
         if(!scene || !scene.boss){ this.scheduleNextTurn(300); return; }
         if(outcome === 'win'){
-            this.demitasStage = st + 1; this._demitasRetry = 0; this.saveData();
-            this.playCutscene({ cuts: scene.cutsWin }, function(){ self.scheduleNextTurn(400); });
+            this.demitasStage = st + 1; this._demitasRetry = 0;
+            // [위기 아크] 결전 승리 = 봉인 해제 — 세라의 이름이 돌아온다. 회복 컷신은 cutsWin 직후에 이어 붙여
+            //   절정(20000)과 결말(40000) 사이의 공백을 여운으로 메운다. 재생 전에 플래그를 꺼야 이름표가 '세라'로 뜬다.
+            var afterWin = function(){ self.scheduleNextTurn(400); };
+            if((this.crisisStage||0) === 3){
+                this.crisisStage = 4;
+                afterWin = function(){
+                    self.crisisSeraLost = false; self.saveData();
+                    self.playCutscene({ cuts: CRISIS_RECOVER }, function(){ self.scheduleNextTurn(400); });
+                };
+            }
+            this.saveData();
+            this.playCutscene({ cuts: scene.cutsWin }, afterWin);
         } else {
             this._demitasRetry = (this.lifetimeScore||0) + 2500; this.saveData();   // 재도전 쿨다운(점수 더 모아야)
             showGameAlert(`${UI_ICON.lock} 봉인고에서 쫓겨났다.<br><br><span style="font-size:0.9rem;color:#666;">드미타스의 봉인이 아직 자네보다 강하다.<br>탐험으로 힘을 키운 뒤 다시 오자.</span>`,
@@ -3275,6 +3414,7 @@ const game = {
         if(this._nextTurnTO) { clearTimeout(this._nextTurnTO); this._nextTurnTO = null; }
         if(!this.isActive || this.isPaused) return;
         if(!skipRico && this._pendingDemitas){ var _o=this._pendingDemitas; this._pendingDemitas=null; this._resolveDemitasBattle(_o); return; }  // [보스전] 결과 먼저 처리
+        if(!skipRico && this.maybeCrisisEvent()) return;   // [위기 아크] 결전보다 먼저 — 위기가 결전의 전제
         if(!skipRico && this.maybeDemitasEvent()) return;
         if(!skipRico && this.maybeRicoCameo()) return;
 

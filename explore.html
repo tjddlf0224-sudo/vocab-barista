@@ -1146,6 +1146,26 @@ const QUEST_NPCS = [
     endless:{ ask:'또 새로운 마법을 연구 중이야~<br><b>시럽 {c}개</b>만 더 모아다 줄래?',
       key:'syrup', base:10, step:3, reward:{goldBase:220, goldStep:40, exp:42} } },
 ];
+// ---------- [위기 아크] 봉인 강화 — 탐험 NPC 붕괴 대사 ----------
+// 카페 crisisStage(vb_save_v7)를 읽어 퀘스트 NPC 인사를 단계별로 대체한다.
+//   stage 1 = 말이 혀끝에서 미끄러지는 초기 증상 / stage 2~3 = 이름 자체를 잃는 심화 / stage 4 = 회복(1회 인사)
+// 위기 동안(1~3) 퀘스트는 잠시 멈춘다 — 재료 이름을 못 대는 NPC가 재료 심부름을 시킬 순 없으니.
+const CRISIS_NPC_LINES = {
+  q_granny: [
+    "아이고, 얘야. 그… 그거 있잖니. 갈색이고, 볶으면 향이 나는… 원, 원두! 그래, 원두.<br><br>…요즘 자꾸 말이 혀끝에서 미끄러지는구나.",
+    "우리 손주 이름이… 분명 어제까지 불렀는데 말이다.<br>(손바닥에 손가락으로 글자를 써 본다) …써지질 않네.<br><br>얘야, 이 할미 어디가 고장난 걸까." ],
+  q_rico: [
+    "어서 와! 오늘의 추천은 내 시그니처… 시그니처…<br>(메뉴판을 뒤집어 본다) 야, 이거 내가 만든 메뉴잖아. 내가 이름 붙였는데.<br><br>왜 안 읽히지?",
+    "손님한테 '맛있게 드세요'를 하려는데 '맛'이 안 나왔어.<br>입은 벌렸는데 말이 없더라.<br><br>…무서워서 오늘 가게 일찍 닫았어." ],
+  q_navi: [
+    "반짝반짝… 어라? (허공에 손을 젓는다)<br>주문이 안 걸려. 빛나라는 말이… 뭐였더라.<br><br>분명 매일 쓰던 말인데!",
+    "숲의 나무들이 이름을 잃고 있어.<br>이름 잃은 나무는 요정 눈에 안 보이게 돼.<br><br>…숲이 점점 깜깜해져. 나 무서워." ],
+};
+const CRISIS_NPC_RECOVER = {
+  q_granny: "원두! 원두 다섯 개! 얘야 들었니, 이 할미 하나도 안 더듬었다!",
+  q_rico: "시그니처 '리코의 새벽' — 크, 이름이 이렇게 맛있는 거였다니.",
+  q_navi: "빛나라! (반짝) …돌아왔어! 말이 돌아왔어! 숲이 다시 환해!",
+};
 // ---------- 숨겨진 이벤트: 어둠의 상인 (영어 대결) ----------
 const DARK_MERCHANT = { name:'어둠의 상인', img:'chars/npc_merchant.png',
   intro:["\"이런, 길 잃은 사장 나리 아니신가. 후후.<br>흩어진 옛말을 헐값에 사 모으는 게 내 일이지. 한 판 걸어보겠나.\"", "\"단어 하나에도 값이 붙는 거, 아나?<br>내가 사들인 말들은 전부 어느 '금고'로 실려 가지. 자신 있으면 앉게.\"", "\"겁먹을 것 없어. 나는 손님을 물지 않아.<br>…자네 그 온기 어린 말들, 값으로 매기면 얼마쯤 할까. 후후.\""],
@@ -1644,6 +1664,8 @@ const World = {
   },
   // 카페 진행도(드미타스 막) 조회 — 봉인고 개방 판정·팻말 표기에 공용
   demitasStage(){ try{ return (JSON.parse(localStorage.getItem('vb_save_v7')||'{}').demitasStage)||0; }catch(e){ return 0; } },
+  // [위기 아크] 카페 위기 진행도 조회 — 퀘스트 NPC 붕괴 대사 전환에 사용
+  crisisStage(){ try{ return (JSON.parse(localStorage.getItem('vb_save_v7')||'{}').crisisStage)||0; }catch(e){ return 0; } },
   // 지도 완성 진행도 — 달 개방 판정·팻말 표기에 공용
   mapsProgress(list){ const done=Explore.state.maps||{};
     return { have:(list||[]).filter(z=>done[z]).length, need:(list||[]).length }; },
@@ -2773,12 +2795,29 @@ const Quest = {
     document.getElementById('q-portrait').src=def.portrait||def.img;
     document.getElementById('q-name').textContent=def.name;
     const tx=document.getElementById('q-text'), ac=document.getElementById('q-actions');
+    // [위기 아크] 봉인 강화 중(1~3)엔 붕괴 대사만 — 퀘스트 일시 정지(재료 이름을 못 대는 이가 심부름을 시킬 순 없다)
+    const _cs = (window.World && World.crisisStage) ? World.crisisStage() : 0;
+    if(_cs >= 1 && _cs <= 3 && CRISIS_NPC_LINES[id]){
+      tx.innerHTML = CRISIS_NPC_LINES[id][_cs >= 2 ? 1 : 0];
+      ac.innerHTML = `<button class="q-btn ghost" onclick="Quest.close()">…또 올게요</button>`;
+      document.getElementById('quest-dlg').classList.add('show');
+      return;
+    }
+    // [위기 아크] 회복 후 첫 대화 — 말이 돌아온 기쁨 한 줄(1회), 그 뒤 평소 퀘스트로
+    let _recoverLine = '';
+    if(_cs === 4 && CRISIS_NPC_RECOVER[id]){
+      if(!Explore.state.crisisRecovered) Explore.state.crisisRecovered = {};
+      if(!Explore.state.crisisRecovered[id]){
+        Explore.state.crisisRecovered[id] = 1; Explore.persist();
+        _recoverLine = `<span style="color:#9ac47a">${CRISIS_NPC_RECOVER[id]}</span><br><br>`;
+      }
+    }
     if(active){
-      if(this._met(stage.need)){ tx.innerHTML=`부탁한 걸 다 모아왔구나!<br>${this._progress(stage.need)}<br>건네줄까?`;
+      if(this._met(stage.need)){ tx.innerHTML=_recoverLine+`부탁한 걸 다 모아왔구나!<br>${this._progress(stage.need)}<br>건네줄까?`;
         ac.innerHTML=`<button class="q-btn ok" onclick="Quest.turnIn()">완료 · 전달</button><button class="q-btn ghost" onclick="Quest.close()">닫기</button>`; }
-      else { tx.innerHTML=`${stage.ask}<br><br>진행: ${this._progress(stage.need)}`;
+      else { tx.innerHTML=_recoverLine+`${stage.ask}<br><br>진행: ${this._progress(stage.need)}`;
         ac.innerHTML=`<button class="q-btn ghost" onclick="Quest.close()">더 모아올게요</button>`; } }
-    else { tx.innerHTML=(n>0?`<span style="color:#9ac47a">${UI_ICON.check} 지난 부탁 고마웠어! 하나 더 부탁해도 될까?</span><br><br>`:'')+stage.ask;
+    else { tx.innerHTML=_recoverLine+(n>0?`<span style="color:#9ac47a">${UI_ICON.check} 지난 부탁 고마웠어! 하나 더 부탁해도 될까?</span><br><br>`:'')+stage.ask;
       ac.innerHTML=`<button class="q-btn ok" onclick="Quest.accept()">수락</button><button class="q-btn ghost" onclick="Quest.close()">다음에</button>`; }
     document.getElementById('quest-dlg').classList.add('show');
   },
