@@ -971,10 +971,15 @@ const CHIBI = {
   luna: { skin:'#f3d6b6', hair:'#cdb8ea', shirt:'#3a2456', legs:'#2a1840', hat:true, longhair:true },
   sera: { skin:'#f6d8b6', hair:'#d8a85c', shirt:'#cdbdf0', legs:'#9b86c9', longhair:true },
 };
-// [에셋] 걷기 스프라이트 4프레임 로드 (동행별). none은 chef 스프라이트 사용. 로드 전엔 drawChibi가 절차적으로 폴백.
+// [에셋] 걷기 스프라이트 4방향×4프레임 로드 (동행별). none은 chef 스프라이트 사용. 로드 전엔 drawChibi가 절차적으로 폴백.
+//   side는 오른쪽 기준 원화 1벌만 두고, 왼쪽 이동은 drawChibi에서 좌우반전으로 재사용한다.
 const WALK_FRAMES = {};
 ['chef','baristaf','roa','luna','sera'].forEach(name=>{
-  WALK_FRAMES[name] = [0,1,2,3].map(i=>{ const im=new Image(); im.src='chars/walk_'+name+'_'+i+'.png'; return im; });
+  WALK_FRAMES[name] = {};
+  ['front','back','side'].forEach(dir=>{
+    const suffix = dir==='front' ? '' : '_'+dir;
+    WALK_FRAMES[name][dir] = [0,1,2,3].map(i=>{ const im=new Image(); im.src='chars/walk_'+name+suffix+'_'+i+'.png'; return im; });
+  });
 });
 // [에셋] 페인티드 맵 (픽셀 타일셋 대체) — 바닥 텍스처 + 서 있는 오브젝트(투명)
 const MAP_TEX = {};
@@ -1255,7 +1260,7 @@ const World = {
   WT:48, HT:34,                     // 월드 크기(타일)
   base:[], deco:[], barrier:null, trees:[], nodes:[],
   // 플레이어(월드 픽셀 좌표 = 타일중심 단위)
-  px:0, py:0, bob:0, facing:1,
+  px:0, py:0, bob:0, facing:1, dir:'front',   // dir: 'front'(카메라 쪽)/'back'(뒤)/'side'(좌우, facing로 반전)
   // 조이스틱
   stick:{active:false,id:null,cx:0,cy:0,dx:0,dy:0},
   raf:null,
@@ -1558,6 +1563,9 @@ const World = {
       this.walkT=(this.walkT||0)+0.28*f;   // 보행 위상(팔다리 스윙)
       vx/=Math.max(1,mag); vy/=Math.max(1,mag);
       if(Math.abs(vx)>0.2) this.facing=vx<0?-1:1;
+      // [4방향] 수직 이동이 우세하면 앞/뒤, 아니면 옆(좌우는 facing 부호로 반전 재사용) — 대각선 이동 시 떨림 방지로 여유(0.15)를 둠
+      if(Math.abs(vy) > Math.abs(vx)+0.15) this.dir = vy<0 ? 'back' : 'front';
+      else if(Math.abs(vx)>0.2) this.dir = 'side';
       const SPD=0.058*f;   // 이동 속도(delta-time 반영 — fps 무관 일정)
       const nx=this.px+vx*SPD, ny=this.py+vy*SPD;
       // 충돌: 발 위치 타일 검사
@@ -1968,7 +1976,9 @@ const World = {
     const ctx=this.ctx;
     // ===== 스프라이트 경로 =====
     const name = (!ckey || ckey==='none') ? ((localStorage.getItem('vb_gender')==='f')?'baristaf':'chef') : ckey;
-    const frames = WALK_FRAMES[name];
+    const dirSet = WALK_FRAMES[name];
+    const dirKey = this.dir || 'front';
+    const frames = dirSet && (dirSet[dirKey] || dirSet.front);
     if(frames && frames[0] && frames[0].complete && frames[0].naturalWidth>0){
       const idx = moving ? (((Math.floor(wp/(Math.PI/2))%4)+4)%4) : 0;
       const img = (frames[idx] && frames[idx].complete && frames[idx].naturalWidth) ? frames[idx] : frames[0];
@@ -1976,7 +1986,9 @@ const World = {
       const h = s*1.55, w = h*(img.naturalWidth/img.naturalHeight);
       // 접지 그림자(맵에선 은은히 — 캐릭터가 떠 보이지 않게)
       ctx.fillStyle='rgba(0,0,0,.20)'; ctx.beginPath(); ctx.ellipse(cx, footY, w*0.32, s*0.10, 0,0,7); ctx.fill();
-      ctx.save(); ctx.translate(cx, footY-bob); if(facing<0) ctx.scale(-1,1);
+      ctx.save(); ctx.translate(cx, footY-bob);
+      // side 원화는 오른쪽 기준 1벌뿐 — 왼쪽 이동(facing<0)일 때만 반전. front/back은 반전 불필요(카메라 정면 대칭 디자인).
+      if(dirKey==='side' && facing<0) ctx.scale(-1,1);
       ctx.imageSmoothingEnabled=true;
       ctx.drawImage(img, -w/2, -h, w, h);
       ctx.restore();
