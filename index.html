@@ -2335,6 +2335,7 @@ const CG_DEX = [
   { cat:'특별',   k:'cg_golem_defeat',             t:'고맙다, 다시 데워줘서' },
   { cat:'특별',   k:'cg_lunashadow_meet',          t:'달의 뒷면' },
   { cat:'특별',   k:'cg_lunashadow_thanks',        t:'백 년의 몫' },
+  { cat:'특별',   k:'cg_crisis_vault_three',       t:'봉인고, 셋이서' },
 ];
 // 이벤트 도감은 '가로 원본'으로 감상 — 게임 내 컷신은 세로(폰 화면 꽉참) 유지.
 // 세로로 재구성해 교체된 CG는 가로 원본을 assets/art/dex/에 별도 보관하고 도감만 그걸 참조.
@@ -2551,7 +2552,7 @@ const CRISIS_ROA = [
 // 세 단골이 각자 다른 이유로 나타나 '구경꾼'을 부순다 — 세라는 이름을 잃은 채(에코 표기)로 온다.
 // 로아는 CRISIS_ROA에서 가게를 지킨다고 했다가 결국 닫고 왔다 — 형식보다 곁을 택하는 게 그의 아크.
 const CRISIS_VAULT_CUTS = [
-  { who:'boss', text:"(봉인고의 문이 열린다.)" },
+  { who:'boss', text:"(봉인고의 문이 열린다.)", cg:"assets/art/cg_crisis_vault_three.jpg", cgc:"봉인고, 셋이서. 로아는 가게를 닫고, 루나는 나눠 지려고, 세라는 이름 없이도 발이 이곳으로 왔다." },
   { who:'m_roa', text:"구경? …단골인데." },
   { who:'m_roa', text:"가게는 하루 닫았어. 이런 날 내린 커피는 맛이 없거든." },
   { who:'m_luna', text:"백 년 전엔 나 혼자 이 봉인을 졌어. 그래서 알아 — 혼자 지는 무게라는 걸. …이번엔 나눠 질 거야." },
