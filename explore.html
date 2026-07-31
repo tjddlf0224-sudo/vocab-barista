@@ -194,13 +194,13 @@
   #battle{ position:fixed; inset:0; z-index:20; display:none; flex-direction:column; }
   #battle.show{ display:flex; }
   .b-arena{ flex:1; position:relative; overflow:hidden;
-    background:#cdeef0 url('scenes/forest.png') center/cover no-repeat; }  /* [에셋] 원두 숲 전투 배경 */
+    background:#cdeef0 url('scenes/forest.webp') center/cover no-repeat; }  /* [에셋] 원두 숲 전투 배경 */
   .b-arena.shake{ animation:bshake .28s; }
   @keyframes bshake{ 0%,100%{transform:translate(0,0)} 25%{transform:translate(-6px,3px)} 50%{transform:translate(6px,-3px)} 75%{transform:translate(-4px,-2px)} }
   /* [에셋] 배경 이미지에 실제 나무·안개가 있으므로 CSS 나무/안개 레이어는 숨김 */
   .b-trees, .b-fog{ display:none; }
   /* 깊은 숲(밤) 전투 배경 */
-  .b-arena.zone-deepwood{ background:#161a40 url('scenes/deepwood.png') center/cover no-repeat; }
+  .b-arena.zone-deepwood{ background:#161a40 url('scenes/deepwood.webp') center/cover no-repeat; }
   /* [수정] 접지 그림자/플랫폼 제거 — 배경 이미지에 지면이 있어 불필요 */
   .platform{ display:none; }
   .plat-enemy{ width:40%; height:13%; top:40%; right:7%; }
@@ -222,15 +222,15 @@
   .b-arena.zone-harbor .b-fog{ display:block; background:radial-gradient(ellipse 82% 100% at 50% 122%, rgba(202,216,230,.24), transparent 74%); }
   .b-arena.zone-harbor .b-vignette{ background:radial-gradient(ellipse 82% 74% at 50% 46%, transparent 52%, rgba(18,26,40,.40) 100%); }
   /* [에셋] 봉인고(최종) — 갇힌 말들이 잠든 검은 큐레이터의 진열장(bg_vault_interior 재사용, 워터마크 제거) */
-  .b-arena.zone-vault{ background:#1c1a26 url('scenes/vault.png') center/cover no-repeat; }
+  .b-arena.zone-vault{ background:#1c1a26 url('scenes/vault.webp') center/cover no-repeat; }
   .b-arena.zone-vault .b-fog{ display:block; background:radial-gradient(ellipse 78% 100% at 50% 124%, rgba(176,150,224,.20), transparent 72%); }
   .b-arena.zone-vault .b-vignette{ background:radial-gradient(ellipse 80% 72% at 50% 46%, transparent 48%, rgba(10,6,20,.52) 100%); }
   /* [에셋] 달(포스트게임) — 가장 오래 잊힌 말들이 잠든 은빛 지평(큰 달·부서진 기둥·흩날리는 달가루) */
-  .b-arena.zone-moon{ background:#171a35 url('scenes/moon.png') center/cover no-repeat; }
+  .b-arena.zone-moon{ background:#171a35 url('scenes/moon.webp') center/cover no-repeat; }
   .b-arena.zone-moon .b-fog{ display:block; background:radial-gradient(ellipse 86% 100% at 50% 126%, rgba(226,224,255,.26), transparent 72%); }
   .b-arena.zone-moon .b-vignette{ background:radial-gradient(ellipse 84% 76% at 50% 46%, transparent 54%, rgba(6,8,26,.46) 100%); }
   /* 달의 뒷면 — 같은 달 배경을 어둡고 차갑게 눌러서 '빛이 닿지 않는 쪽'으로 */
-  .b-arena.zone-moonback{ background:#08060f url('scenes/moon.png') center/cover no-repeat; }
+  .b-arena.zone-moonback{ background:#08060f url('scenes/moon.webp') center/cover no-repeat; }
   .b-arena.zone-moonback::before{ content:''; position:absolute; inset:0; background:rgba(6,4,14,.62); pointer-events:none; }
   .b-arena.zone-moonback .b-fog{ display:block; background:radial-gradient(ellipse 86% 100% at 50% 126%, rgba(150,140,200,.18), transparent 72%); }
   .b-arena.zone-moonback .b-vignette{ background:radial-gradient(ellipse 78% 70% at 50% 46%, transparent 44%, rgba(2,1,8,.72) 100%); }
@@ -951,10 +951,10 @@ const MATERIALS = {
 const GATHER_MATS = Object.keys(MATERIALS).filter(k => !MATERIALS[k].rare);
 // ---------- 동행 캐릭터 (채용 게이팅은 Stage C, 지금은 자유 선택해 미리보기) ----------
 const COMPANIONS = {
-  none: { name:'기본',  emoji:'🧑‍🍳', img:null, battleImg:'chars/chef_back.png', charId:null },
-  roa:  { name:'로아',  img:'chars/roa.png',  battleImg:'chars/roa_back.png',  charId:'m_roa' },
-  luna: { name:'루나',  img:'chars/luna.png', battleImg:'chars/luna_back.png', charId:'m_luna' },
-  sera: { name:'세라',  img:'chars/sera.png', battleImg:'chars/sera_back.png', charId:'m_sera' },
+  none: { name:'기본',  emoji:'🧑‍🍳', img:null, battleImg:'chars/chef_back.webp', charId:null },
+  roa:  { name:'로아',  img:'chars/roa.webp',  battleImg:'chars/roa_back.webp',  charId:'m_roa' },
+  luna: { name:'루나',  img:'chars/luna.webp', battleImg:'chars/luna_back.webp', charId:'m_luna' },
+  sera: { name:'세라',  img:'chars/sera.webp', battleImg:'chars/sera_back.webp', charId:'m_sera' },
 };
 const COMP_ORDER = ['none','roa','luna','sera'];
 // ===== 탐험 동행 대사 (동행 캐릭터별) =====
@@ -978,17 +978,17 @@ const WALK_FRAMES = {};
   WALK_FRAMES[name] = {};
   ['front','back','side'].forEach(dir=>{
     const suffix = dir==='front' ? '' : '_'+dir;
-    WALK_FRAMES[name][dir] = [0,1,2,3].map(i=>{ const im=new Image(); im.src='chars/walk_'+name+suffix+'_'+i+'.png'; return im; });
+    WALK_FRAMES[name][dir] = [0,1,2,3].map(i=>{ const im=new Image(); im.src='chars/walk_'+name+suffix+'_'+i+'.webp'; return im; });
   });
 });
 // [에셋] 페인티드 맵 (픽셀 타일셋 대체) — 바닥 텍스처 + 서 있는 오브젝트(투명)
 const MAP_TEX = {};
 ['grass','path','water','harbor_ground','vault_ground','moon_ground']
-  .forEach(n=>{ const im=new Image(); im.src='tiles/'+n+'.png'; MAP_TEX[n]=im; });
+  .forEach(n=>{ const im=new Image(); im.src='tiles/'+n+'.webp'; MAP_TEX[n]=im; });
 const MAP_OBJ = {};
 ['tree_green','tree_orange','tree_pine','bush','rock','stump','flowers','grass_tuft','forge',
  'harbor_obj1','harbor_obj2','vault_obj1','vault_obj2','moon_obj1','moon_obj2']
-  .forEach(n=>{ const im=new Image(); im.src='sprites/'+n+'.png'; MAP_OBJ[n]=im; });
+  .forEach(n=>{ const im=new Image(); im.src='sprites/'+n+'.webp'; MAP_OBJ[n]=im; });
 // [존 테마] 걷기맵의 바닥 텍스처·장애물 오브젝트를 존마다 갈아끼운다.
 //   숲 계열(forest/deepwood)은 기존 잔디+나무 그대로(깊은 숲은 tint로 밤 숲이 됨).
 //   항구/봉인고/달은 잔디밭에 나무가 서 있으면 어색하므로 전용 에셋 사용.
@@ -1004,7 +1004,7 @@ const ZONE_THEME = {
 function zoneTheme(){ return ZONE_THEME[(Explore.state&&Explore.state.map&&Explore.state.map.zone)||'forest'] || ZONE_THEME.forest; }
 // 채집 노드는 SVG 아이콘 사용(사용자 선호) — 페인티드 노드 아트 미사용
 const NODE_ART = {};
-const LUNASHADOW_IMG = new Image(); LUNASHADOW_IMG.src = 'monsters/lunashadow.png';   // 달의 뒷면에 서 있는 모습(걷기맵용)
+const LUNASHADOW_IMG = new Image(); LUNASHADOW_IMG.src = 'monsters/lunashadow.webp';   // 달의 뒷면에 서 있는 모습(걷기맵용)
 // 잔디 반복용 사전 축소 캔버스(반복 크기 GR마다 1회 생성)
 let _grassCv=null;
 function grassCanvas(GR){
@@ -1068,12 +1068,12 @@ window.EQUIP_ICON = EQUIP_ICON; // 대장간 아이콘 이미지 로드 실패 �
 // 재료 아이콘 — 비용/보상 텍스트(innerHTML)에 들어가는 작은 이미지. 로드 실패 시 원래 이모지로 폴백(폴백 문자열은 이모지라 안전).
 const MAT_ICON = Object.fromEntries(Object.entries(MATERIALS).map(([k,m])=>[k, m.img?`<img class="mi" src="${m.img}" alt="" onerror="this.replaceWith(document.createTextNode('${m.icon}'))">`:m.icon]));
 // ---------- 조합 레시피 (재료+스펠링퀴즈 → 카페에서 쓰는 특별 아이템) ----------
-// 조합템 아이콘 — 제미나이 에셋(sprites/cr_*.png) 우선, 로드 실패 시 이모지 폴백.
+// 조합템 아이콘 — 제미나이 에셋(sprites/cr_*.webp) 우선, 로드 실패 시 이모지 폴백.
 // 이모지는 기기마다 모양이 달라 아트와 따로 놀아서 실제 그림으로 교체.
 function craftIcon(item, cls){
   if(!item || !item.id) return (item && item.icon) || '';
   // 에셋 우선, 실패 시 원래 이모지로 폴백(CRAFT_DB는 icon이 이모지)
-  return `<img class="${cls||'cr-ic'}" src="sprites/${item.id}.png" alt=""
+  return `<img class="${cls||'cr-ic'}" src="sprites/${item.id}.webp" alt=""
      onerror="this.replaceWith(document.createTextNode('${item.icon||''}'))">`;
 }
 const CRAFT_DB = [
@@ -1088,7 +1088,7 @@ const CRAFT_DB = [
 // ---------- 퀘스트 NPC (에스컬레이팅 반복 의뢰) ----------
 // 각 stage.need = [{type:'mat'|'item', key, count}] · 단계가 오를수록 수량↑ → 조합아이템/드롭재료 요구 → 무한 스케일링
 const QUEST_NPCS = [
-  { id:'q_granny', name:'플로라 할머니', img:'chars/npc_granny.png', portrait:'chars/npc_granny_talk.png',
+  { id:'q_granny', name:'플로라 할머니', img:'chars/npc_granny.webp', portrait:'chars/npc_granny_talk.webp',
     stages:[
       { ask:'허리가 아파서 원두를 못 줍겠구나…<br><b>커피 원두 5개</b>만 가져다주면 고맙겠는데.',
         need:[{type:'mat',key:'bean',count:5}], reward:{gold:140, exp:22, item:'cr_heal'},
@@ -1109,7 +1109,7 @@ const QUEST_NPCS = [
     endless:{ ask:'단골이 자꾸 늘어서 말이야~<br><b>커피 원두 {c}개</b>만 또 부탁하마!',
       key:'bean', base:16, step:4, reward:{goldBase:240, goldStep:40, exp:34} } },
 
-  { id:'q_rico', name:'바리스타 리코', img:'chars/npc_rico.png', portrait:'chars/npc_rico_talk.png',
+  { id:'q_rico', name:'바리스타 리코', img:'chars/npc_rico.webp', portrait:'chars/npc_rico_talk.webp',
     stages:[
       { ask:'시그니처 라떼를 만들 <b>우유 4개</b>가 필요해.<br>구해다 주면 팁을 두둑이 줄게!',
         need:[{type:'mat',key:'milk',count:4}], reward:{gold:120, exp:18, item:'cr_atk'},
@@ -1130,7 +1130,7 @@ const QUEST_NPCS = [
     endless:{ ask:'또 신메뉴 아이디어가 떠올랐어!<br><b>우유 {c}개</b>만 더 대줄 수 있어?',
       key:'milk', base:12, step:3, reward:{goldBase:260, goldStep:44, exp:34} } },
 
-  { id:'q_navi', name:'숲요정 나비', img:'chars/npc_navi.png', portrait:'chars/npc_navi_talk.png',
+  { id:'q_navi', name:'숲요정 나비', img:'chars/npc_navi.webp', portrait:'chars/npc_navi_talk.webp',
     stages:[
       { ask:'반짝이는 <b>시럽 3개</b>를 모아오면<br>요정의 축복을 나눠줄게!',
         need:[{type:'mat',key:'syrup',count:3}], reward:{gold:90, exp:34, item:'cr_def'},
@@ -1172,7 +1172,7 @@ const CRISIS_NPC_RECOVER = {
   q_navi: "빛나라! (반짝) …돌아왔어! 말이 돌아왔어! 숲이 다시 환해!",
 };
 // ---------- 숨겨진 이벤트: 어둠의 상인 (영어 대결) ----------
-const DARK_MERCHANT = { name:'어둠의 상인', img:'chars/npc_merchant.png',
+const DARK_MERCHANT = { name:'어둠의 상인', img:'chars/npc_merchant.webp',
   intro:["\"이런, 길 잃은 사장 나리 아니신가. 후후.<br>흩어진 옛말을 헐값에 사 모으는 게 내 일이지. 한 판 걸어보겠나.\"", "\"단어 하나에도 값이 붙는 거, 아나?<br>내가 사들인 말들은 전부 어느 '금고'로 실려 가지. 자신 있으면 앉게.\"", "\"겁먹을 것 없어. 나는 손님을 물지 않아.<br>…자네 그 온기 어린 말들, 값으로 매기면 얼마쯤 할까. 후후.\""],
   lose:["\"허어… 졌네, 졌어.<br>자네 말엔 값이 안 매겨져. 그게… 어째서인지 자꾸 신경이 쓰이는군.\"", "\"오늘 판은 자네 거야. 약속한 물건일세.<br>…내 주인께서 아시면. 아니, 됐네. 또 보세, 사장 나리.\"", "\"…쳇. 값을 못 매기는 말이 세상에 있다니.<br>가져가게. 대신 다음엔 안 봐줘.\""],
   win:["\"아깝군. 딱 한 글자 차이였는데.<br>이 바닥은 그 한 글자에서 값이 갈려. 다음엔 좀 더 벼려 오게.\"", "\"이번 판은 내가 챙기겠네. 후후.<br>서운해 말게, 복수할 기회야 얼마든지 있으니.\""],
@@ -1251,11 +1251,8 @@ const Assets = {
 };
 
 // ---------- 타일맵 엔진 (넓은 맵 + 카메라 추종 + 조이스틱) ----------
-const TILESET_SRC = 'assets/tiny-town/Tilemap/tilemap_packed.png';
-const TT_COLS = 12, TT_SIZE = 16;   // 타일셋: 12열, 16px
-
 const World = {
-  cv:null, ctx:null, sheet:null, ready:false,
+  cv:null, ctx:null,
   TS:42, dpr:1, viewW:0, viewH:0,
   WT:48, HT:34,                     // 월드 크기(타일)
   base:[], deco:[], barrier:null, trees:[], nodes:[],
@@ -1267,9 +1264,6 @@ const World = {
 
   init(){
     this.cv=document.getElementById('map'); this.ctx=this.cv.getContext('2d');
-    this.sheet=new Image();
-    this.sheet.onload=()=>{ this.ready=true; };
-    this.sheet.src=TILESET_SRC;
     this.generate();
     // 위치 복원
     const p=Explore.state.pos;
@@ -1816,9 +1810,6 @@ const World = {
     const px=Math.round(this.px),py=Math.round(this.py); ctx.fillStyle='#fff'; ctx.fillRect(px*S-1,py*S-1,S+2,S+2);
     const t=document.getElementById('mapview-title'); if(t){ const zn=(ZONES[Explore.state.map.zone]||{}).name||''; const done=(Explore.state.maps||{})[Explore.state.map.zone];
       t.innerHTML = zn+' 지도 '+(done?`<span class="mv-done">완성 ${UI_ICON.map}</span>`:'· '+Math.round(this.exploredCount/(this.WT*this.HT)*100)+'%'); } },
-  drawTile(idx,dx,dy,size){ if(idx<0)return; const sx=(idx%TT_COLS)*TT_SIZE, sy=Math.floor(idx/TT_COLS)*TT_SIZE;
-    this.ctx.drawImage(this.sheet,sx,sy,TT_SIZE,TT_SIZE,dx,dy,size,size); },
-
   render(){
     const ctx=this.ctx, TS=this.TS, dpr=this.dpr; if(!TS) return;
     ctx.setTransform(dpr,0,0,dpr,0,0); ctx.imageSmoothingEnabled=true;
@@ -2119,7 +2110,7 @@ const World = {
       const sk=(typeof SKILLS!=='undefined'&&SKILLS[key])||null;
       // 기본(동행 없음)은 플레이어 성별에 맞는 바리스타 얼굴로 — 이모지 대신
       const gImg = (key==='none')
-        ? ((localStorage.getItem('vb_gender')==='f') ? 'chars/barista_f.png' : 'chars/barista_m.png')
+        ? ((localStorage.getItem('vb_gender')==='f') ? 'chars/barista_f.webp' : 'chars/barista_m.webp')
         : c.img;
       const art = gImg ? `<img src="${gImg}" alt="${c.name}">` : UI_ICON.unknown;
       const skIcon = sk ? (UI_ICON[SKILL_ICON[key]] || '') : '';
@@ -2200,7 +2191,7 @@ const World = {
     const eqName=slot=>{
       const id=s.equip&&s.equip[slot]; if(!id)return'없음';
       const it=(EQUIP_DB[slot]||[]).find(x=>x.id===id); if(!it)return'없음';
-      return `<img class="st-eqimg" src="sprites/eq_${it.id}.png" alt="" onerror="this.remove()">${it.name}`;
+      return `<img class="st-eqimg" src="sprites/eq_${it.id}.webp" alt="" onerror="this.remove()">${it.name}`;
     };
     let h='';
     h+=`<div class="st-row"><div class="st-chip">${UI_ICON.level} Lv ${s.level}</div>`
@@ -2223,7 +2214,7 @@ const World = {
         if(isEq) btn='<button class="eq-btn on" disabled>장착중</button>';
         else if(isOwned) btn=`<button class="eq-btn equip" onclick="World.equipItem('${slot}','${it.id}')">장착</button>`;
         else btn=`<button class="eq-btn buy" ${this.canAfford(it.cost)?'':'disabled'} onclick="World.forgeItem('${slot}','${it.id}')">제작</button>`;
-        const icon = `<img src="sprites/eq_${it.id}.png" alt="" onerror="this.onerror=null;this.outerHTML=(window.EQUIP_ICON&&EQUIP_ICON['${it.id}'])||'${it.icon}'">`;
+        const icon = `<img src="sprites/eq_${it.id}.webp" alt="" onerror="this.onerror=null;this.outerHTML=(window.EQUIP_ICON&&EQUIP_ICON['${it.id}'])||'${it.icon}'">`;
         g+=`<div class="eq-card${isEq?' equipped':''}"><span class="eq-ic">${icon}</span><div class="eq-info"><div class="nm">${it.name}</div><div class="bn">${bn}</div>${isOwned?'':`<div class="ct">${this.costText(it.cost)}</div>`}</div>${btn}</div>`;
       }); return g+'</div>'; };
     let h=`<div class="st-sec">${UI_ICON.weapon} 무기</div>`+forge('weapon',EQUIP_DB.weapon);
@@ -2237,50 +2228,50 @@ const World = {
 // ============================================================
 // 몬스터 도감(id로 조회) — 존이 이 id들을 참조
 const MONSTERS = {
-  slime:      { id:'slime',      name:'원두 슬라임', emoji:'🫧', art:'monsters/slime.png',      lv:3, hp:24, atk:7,  def:2,  exp:14, gold:12, drops:[{mat:'bean',chance:0.9},{mat:'gel',chance:0.4}] },
-  boar:       { id:'boar',       name:'들 멧돼지',   emoji:'🐗', art:'monsters/boar.png',       lv:5, hp:34, atk:10, def:4,  exp:22, gold:20, drops:[{mat:'berry',chance:0.9},{mat:'tusk',chance:0.35}] },
-  crow:       { id:'crow',       name:'까마귀 떼',   emoji:'🐦‍⬛', art:'monsters/crow.png',      lv:4, hp:18, atk:12, def:1,  exp:18, gold:16, drops:[{mat:'bean',chance:0.85},{mat:'feather',chance:0.4}] },
+  slime:      { id:'slime',      name:'원두 슬라임', emoji:'🫧', art:'monsters/slime.webp',      lv:3, hp:24, atk:7,  def:2,  exp:14, gold:12, drops:[{mat:'bean',chance:0.9},{mat:'gel',chance:0.4}] },
+  boar:       { id:'boar',       name:'들 멧돼지',   emoji:'🐗', art:'monsters/boar.webp',       lv:5, hp:34, atk:10, def:4,  exp:22, gold:20, drops:[{mat:'berry',chance:0.9},{mat:'tusk',chance:0.35}] },
+  crow:       { id:'crow',       name:'까마귀 떼',   emoji:'🐦‍⬛', art:'monsters/crow.webp',      lv:4, hp:18, atk:12, def:1,  exp:18, gold:16, drops:[{mat:'bean',chance:0.85},{mat:'feather',chance:0.4}] },
   // ※[지역 서열 재조정] 이전엔 '예전 golem 공유정의(hp345/atk69/def43)'를 그대로 보존했으나,
   //   그 값이 뒤 지역(잔향항구 atk61/def40)보다 세서 5존 난이도 곡선이 깊은숲에서 역전됐다.
   //   base를 낮춰 실측 hp220/atk38/def26로 재조정 — 원두숲(hp102/atk20/def14)과 잔향항구
   //   (hp337/atk61/def40) 사이로 들어와 존 순서대로 단조증가하게 함. exp/gold(f는 lv/diff에만
   //   의존)는 안 바뀜.
-  golem:      { id:'golem',      name:'로스팅 골렘', emoji:'🪨', art:'monsters/golem.png',
-    phased:true, phaseArt:{mist:'monsters/golem_mist.png', core:'monsters/golem.png', rampage:'monsters/golem_rampage.png'},
+  golem:      { id:'golem',      name:'로스팅 골렘', emoji:'🪨', art:'monsters/golem.webp',
+    phased:true, phaseArt:{mist:'monsters/golem_mist.webp', core:'monsters/golem.webp', rampage:'monsters/golem_rampage.webp'},
     lv:12, hp:92, atk:16, def:11, exp:109, gold:90, drops:[{mat:'berry',chance:0.9,count:2},{mat:'core',chance:0.45}] },
   // ※원두 숲 보스(신규 분리). base.lv=6은 예전 golem 공유정의가 원두숲 대상으로 내던 실측값
   //   (hp101/atk20/def13)을 역산해 그대로 재현 — 기존 난이도 보존, 정체성·기믹만 신규.
-  woodr:      { id:'woodr',      name:'묵은 로스팅정령, 우드르', emoji:'🔥', art:'monsters/woodr.png', nonlethal:true, lv:6, hp:60, atk:12, def:8, exp:45, gold:37, drops:[{mat:'berry',chance:0.9,count:2},{mat:'core',chance:1}] },
-  shadowwolf: { id:'shadowwolf', name:'그림자 늑대', emoji:'🐺', art:'monsters/shadowwolf.png', lv:7, hp:42, atk:16, def:4,  exp:32, gold:26, drops:[{mat:'berry',chance:0.85},{mat:'fang',chance:0.4}] },
-  wisp:       { id:'wisp',       name:'도깨비불',   emoji:'🔵', art:'monsters/wisp.png',       lv:6, hp:28, atk:14, def:2,  exp:28, gold:24, drops:[{mat:'bean',chance:0.8},{mat:'ember',chance:0.45}] },
-  echo:       { id:'echo',       name:'잊힌 메아리', emoji:'💬', art:'monsters/echo.png',       lv:8, hp:36, atk:15, def:3,  exp:34, gold:28, drops:[{mat:'berry',chance:0.8},{mat:'fang',chance:0.4}] },
-  misttoad:   { id:'misttoad',   name:'안개두꺼비',  emoji:'🐸', art:'monsters/misttoad.png',   lv:9, hp:46, atk:13, def:6,  exp:36, gold:30, drops:[{mat:'bean',chance:0.75},{mat:'ember',chance:0.4}] },
+  woodr:      { id:'woodr',      name:'묵은 로스팅정령, 우드르', emoji:'🔥', art:'monsters/woodr.webp', nonlethal:true, lv:6, hp:60, atk:12, def:8, exp:45, gold:37, drops:[{mat:'berry',chance:0.9,count:2},{mat:'core',chance:1}] },
+  shadowwolf: { id:'shadowwolf', name:'그림자 늑대', emoji:'🐺', art:'monsters/shadowwolf.webp', lv:7, hp:42, atk:16, def:4,  exp:32, gold:26, drops:[{mat:'berry',chance:0.85},{mat:'fang',chance:0.4}] },
+  wisp:       { id:'wisp',       name:'도깨비불',   emoji:'🔵', art:'monsters/wisp.webp',       lv:6, hp:28, atk:14, def:2,  exp:28, gold:24, drops:[{mat:'bean',chance:0.8},{mat:'ember',chance:0.45}] },
+  echo:       { id:'echo',       name:'잊힌 메아리', emoji:'💬', art:'monsters/echo.webp',       lv:8, hp:36, atk:15, def:3,  exp:34, gold:28, drops:[{mat:'berry',chance:0.8},{mat:'fang',chance:0.4}] },
+  misttoad:   { id:'misttoad',   name:'안개두꺼비',  emoji:'🐸', art:'monsters/misttoad.webp',   lv:9, hp:46, atk:13, def:6,  exp:36, gold:30, drops:[{mat:'bean',chance:0.75},{mat:'ember',chance:0.4}] },
   // ---- 잔향 항구(Lv12–17) — 전용 아트 전 이모지 폴백 ----
-  seafog:     { id:'seafog',     name:'해무 해파리', emoji:'🎐', art:'monsters/seafog.png', lv:14, hp:60, atk:18, def:6,  exp:64, gold:40, drops:[{mat:'saltglass',chance:0.55},{mat:'gel',chance:0.35}] },
-  dockgull:   { id:'dockgull',   name:'부두 갈매기 떼', emoji:'🕊️', art:'monsters/dockgull.png', lv:14, hp:50, atk:23, def:4,  exp:66, gold:52, drops:[{mat:'waxletter',chance:0.55},{mat:'feather',chance:0.4}] },
-  waxman:     { id:'waxman',     name:'봉랍 인부',  emoji:'🕴️', art:'monsters/waxman.png', spriteScale:1.35, lv:15, hp:95, atk:19, def:13, exp:80, gold:58, drops:[{mat:'sealtag',chance:0.55},{mat:'core',chance:0.3}] },
-  frostwraith:{ id:'frostwraith',name:'서리 망령',  emoji:'👻', art:'monsters/frostwraith.png', lv:16, hp:70, atk:25, def:7,  exp:92, gold:66, drops:[{mat:'frostsalt',chance:0.55},{mat:'fang',chance:0.3}] },
-  saffran:    { id:'saffran',    name:'회색 경매인, 사프란', emoji:'🎩', art:'monsters/saffran.png', lv:18, hp:110, atk:20, def:13, exp:210, gold:160, drops:[{mat:'saltglass',chance:1,count:2},{mat:'frostsalt',chance:0.8},{mat:'sealtag',chance:0.8}] },
+  seafog:     { id:'seafog',     name:'해무 해파리', emoji:'🎐', art:'monsters/seafog.webp', lv:14, hp:60, atk:18, def:6,  exp:64, gold:40, drops:[{mat:'saltglass',chance:0.55},{mat:'gel',chance:0.35}] },
+  dockgull:   { id:'dockgull',   name:'부두 갈매기 떼', emoji:'🕊️', art:'monsters/dockgull.webp', lv:14, hp:50, atk:23, def:4,  exp:66, gold:52, drops:[{mat:'waxletter',chance:0.55},{mat:'feather',chance:0.4}] },
+  waxman:     { id:'waxman',     name:'봉랍 인부',  emoji:'🕴️', art:'monsters/waxman.webp', spriteScale:1.35, lv:15, hp:95, atk:19, def:13, exp:80, gold:58, drops:[{mat:'sealtag',chance:0.55},{mat:'core',chance:0.3}] },
+  frostwraith:{ id:'frostwraith',name:'서리 망령',  emoji:'👻', art:'monsters/frostwraith.webp', lv:16, hp:70, atk:25, def:7,  exp:92, gold:66, drops:[{mat:'frostsalt',chance:0.55},{mat:'fang',chance:0.3}] },
+  saffran:    { id:'saffran',    name:'회색 경매인, 사프란', emoji:'🎩', art:'monsters/saffran.webp', lv:18, hp:110, atk:20, def:13, exp:210, gold:160, drops:[{mat:'saltglass',chance:1,count:2},{mat:'frostsalt',chance:0.8},{mat:'sealtag',chance:0.8}] },
   // ---- 봉인고(Lv18–24, 최종) — 전용 아트 전 이모지 폴백 ----
   // ※base lv를 존 중앙(21)에 맞춰 밴드 편차를 줄이고, diff 2.2가 곱해지는 걸 감안해 base atk/def를 낮게 잡는다
   // ※[지역 서열 재조정] atk를 올림(14/16/15→20/22/24) — 이전엔 실측 평균이 잔향항구 일반몹보다
   //   낮아 봉인고가 항구보다 약하게 때리는 역전이 있었다. exp/gold는 안 바뀜.
-  sealedecho: { id:'sealedecho', name:'봉인된 말의 잔영', emoji:'🫥', art:'monsters/sealedecho.png', lv:21, hp:90,  atk:20, def:8,  exp:130, gold:78, drops:[{mat:'sealshard',chance:0.55},{mat:'sealtag',chance:0.3}] },
-  pricehound: { id:'pricehound', name:'값의 사냥개',  emoji:'🐕‍🦺', art:'monsters/pricehound.png', lv:21, hp:100, atk:22, def:9,  exp:145, gold:96, drops:[{mat:'pricechain',chance:0.55},{mat:'fang',chance:0.35}] },
-  silentward: { id:'silentward', name:'침묵의 문지기', emoji:'🗿', art:'monsters/silentward.png', lv:22, hp:150, atk:24, def:14, exp:170, gold:110, drops:[{mat:'silentbell',chance:0.55},{mat:'core',chance:0.35}] },
+  sealedecho: { id:'sealedecho', name:'봉인된 말의 잔영', emoji:'🫥', art:'monsters/sealedecho.webp', lv:21, hp:90,  atk:20, def:8,  exp:130, gold:78, drops:[{mat:'sealshard',chance:0.55},{mat:'sealtag',chance:0.3}] },
+  pricehound: { id:'pricehound', name:'값의 사냥개',  emoji:'🐕‍🦺', art:'monsters/pricehound.webp', lv:21, hp:100, atk:22, def:9,  exp:145, gold:96, drops:[{mat:'pricechain',chance:0.55},{mat:'fang',chance:0.35}] },
+  silentward: { id:'silentward', name:'침묵의 문지기', emoji:'🗿', art:'monsters/silentward.webp', lv:22, hp:150, atk:24, def:14, exp:170, gold:110, drops:[{mat:'silentbell',chance:0.55},{mat:'core',chance:0.35}] },
   // ---- 달(포스트게임, Lv25–30) — 가장 오래 잊힌 말들이 잠든 곳. 적이 아니라 '놓아주는' 존재들 ----
-  moondust:   { id:'moondust',   name:'달가루 나그네', emoji:'🌫️', art:'monsters/moondust.png', lv:26, hp:120, atk:17, def:10, exp:210, gold:130, drops:[{mat:'moondust',chance:0.55},{mat:'sealshard',chance:0.3}] },
-  namewisp:   { id:'namewisp',   name:'이름 없는 불빛', emoji:'🕯️', art:'monsters/namewisp.png', lv:27, hp:105, atk:20, def:8,  exp:230, gold:150, drops:[{mat:'namelight',chance:0.55},{mat:'silentbell',chance:0.3}] },
-  centurymoth:{ id:'centurymoth',name:'백 년 나방',   emoji:'🦋', art:'monsters/centurymoth.png', lv:28, hp:150, atk:18, def:13, exp:260, gold:170, drops:[{mat:'moondust',chance:0.5},{mat:'namelight',chance:0.4}] },
+  moondust:   { id:'moondust',   name:'달가루 나그네', emoji:'🌫️', art:'monsters/moondust.webp', lv:26, hp:120, atk:17, def:10, exp:210, gold:130, drops:[{mat:'moondust',chance:0.55},{mat:'sealshard',chance:0.3}] },
+  namewisp:   { id:'namewisp',   name:'이름 없는 불빛', emoji:'🕯️', art:'monsters/namewisp.webp', lv:27, hp:105, atk:20, def:8,  exp:230, gold:150, drops:[{mat:'namelight',chance:0.55},{mat:'silentbell',chance:0.3}] },
+  centurymoth:{ id:'centurymoth',name:'백 년 나방',   emoji:'🦋', art:'monsters/centurymoth.webp', lv:28, hp:150, atk:18, def:13, exp:260, gold:170, drops:[{mat:'moondust',chance:0.5},{mat:'namelight',chance:0.4}] },
   // 달의 보스: 뜻을 잃고 형체만 남은 태초의 옛말 — 값의 장막보다 두꺼운 '침묵의 장막' 5겹
   // ※장막 5겹은 스킬 5번(게이지 재충전 3턴 주기)이라 ~15턴 지구전이 된다 → 공격력을 낮춰 버틸 여유를 준다
-  eldestword: { id:'eldestword', name:'가장 오래된 말', emoji:'🌙', art:'monsters/eldestword.png', lv:31, hp:130, atk:16, def:11, exp:520, gold:420, veil:5, drops:[{mat:'namelight',chance:1,count:2},{mat:'moondust',chance:1,count:2},{mat:'goldbean',chance:0.8}] },
+  eldestword: { id:'eldestword', name:'가장 오래된 말', emoji:'🌙', art:'monsters/eldestword.webp', lv:31, hp:130, atk:16, def:11, exp:520, gold:420, veil:5, drops:[{mat:'namelight',chance:1,count:2},{mat:'moondust',chance:1,count:2},{mat:'goldbean',chance:0.8}] },
   // 존 보스: 드미타스가 남긴 수호물(드미타스 본인은 카페 크로스페이지 결전) — '값의 장막' 기믹 보유
   // ※밸런스: 존 배율(diff2.2×보스1.7=3.74)이 곱해지므로 base를 낮게 잡는다. 실측 Lv22+최상위장비 기준
   //   hp411/atk64/def45 → 장막 해제까지 ~9턴·처치 ~12턴, 회복 아이템 쓰면 클리어 가능한 최종보스 난이도.
   // ※[지역 서열 재조정] def를 10→12로 올림(실측 37→45) — 잔향항구 보스(def40)보다 낮게 막던 역전을 해소,
   //   달 보스(def49)보다는 낮게 유지.
-  curatorward:{ id:'curatorward',name:'큐레이터의 수호물', emoji:'⚖️', art:'monsters/curatorward.png', lv:25, hp:110, atk:17, def:12, exp:340, gold:260, veil:3, drops:[{mat:'sealshard',chance:1,count:2},{mat:'silentbell',chance:0.9},{mat:'pricechain',chance:0.9},{mat:'goldbean',chance:0.5}] },
+  curatorward:{ id:'curatorward',name:'큐레이터의 수호물', emoji:'⚖️', art:'monsters/curatorward.webp', lv:25, hp:110, atk:17, def:12, exp:340, gold:260, veil:3, drops:[{mat:'sealshard',chance:1,count:2},{mat:'silentbell',chance:0.9},{mat:'pricechain',chance:0.9},{mat:'goldbean',chance:0.5}] },
   // ---- 루나의 어둠(비밀 초월보스) — 가장 오래된 말을 꺾은 뒤에만 낮은 확률로 조우 ----
   // 100년간 봉인 속에서 놓지 못한 기억이 짙어져 태어난 어둠(루나가 봉인에 바친 기억의 잔여물).
   // ※[약점 축 게이팅] weakAxis:'R' — 오답정복(SRS졸업) 방어%가 자기 캡(25%)의 weakThreshold(80%) 미만이면
@@ -2288,7 +2279,7 @@ const MONSTERS = {
   //   정복한 이해(R)만 이 어둠을 가른다 — 프메2 무신(전투기술 압도적, 마법만 약점)의 국지적 우회구조를 차용.
   // ※base.lv를 달의 보스 등장레벨(31)에 맞춰 f=diff2.6×1.7=4.42로 golem/curatorward와 동일 역산 패턴 적용.
   //   실측 hp700/atk84/def62(가장 오래된 말 hp575/atk71/def49보다 한 단계 위, 선택 컨텐츠라 정규 곡선 밖).
-  lunashadow: { id:'lunashadow', name:'루나의 어둠', emoji:'🌑', art:'monsters/lunashadow.png', lv:31, hp:158, atk:19, def:14,
+  lunashadow: { id:'lunashadow', name:'루나의 어둠', emoji:'🌑', art:'monsters/lunashadow.webp', lv:31, hp:158, atk:19, def:14,
     weakAxis:'R', weakThreshold:0.8, exp:600, gold:500, drops:[{mat:'lunamemory',chance:1},{mat:'goldbean',chance:1,count:2}] },
 };
 // 존(지역) 레지스트리 — 이름/해제레벨/난이도/틴트/몬스터풀/보스/이웃
@@ -2471,7 +2462,7 @@ const Battle = {
   setSelfSprite(){ const ckey=Explore.state.companion||'none'; const comp=COMPANIONS[ckey]; const ps=document.getElementById('p-self'); ps.className='sprite-self';
     let bi=comp&&(comp.battleImg||comp.img);
     // 기본(동료 없음) = 선택한 성별 바리스타 뒷모습
-    if(ckey==='none' && localStorage.getItem('vb_gender')==='f') bi='chars/baristaf_back.png';
+    if(ckey==='none' && localStorage.getItem('vb_gender')==='f') bi='chars/baristaf_back.webp';
     // 이미지가 없거나 로드 실패하면 이모지로 폴백(기본 요리사 뒷모습 PNG 추가 전까지 안전)
     if(bi){ ps.classList.add('has-img'); ps.innerHTML='<img src="'+bi+'" onerror="this.parentNode.className=\'sprite-self emoji\';this.parentNode.textContent=\'🧑‍🍳\'">'; }
     else { ps.classList.add('emoji'); ps.textContent='🧑‍🍳'; } },
@@ -2666,7 +2657,7 @@ const Battle = {
     //   실측: Lv1·무장비=0%(진짜 벽) → Lv4·무장비=73% → Lv4·티어1 장비(원두검+
     //   우유거품, 400골드=슬라임 약 30마리)=100% → Lv6+=100%. '숲 한 바퀴 돌고
     //   제일 싼 장비 사기'만큼만 하면 확실히 이기고, 아무것도 안 하면 확실히 진다.
-    const enemy = { id:'demitas', name:'드미타스', art:'chars/face_demitasse_base.png',
+    const enemy = { id:'demitas', name:'드미타스', art:'chars/face_demitasse_base.webp',
       lv:(Explore.state.level||1)+2, isBoss:true,
       hp:  Math.max(60, Math.round(p.maxHp * 2.3)),
       atk: 18,
@@ -2739,7 +2730,7 @@ const Battle = {
     // [보스 관문] 이 보스가 다음 존 관문이었다면, 통과 처리하고 그대로 다음 존까지 이동시킨다.
     const finish=()=>{ if(this.gateTo){ const dest=this.gateTo; this.gateTo=null; this.close(); World.travelZone(dest); return; } this.close(); };
     // [보스 격파 CG] 깊은숲 골렘 전용 — 안식을 얻은 골렘의 짧은 컷신(도감에도 자동 기록됨)
-    if(e.id==='golem'){ showExCutsceneCG('assets/art/cg_golem_defeat.jpg', '고맙다, 다시 데워줘서.', finish); }
+    if(e.id==='golem'){ showExCutsceneCG('assets/art/cg_golem_defeat.webp', '고맙다, 다시 데워줘서.', finish); }
     else if(e.id==='lunashadow' && typeof LunaShadow!=='undefined'){ LunaShadow.victory(finish); }
     else finish();
     },   // 결과 잠깐 보여주고 자동으로 전투 종료(탭하면 즉시)
@@ -2900,7 +2891,7 @@ const DarkDuel = {
     if(window.ExploreBgm) try{ExploreBgm.play('boss');}catch(e){}
     // [정리] 말풍선보다 CG가 먼저 — 메인 캐릭터 조우처럼 얼굴부터 보여준 뒤 대사로 이어진다
     var self=this;
-    showExCutsceneCG('assets/art/cg_dark_merchant_duel.jpg', '어둠 속에서, 낯선 상인이 잔을 내밀었다.', function(){ self.intro(); }, 'cg_dark_merchant_meet'); },
+    showExCutsceneCG('assets/art/cg_dark_merchant_duel.webp', '어둠 속에서, 낯선 상인이 잔을 내밀었다.', function(){ self.intro(); }, 'cg_dark_merchant_meet'); },
   intro(){ var _beaten=!!((Explore.state.events||{}).darkMerchant);
     // [반전] 카페 드미타스 진행도에 따라 정체를 흘림 — 만난 뒤 첫 조우=reveal(1회), 구원 후=dissolve
     var _stage=0; try{ _stage=(JSON.parse(localStorage.getItem('vb_save_v7')||'{}').demitasStage)||0; }catch(e){}
@@ -3063,7 +3054,7 @@ const LunaShadow = {
   meet(){ this.i=0;
     const first=!((Explore.state.events||{}).lunaShadowMet);
     if(first){ if(!Explore.state.events)Explore.state.events={}; Explore.state.events.lunaShadowMet=1; try{Explore.persist();}catch(e){}
-      const self=this; showExCutsceneCG('assets/art/cg_lunashadow_meet.jpg', '달빛이 닿지 않는 쪽에, 그 애를 닮은 것이 서 있었다.', function(){ self.render(); }); }
+      const self=this; showExCutsceneCG('assets/art/cg_lunashadow_meet.webp', '달빛이 닿지 않는 쪽에, 그 애를 닮은 것이 서 있었다.', function(){ self.render(); }); }
     else this.render();
   },
   render(){
@@ -3085,10 +3076,10 @@ const LunaShadow = {
   victory(done){
     if(window.World){ World.arenaBoss=null; try{ World.updateActionBtn(); }catch(e){} }
     const f=(localStorage.getItem('vb_gender')==='f');
-    const cg = f ? 'assets/art/cg_lunashadow_thanks_f.jpg' : 'assets/art/cg_lunashadow_thanks_m.jpg';
+    const cg = f ? 'assets/art/cg_lunashadow_thanks_f.webp' : 'assets/art/cg_lunashadow_thanks_m.webp';
     const cap = f ? '"…고마워. 이건 친구한테만 하는 거야." 루나가 오래 안아주었다.'
                   : '"…고마워." 루나가 살며시 다가와, 뺨에 입을 맞췄다.';
-    showExCutsceneCG('assets/art/cg_lunashadow_meet.jpg', '어둠이 옅어지며 흩어진다 — 그 애가 두고 간 백 년이, 마침내 제자리로.', function(){
+    showExCutsceneCG('assets/art/cg_lunashadow_meet.webp', '어둠이 옅어지며 흩어진다 — 그 애가 두고 간 백 년이, 마침내 제자리로.', function(){
       showExCutsceneCG(cg, cap, function(){ if(done) done(); }, 'cg_lunashadow_thanks');
     });
   },

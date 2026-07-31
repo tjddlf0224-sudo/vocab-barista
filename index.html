@@ -708,7 +708,7 @@
 }
 
 /* ===== 시작화면 — 파스텔 카페 일러스트 타이틀 ===== */
-#start-screen.premium{ background:#f3d9bf url('scenes/title.png') center/cover no-repeat; overflow:hidden; padding:0; }
+#start-screen.premium{ background:#f3d9bf url('scenes/title.webp') center/cover no-repeat; overflow:hidden; padding:0; }
 /* 상단 타이틀 + 하단 버튼 가독성 스크림 */
 #start-screen.premium::before{ content:''; position:absolute; inset:0; pointer-events:none; z-index:0;
     background:linear-gradient(180deg, rgba(255,250,242,.32) 0%, transparent 22%, transparent 50%, rgba(255,243,228,.55) 80%, rgba(255,240,223,.93) 100%); }
@@ -1074,7 +1074,7 @@
 
     <div class="cafe-view">
         <div class="scene-bg" id="scene-bg">
-            <img class="scene-photo" src="scenes/cafe_pastel.png" alt="">
+            <img class="scene-photo" src="scenes/cafe_pastel.webp" alt="">
         </div>
         <div class="wall-deco-area" id="wall-layer"></div>
         <div class="customer-area" id="customer-area"></div>
@@ -1126,7 +1126,7 @@
 </div>
 
     <style>
-      #login-screen{ position:fixed; inset:0; z-index:200; background:#f3d9bf url('scenes/title.png') center/cover no-repeat; display:flex; align-items:center; justify-content:center; padding:20px; }
+      #login-screen{ position:fixed; inset:0; z-index:200; background:#f3d9bf url('scenes/title.webp') center/cover no-repeat; display:flex; align-items:center; justify-content:center; padding:20px; }
       #login-screen::before{ content:''; position:absolute; inset:0; background:rgba(30,18,10,.55); }
       #login-screen.hidden{ display:none; }
       .login-inner{ position:relative; z-index:1; width:100%; max-width:360px; background:rgba(255,250,242,.97); border-radius:22px; padding:26px 22px 18px; box-shadow:0 16px 40px rgba(0,0,0,.4); text-align:center; font-family:'Jua','Nunito',sans-serif; max-height:92vh; overflow-y:auto; }
@@ -1254,8 +1254,8 @@
         <h2>바리스타 선택</h2>
         <p>어떤 바리스타로 시작할까요?<br><span style="font-size:.82rem;color:#8d7a66;">함께 카페를 꾸려갈 나의 모습이에요</span></p>
         <div class="gender-grid">
-          <button class="gender-card m" onclick="selectGender('m')"><img src="chars/barista_m.png" alt="남자 바리스타"><span>남자 바리스타</span></button>
-          <button class="gender-card f" onclick="selectGender('f')"><img src="chars/barista_f.png" alt="여자 바리스타"><span>여자 바리스타</span></button>
+          <button class="gender-card m" onclick="selectGender('m')"><img src="chars/barista_m.webp" alt="남자 바리스타"><span>남자 바리스타</span></button>
+          <button class="gender-card f" onclick="selectGender('f')"><img src="chars/barista_f.webp" alt="여자 바리스타"><span>여자 바리스타</span></button>
         </div>
       </div>
     </div>
@@ -1324,8 +1324,8 @@
           <div class="set-label">바리스타</div>
           <p class="set-desc">카페를 함께 꾸려갈 나의 캐릭터예요. 언제든 바꿀 수 있어요.</p>
           <div style="display:flex; gap:8px;">
-            <button id="set-gender-m" class="set-btn set-btn-neutral" onclick="vbSetGenderPref('m')" style="flex:1;"><img src="chars/barista_m.png" alt="" class="set-gimg">남자</button>
-            <button id="set-gender-f" class="set-btn set-btn-neutral" onclick="vbSetGenderPref('f')" style="flex:1;"><img src="chars/barista_f.png" alt="" class="set-gimg">여자</button>
+            <button id="set-gender-m" class="set-btn set-btn-neutral" onclick="vbSetGenderPref('m')" style="flex:1;"><img src="chars/barista_m.webp" alt="" class="set-gimg">남자</button>
+            <button id="set-gender-f" class="set-btn set-btn-neutral" onclick="vbSetGenderPref('f')" style="flex:1;"><img src="chars/barista_f.webp" alt="" class="set-gimg">여자</button>
           </div>
         </div>
         <div class="set-sec hidden" id="set-danger-sec">
@@ -1890,11 +1890,11 @@ window.UI_ICON = UI_ICON;
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run); else run();
 })();   // 인라인 onerror/핸들러에서도 쓸 수 있게(최상위 const는 window에 안 붙음)
 
-// 조합템 아이콘 — 탐험 조합소에서 만든 아이템. 제미나이 에셋(sprites/cr_*.png) 우선, 실패 시 이모지 폴백.
+// 조합템 아이콘 — 탐험 조합소에서 만든 아이템. 제미나이 에셋(sprites/cr_*.webp) 우선, 실패 시 이모지 폴백.
 function craftIcon(id, item, cls){
   if(!id || !item) return (item && item.icon) || '';
   // 에셋 우선, 실패 시 기존 SVG 아이콘(ICONS.*)으로 폴백 — 텍스트가 아니라 마크업으로 되돌려야 함
-  return `<img class="${cls||'cr-ic'}" src="sprites/${id}.png" alt=""
+  return `<img class="${cls||'cr-ic'}" src="sprites/${id}.webp" alt=""
      onerror="this.outerHTML=(window.CRAFTED_DEFS&&CRAFTED_DEFS['${id}']&&CRAFTED_DEFS['${id}'].icon)||''">`;
 }
 window.craftIcon = craftIcon;
@@ -2161,55 +2161,55 @@ function buildAnimalSVG(kind, o) {
 //   img: (선택) 외부 이미지 경로 — ChatGPT로 뽑은 PNG를 넣으면 SVG 대신 사용
 // ==========================================
 const CHAR_DEX = [
-    { id:'c_yujin', name:'유진',  kind:'human', rarity:'common', desc:'아침마다 들르는 단골 직장인', img:'chars/yujin.png',
+    { id:'c_yujin', name:'유진',  kind:'human', rarity:'common', desc:'아침마다 들르는 단골 직장인', img:'chars/yujin.webp',
       spec:{ skin:'#f3c9a0', skinShade:'#e0ad7e', hair:'#3b2a20', hairStyle:'bob', shirt:'#2b3a55', mood:'happy', blush:true } },
-    { id:'c_minjun', name:'민준', kind:'human', rarity:'common', desc:'안경 쓴 차분한 회사원', img:'chars/minjun.png',
+    { id:'c_minjun', name:'민준', kind:'human', rarity:'common', desc:'안경 쓴 차분한 회사원', img:'chars/minjun.webp',
       spec:{ skin:'#e8b58a', skinShade:'#d49b6e', hair:'#241812', hairStyle:'short', shirt:'#455a64', mood:'neutral', glasses:true } },
-    { id:'c_haein', name:'하은', kind:'human', rarity:'common', desc:'발랄한 단골 학생', img:'chars/haein.png',
+    { id:'c_haein', name:'하은', kind:'human', rarity:'common', desc:'발랄한 단골 학생', img:'chars/haein.webp',
       spec:{ skin:'#f7d3ad', skinShade:'#e6bb8c', hair:'#5d3a1a', hairStyle:'bob', shirt:'#e57373', mood:'happy', blush:true } },
-    { id:'c_doyun', name:'도윤', kind:'human', rarity:'common', desc:'비니가 트레이드마크인 청년', img:'chars/doyun.png',
+    { id:'c_doyun', name:'도윤', kind:'human', rarity:'common', desc:'비니가 트레이드마크인 청년', img:'chars/doyun.webp',
       spec:{ skin:'#d9a679', skinShade:'#c28e60', hair:'#2e7d32', hairStyle:'beanie', shirt:'#66bb6a', mood:'neutral' } },
-    { id:'c_grandma', name:'순자 여사', kind:'human', rarity:'common', desc:'정 많은 동네 어르신', img:'chars/grandma.png',
+    { id:'c_grandma', name:'순자 여사', kind:'human', rarity:'common', desc:'정 많은 동네 어르신', img:'chars/grandma.webp',
       spec:{ skin:'#f0c9a6', skinShade:'#ddb088', hair:'#cfcfcf', hairStyle:'bun', shirt:'#9575cd', mood:'happy', glasses:true } },
-    { id:'c_hipster', name:'재이', kind:'human', rarity:'common', desc:'노란 셔츠의 힙스터', img:'chars/hipster.png',
+    { id:'c_hipster', name:'재이', kind:'human', rarity:'common', desc:'노란 셔츠의 힙스터', img:'chars/hipster.webp',
       spec:{ skin:'#c98a5e', skinShade:'#b5774b', hair:'#1c1c1c', hairStyle:'short', shirt:'#d4a017', mood:'neutral' } },
 
-    { id:'c_seoa', name:'서아', kind:'human', rarity:'uncommon', desc:'긴 머리의 우아한 단골', img:'chars/seoa.png',
+    { id:'c_seoa', name:'서아', kind:'human', rarity:'uncommon', desc:'긴 머리의 우아한 단골', img:'chars/seoa.webp',
       spec:{ skin:'#f6d5b4', skinShade:'#e7be97', hair:'#4a2c1a', hairStyle:'long', shirt:'#ef9a9a', mood:'happy', blush:true, lashes:true, lips:true } },
-    { id:'c_cat',  name:'나비',  kind:'cat',  rarity:'uncommon', desc:'도도하지만 정 많은 고양이 손님', anim:'cat', img:'chars/navi.png' },
-    { id:'c_dog',  name:'초코',  kind:'dog',  rarity:'uncommon', desc:'언제나 해맑은 강아지 손님', anim:'dog', img:'chars/choco.png' },
+    { id:'c_cat',  name:'나비',  kind:'cat',  rarity:'uncommon', desc:'도도하지만 정 많은 고양이 손님', anim:'cat', img:'chars/navi.webp' },
+    { id:'c_dog',  name:'초코',  kind:'dog',  rarity:'uncommon', desc:'언제나 해맑은 강아지 손님', anim:'dog', img:'chars/choco.webp' },
 
-    { id:'c_rush', name:'버럭 씨', kind:'rush', rarity:'common', desc:'3초도 못 기다리는 성격 급한 손님', img:'chars/rush.png',
+    { id:'c_rush', name:'버럭 씨', kind:'rush', rarity:'common', desc:'3초도 못 기다리는 성격 급한 손님', img:'chars/rush.webp',
       spec: { skin:'#e8896f', skinShade:'#d4745a', hair:'#2a1a12', hairStyle:'short', shirt:'#7a2e2e', mood:'angry', brow:'#2a1a12',
         front:`<g><path d="M150 66 q-7 11 0 16 a4.2 4.2 0 0 0 0 -16 Z" fill="#7ec8ff" opacity=".9"/><g stroke="#ff3b3b" stroke-width="4" stroke-linecap="round"><path d="M150 18 l10 -10 M164 14 l8 2 M158 28 l10 4"/></g><g fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".75"><path d="M74 18 q-7 -10 0 -20"/><path d="M100 12 q-7 -10 0 -20"/></g></g>` } },
 
-    { id:'c_vip', name:'젠틀 경', kind:'vip', rarity:'rare', desc:'실크햇과 모노클의 품격 있는 신사', img:'chars/vip.png',
+    { id:'c_vip', name:'젠틀 경', kind:'vip', rarity:'rare', desc:'실크햇과 모노클의 품격 있는 신사', img:'chars/vip.webp',
       spec: { skin:'#f1cda3', skinShade:'#e0b483', hair:'#1c1c1c', hairStyle:'short', shirt:'#1a1a1a', shirtDark:'#000', mood:'neutral', special:'vip',
         front:`<g><path d="M88 156 L100 163 L88 170 Z" fill="#b8860b"/><path d="M112 156 L100 163 L112 170 Z" fill="#b8860b"/><circle cx="100" cy="163" r="4" fill="#8a6508"/><path d="M82 110 Q100 120 118 110 Q110 117 100 115 Q90 117 82 110 Z" fill="#3b2a20"/><circle cx="120" cy="92" r="14" fill="rgba(255,255,255,.12)" stroke="#d4af37" stroke-width="3"/><path d="M122 106 Q128 124 118 136" stroke="#d4af37" stroke-width="2" fill="none"/><rect x="56" y="12" width="88" height="13" rx="4" fill="#141414"/><rect x="72" y="-30" width="56" height="46" rx="5" fill="#141414"/><rect x="72" y="2" width="56" height="9" fill="#b8860b"/></g>` } },
 
     // ===== 메인 캐릭터 (주기적 등장 · 스토리) =====
-    { id:'m_roa', name:'로아', kind:'main', rarity:'epic', tags:['normal'], img:'chars/roa.png',
+    { id:'m_roa', name:'로아', kind:'main', rarity:'epic', tags:['normal'], img:'chars/roa.webp',
       title:'전설의 떠돌이 바리스타',
       desc:'세계를 떠돌며 단 한 잔의 완벽한 커피를 찾는 전설의 바리스타. 그의 인정을 받으면 카페의 격이 올라간다고 한다.',
       story:'"…나쁘지 않군. 하지만 진짜 실력은 단어로 증명하는 법이지. 자, 내 주문을 맞춰보게."',
       spec:{ skin:'#e9c39a', skinShade:'#d6ab7e', hair:'#e8e8ef', hairStyle:'long', shirt:'#2c3e50', shirtDark:'#1a252f', mood:'neutral', brow:'#9a9aa6',
         front:`<g><path d="M24 250 C24 200 50 176 100 176 C150 176 176 200 176 250 Z" fill="#37474f"/><rect x="70" y="176" width="60" height="74" fill="#eceff1" opacity=".9"/><path d="M70 176 L100 196 L130 176 Z" fill="#cfd8dc"/><circle cx="100" cy="214" r="9" fill="none" stroke="#8a6d3b" stroke-width="3"/><path d="M100 209 q4 5 0 10 q-4 -5 0 -10" fill="#8a6d3b"/><path d="M118 86 q14 -2 18 10" stroke="#cfa84a" stroke-width="3" fill="none"/></g>` },
       },
-    { id:'m_luna', name:'루나', kind:'main', rarity:'legendary', tags:['vip'], img:'chars/luna.png',
+    { id:'m_luna', name:'루나', kind:'main', rarity:'legendary', tags:['vip'], img:'chars/luna.webp',
       title:'달빛 마녀 단골',
       desc:'보름달이 뜨는 밤에만 나타나는 신비로운 단골. 그녀의 주문은 늘 어렵지만, 맞히면 마법 같은 행운이 따라온다.',
       story:'"후훗… 오늘 밤은 운이 좋네. 내 철자 주문을 완성하면, 달빛의 보상을 주지."',
       spec:{ skin:'#f3dcc4', skinShade:'#e6c5a6', hair:'#7e57c2', hairStyle:'long', shirt:'#311b4f', shirtDark:'#23123b', mood:'happy', brow:'#5e35a8', blush:true, lashes:true, lips:true, special:'vip',
         front:`<g><path d="M50 18 L150 18 L100 -34 Z" fill="#3b2456"/><path d="M50 18 L150 18 L100 -10 Z" fill="#4a2e6e"/><circle cx="100" cy="-18" r="6" fill="#ffd76a"/><path d="M150 34 l6 -8 l3 9 l9 3 l-9 3 l-3 9 l-3 -9 l-9 -3 l9 -3 z" fill="#ffd76a" opacity=".9"/><circle cx="138" cy="150" r="5" fill="#ffd76a" opacity=".8"/></g>` } },
-    { id:'m_sera', name:'세라', alias:'아이돌 에코', kind:'main', rarity:'epic', tags:['normal','vip'], img:'chars/sera.png', hidden:'chars/sera_hidden.png',
+    { id:'m_sera', name:'세라', alias:'아이돌 에코', kind:'main', rarity:'epic', tags:['normal','vip'], img:'chars/sera.webp', hidden:'chars/sera_hidden.webp',
       title:'커피 거리의 인기 아이돌',
       desc:'우연히 우리 카페를 마음에 들어한 톱스타. 그녀가 오면 가게가 들썩인다. 무대 밖에서 처음 \'집\' 같은 걸 느낀다.',
       story:'"여기선… 그냥 손님이어도 괜찮은 거죠? 자, 제 주문 맞춰주실래요?"' },
 ];
 const CHAR_BY_ID = {}; CHAR_DEX.forEach(c => CHAR_BY_ID[c.id] = c);
-CHAR_BY_ID['q_rico'] = { id:'q_rico', name:'리코', kind:'npc', img:'chars/npc_rico_talk.png' };
-CHAR_BY_ID['q_demitas'] = { id:'q_demitas', name:'드미타스', kind:'npc', img:'chars/face_demitasse_base.png' };
-CHAR_BY_ID['boss'] = { id:'boss', name:'사장', kind:'npc', img:'chars/barista_m.png' };
+CHAR_BY_ID['q_rico'] = { id:'q_rico', name:'리코', kind:'npc', img:'chars/npc_rico_talk.webp' };
+CHAR_BY_ID['q_demitas'] = { id:'q_demitas', name:'드미타스', kind:'npc', img:'chars/face_demitasse_base.webp' };
+CHAR_BY_ID['boss'] = { id:'boss', name:'사장', kind:'npc', img:'chars/barista_m.webp' };
 // ===== 일반 손님 성격 대사 (order:입장 · ok:정답 · miss:오답 · bye:작별) — 아바타 위 말풍선 =====
 const CUSTOMER_DIALOGUE = {
     c_yujin: { order:["…살려주세요. 늘 마시던 걸로, 진하게.", "어제 새벽 세 시에 퇴근했어요. 이 한 잔에 오늘을 겁니다.", "말은 좀 이따가요. 아직 눈이 안 떠졌어요.", "출근길에 여기 불빛 보이면 그래도 좀 살 것 같아요.", "아이스로 주세요. 정신 좀 차리게요."], ok:["크— 이제 좀 사람 같네요. 감사합니다.", "이 맛이에요. 오늘 하루는 버티겠어요.", "역시 여기 오길 잘했다."], miss:["어… 그거 마시면 저 더 졸려요.", "사장님, 저 지금 카페인이 급해요. 다시 부탁해요.", "음, 땡. 한 번만 더요."], bye:["잘 마셨어요. 내일도 살아서 올게요."] },
@@ -2232,25 +2232,25 @@ const CARD_TIER_LABEL = { easy:'Easy 마스터', normal:'Normal 마스터', hard
 const CARD_TIER_KO    = { easy:'쉬움', normal:'보통', hard:'어려움' };
 const CARD_DEX = [
     // Easy — 편안하고 다정한 버전
-    { id:'luna_v2', tier:'easy',   charId:'m_luna', name:'루나 · 평상복',     img:'chars/luna_v2.png',
+    { id:'luna_v2', tier:'easy',   charId:'m_luna', name:'루나 · 평상복',     img:'chars/luna_v2.webp',
       desc:'마녀 모자를 벗은 루나. "이런 차림은… 너에게만 보여주는 거란다."' },
-    { id:'seoa_v3', tier:'easy',   charId:'c_seoa', name:'서아 · 카페 알바',   img:'chars/seoa_v3.png',
+    { id:'seoa_v3', tier:'easy',   charId:'c_seoa', name:'서아 · 카페 알바',   img:'chars/seoa_v3.webp',
       desc:'앞치마를 두르고 트레이를 든 서아. "오늘은 제가 도와드릴게요!"' },
-    { id:'roa_v2',  tier:'easy',   charId:'m_roa',  name:'로아 · 캐주얼',     img:'chars/roa_v2.png',
+    { id:'roa_v2',  tier:'easy',   charId:'m_roa',  name:'로아 · 캐주얼',     img:'chars/roa_v2.webp',
       desc:'앞치마를 벗은 로아의 오프 듀티. "…이런 날도 나쁘지 않군."' },
     // Normal — 격식과 계절
-    { id:'seoa_v2', tier:'normal', charId:'c_seoa', name:'서아 · 한복',       img:'chars/seoa_v2.png',
+    { id:'seoa_v2', tier:'normal', charId:'c_seoa', name:'서아 · 한복',       img:'chars/seoa_v2.webp',
       desc:'고운 한복을 차려입은 서아. "명절이라 한번 입어봤어요. 어때요?"' },
-    { id:'roa_v3',  tier:'normal', charId:'m_roa',  name:'로아 · 정장',       img:'chars/roa_v3.png',
+    { id:'roa_v3',  tier:'normal', charId:'m_roa',  name:'로아 · 정장',       img:'chars/roa_v3.webp',
       desc:'각 잡힌 정장의 로아. "가끔은 이런 자리도 있는 법이지."' },
-    { id:'sera_v2', tier:'normal', charId:'m_sera', name:'세라 · 여름 원피스', img:'chars/sera_v2.png',
+    { id:'sera_v2', tier:'normal', charId:'m_sera', name:'세라 · 여름 원피스', img:'chars/sera_v2.webp',
       desc:'밀짚모자를 눌러쓴 세라. "오늘은 완전 변장 성공이죠? 헤헤."' },
     // Hard — 가장 화려한 버전
-    { id:'sera_v3', tier:'hard',   charId:'m_sera', name:'세라 · 겨울 니트',   img:'chars/sera_v3.png',
+    { id:'sera_v3', tier:'hard',   charId:'m_sera', name:'세라 · 겨울 니트',   img:'chars/sera_v3.webp',
       desc:'포근한 니트에 파묻힌 세라. "…추워서 그런 거예요. 얼굴 빨간 거."' },
-    { id:'sera_v4', tier:'hard',   charId:'m_sera', name:'세라 · 드레스업',    img:'chars/sera_v4.png',
+    { id:'sera_v4', tier:'hard',   charId:'m_sera', name:'세라 · 드레스업',    img:'chars/sera_v4.webp',
       desc:'시상식에서 막 돌아온 세라. "무대보다… 여기가 더 떨려요."' },
-    { id:'luna_v3', tier:'hard',   charId:'m_luna', name:'루나 · 별빛 드레스', img:'chars/luna_v3.png',
+    { id:'luna_v3', tier:'hard',   charId:'m_luna', name:'루나 · 별빛 드레스', img:'chars/luna_v3.webp',
       desc:'별자리를 두른 루나. "백 년에 한 번… 오늘 같은 밤에만 입는단다."' },
 ];
 const CARDS_BY_TIER = { easy:[], normal:[], hard:[] };
@@ -2291,9 +2291,9 @@ const AFFECTION_STORY = {
 // 호감 단계: low(<30) · mid(30~59) · high(>=60). 캐릭터 개성·말투 살린 오리지널 대사.
 // ===== 유대 막 해금 CG (있는 막만 표시) · 경로 assets/art =====
 const AFFECTION_CG = {
-    m_roa:  { 1:'assets/art/cg_roa_act1_first_sip.jpg', 2:'assets/art/cg_roa_act2_name.jpg',        3:'assets/art/cg_roa_act3_burnt_tongue.jpg', 4:'assets/art/cg_roa_act4_summons.jpg', 5:'assets/art/cg_roa_act5_own_apron.jpg' },
-    m_luna: { 1:'assets/art/cg_luna_act1_moonlight.jpg', 2:'assets/art/cg_luna_act2_name.jpg',       3:'assets/art/cg_luna_guardian_war.jpg',   4:'assets/art/cg_luna_empty_chair.jpg',      5:'assets/art/cg_luna_act5_memory.jpg' },
-    m_sera: { 1:'assets/art/cg_sera_disguise.jpg',     2:'assets/art/cg_sera_act2_name.jpg',        3:'assets/art/cg_sera_five_year_song.jpg',   4:'assets/art/cg_sera_act4_happiness.jpg', 5:'assets/art/cg_sera_five_song.jpg' },
+    m_roa:  { 1:'assets/art/cg_roa_act1_first_sip.webp', 2:'assets/art/cg_roa_act2_name.webp',        3:'assets/art/cg_roa_act3_burnt_tongue.webp', 4:'assets/art/cg_roa_act4_summons.webp', 5:'assets/art/cg_roa_act5_own_apron.webp' },
+    m_luna: { 1:'assets/art/cg_luna_act1_moonlight.webp', 2:'assets/art/cg_luna_act2_name.webp',       3:'assets/art/cg_luna_guardian_war.webp',   4:'assets/art/cg_luna_empty_chair.webp',      5:'assets/art/cg_luna_act5_memory.webp' },
+    m_sera: { 1:'assets/art/cg_sera_disguise.webp',     2:'assets/art/cg_sera_act2_name.webp',        3:'assets/art/cg_sera_five_year_song.webp',   4:'assets/art/cg_sera_act4_happiness.webp', 5:'assets/art/cg_sera_five_song.webp' },
 };
 function affCg(id, actNum){ return (AFFECTION_CG[id]||{})[actNum] || ''; }
 
@@ -2356,7 +2356,7 @@ const CG_WIDE = new Set([
 const CG_GENDERED = new Set(['cg_lunashadow_thanks']);
 function cgWideSrc(key){
   if(CG_GENDERED.has(key)) key = key + (vbGender()==='f' ? '_f' : '_m');
-  return CG_WIDE.has(key) ? ('assets/art/dex/' + key + '.jpg') : ('assets/art/' + key + '.jpg');
+  return CG_WIDE.has(key) ? ('assets/art/dex/' + key + '.webp') : ('assets/art/' + key + '.webp');
 }
 
 // [세로 프레이밍] 가로 CG를 세로 폰에 object-fit:cover로 '꽉 채움'. 파일은 안 자르고 CSS로만 프레이밍(비파괴).
@@ -2381,21 +2381,21 @@ const AFFECTION_SCENES = {
   m_roa: [
     {c:[{w:"m_roa",t:"추출 온도, 낮췄지?"},{w:"boss",t:"요즘 조금씩 바꿔보고 있어요."},{w:"m_roa",t:"그렇군."},{w:"m_roa",t:"(한 모금 더) …나쁘진 않군."},{w:"m_roa",t:"또 올게."}]},
     {c:[{w:"q_rico",t:"자, 잠깐만. 그, 그라인드 하임의 로아?! 라테 그랑프리 3연속—"},{w:"m_roa",t:"…시끄러워."},{w:"m_roa",t:"(내게) 로아야. 이름. 이렇게 알려질 줄은 몰랐고."},{w:"boss",t:"물어보려던 참이었어요."},{w:"m_roa",t:"알아. 안 물어봐서 편했어."},{w:"boss",t:"왜 이런 골목에 계세요?"},{w:"m_roa",t:"…그건 커피 몇 잔 더 마시면 말해줄게."}]},
-    {c:[{w:"boss",t:"무슨 생각 해요?"},{w:"m_roa",t:"…커피 몇 잔 더 마시면 말해준다고 했지. 우승 얘긴 리코가 다 떠들었을 테고.",fc:"chars/face_roa_confess.png"},{w:"m_roa",t:"근데 아무도 그 다음은 안 물어보더라. 세 번째 우승하고부터, 맛이 안 느껴졌어.",cg:"assets/art/cg_roa_grandprix.jpg",cgc:"라테 그랑프리 — 세 번째 우승. 그날부터 맛이 사라졌다."},{w:"boss",t:"맛이… 아예요?"},{w:"m_roa",t:"우승하고 마신 축배도 맹물 같더군. 스승은 '기술만 완벽하면 된다'고 했고."},{w:"m_roa",t:"그날 앞치마 벗었어."},{w:"m_roa",t:"(내 커피를 한 모금) 근데 여기 커피는… 완벽하진 않아. 그런데 맛이 나.",fc:"chars/face_roa_confess.png"},{w:"m_roa",t:"한 잔 더."}]},
-    {c:[{w:"m_roa",t:"그라인드 하임에서 사람 보내왔어.",cg:"assets/art/cg_roa_grindheim_flashback.jpg",cgc:"그라인드 하임 — 그가 앞치마를 벗고 걸어 나온 곳."},{w:"boss",t:"스승 분이요?"},{w:"m_roa",t:"스승이 아프대. 그 카페 이름으로 4승 나가달라는 거야."},{w:"m_roa",t:"가기 싫어. 근데 안 가기도 그래.",fc:"chars/face_roa_waver.png"},{w:"m_roa",t:"처음으로 선택이 어려워.",fc:"chars/face_roa_waver.png"},{w:"boss",t:"여기 있어요. 결정은 나중에 해도 되잖아요."},{w:"m_roa",t:"…그 말, 가볍게 한 거 아니지?"},{w:"boss",t:"네."},{w:"m_roa",t:"알겠어."},{w:"m_roa",t:"커피나 줘."}]},
-    {c:[{w:"m_roa",t:"그라인드 하임엔 안 갔어."},{w:"boss",t:"괜찮겠어요?"},{w:"m_roa",t:"스승한텐 연락했어. 다른 사람 세우라고."},{w:"m_roa",t:"우승컵은 세 개면 충분해. 이제는 맛을 느끼면서 내리고 싶어.",cg:"assets/art/cg_roa_three_cups.jpg",cgc:"세 개의 우승컵. 그에겐 이걸로 충분했다."},{w:"m_roa",t:"(앞치마를 집어 스스로 두르며) 이건 내가 두르는 거야. 누가 씌운 게 아니라."},{w:"m_roa",t:"…여기 있어도 돼?"}],m:[{w:"boss",t:"언제든."},{w:"m_roa",t:"좋아. 대신 안 봐줘."},{w:"m_roa",t:"자네 커피, 내가 이겨야 직성이 풀리거든.",fc:"chars/face_roa_rival.png"},{w:"m_roa",t:"(잔을 비우고) 내일 또 겨루지."}],f:[{w:"boss",t:"언제든."},{w:"m_roa",t:"…그래. 혼자 마시는 건 이제 그만하고싶네.",fc:"chars/face_roa_confess.png"},{w:"m_roa",t:"내일도, 같은 시간에 올게."}]},
+    {c:[{w:"boss",t:"무슨 생각 해요?"},{w:"m_roa",t:"…커피 몇 잔 더 마시면 말해준다고 했지. 우승 얘긴 리코가 다 떠들었을 테고.",fc:"chars/face_roa_confess.webp"},{w:"m_roa",t:"근데 아무도 그 다음은 안 물어보더라. 세 번째 우승하고부터, 맛이 안 느껴졌어.",cg:"assets/art/cg_roa_grandprix.webp",cgc:"라테 그랑프리 — 세 번째 우승. 그날부터 맛이 사라졌다."},{w:"boss",t:"맛이… 아예요?"},{w:"m_roa",t:"우승하고 마신 축배도 맹물 같더군. 스승은 '기술만 완벽하면 된다'고 했고."},{w:"m_roa",t:"그날 앞치마 벗었어."},{w:"m_roa",t:"(내 커피를 한 모금) 근데 여기 커피는… 완벽하진 않아. 그런데 맛이 나.",fc:"chars/face_roa_confess.webp"},{w:"m_roa",t:"한 잔 더."}]},
+    {c:[{w:"m_roa",t:"그라인드 하임에서 사람 보내왔어.",cg:"assets/art/cg_roa_grindheim_flashback.webp",cgc:"그라인드 하임 — 그가 앞치마를 벗고 걸어 나온 곳."},{w:"boss",t:"스승 분이요?"},{w:"m_roa",t:"스승이 아프대. 그 카페 이름으로 4승 나가달라는 거야."},{w:"m_roa",t:"가기 싫어. 근데 안 가기도 그래.",fc:"chars/face_roa_waver.webp"},{w:"m_roa",t:"처음으로 선택이 어려워.",fc:"chars/face_roa_waver.webp"},{w:"boss",t:"여기 있어요. 결정은 나중에 해도 되잖아요."},{w:"m_roa",t:"…그 말, 가볍게 한 거 아니지?"},{w:"boss",t:"네."},{w:"m_roa",t:"알겠어."},{w:"m_roa",t:"커피나 줘."}]},
+    {c:[{w:"m_roa",t:"그라인드 하임엔 안 갔어."},{w:"boss",t:"괜찮겠어요?"},{w:"m_roa",t:"스승한텐 연락했어. 다른 사람 세우라고."},{w:"m_roa",t:"우승컵은 세 개면 충분해. 이제는 맛을 느끼면서 내리고 싶어.",cg:"assets/art/cg_roa_three_cups.webp",cgc:"세 개의 우승컵. 그에겐 이걸로 충분했다."},{w:"m_roa",t:"(앞치마를 집어 스스로 두르며) 이건 내가 두르는 거야. 누가 씌운 게 아니라."},{w:"m_roa",t:"…여기 있어도 돼?"}],m:[{w:"boss",t:"언제든."},{w:"m_roa",t:"좋아. 대신 안 봐줘."},{w:"m_roa",t:"자네 커피, 내가 이겨야 직성이 풀리거든.",fc:"chars/face_roa_rival.webp"},{w:"m_roa",t:"(잔을 비우고) 내일 또 겨루지."}],f:[{w:"boss",t:"언제든."},{w:"m_roa",t:"…그래. 혼자 마시는 건 이제 그만하고싶네.",fc:"chars/face_roa_confess.webp"},{w:"m_roa",t:"내일도, 같은 시간에 올게."}]},
   ],
   m_luna: [
-    {c:[{w:"m_luna",t:"여기서 달이 이렇게 잘 보이는 줄 몰랐어."},{w:"boss",t:"그 자리가 제일 잘 보여요."},{w:"m_luna",t:"백 년을 봐도 안 질려. 달이 꽤 성실한 편이거든."},{w:"m_luna",t:"라떼 하나. …뜨겁게. 요샌 다들 차게 마시더라. 이상한 시대야."},{w:"m_luna",t:"…고마워. (한 모금) 따뜻한 거, 오랜만이네.",fc:"chars/face_luna_grateful.png"},{w:"m_luna",t:"또 와도 돼?"}]},
+    {c:[{w:"m_luna",t:"여기서 달이 이렇게 잘 보이는 줄 몰랐어."},{w:"boss",t:"그 자리가 제일 잘 보여요."},{w:"m_luna",t:"백 년을 봐도 안 질려. 달이 꽤 성실한 편이거든."},{w:"m_luna",t:"라떼 하나. …뜨겁게. 요샌 다들 차게 마시더라. 이상한 시대야."},{w:"m_luna",t:"…고마워. (한 모금) 따뜻한 거, 오랜만이네.",fc:"chars/face_luna_grateful.webp"},{w:"m_luna",t:"또 와도 돼?"}]},
     {c:[{w:"m_luna",t:"루나. 그게 내 이름이야."},{w:"boss",t:"'Luna' — 옛말로 달이잖아요."},{w:"m_luna",t:"(잠깐 멈춘다) …알아보는 사람 오랜만이네."},{w:"boss",t:"달에서 따온 이름이에요?"},{w:"m_luna",t:"글쎄. 너무 오래돼서 나도 가끔 헷갈려."},{w:"m_luna",t:"이름 제대로 불린 거, 백 년 만이야."},{w:"m_luna",t:"(옅게 웃는다) 웃을 생각 없었는데. 이상하네."}]},
-    {c:[{w:"boss",t:"오늘 좀 지쳐 보여요."},{w:"m_luna",t:"꿈을 꿨어. 백 년 만에."},{w:"boss",t:"좋은 꿈이요?"},{w:"m_luna",t:"아니. 전쟁이 끝나던 밤이었어."},{w:"m_luna",t:"그 어둠을 가두려면 봉인이 필요했어. 봉인엔 대가가 따르고."},{w:"m_luna",t:"나는 가진 것 중에 제일 값진 걸 내놨어."},{w:"boss",t:"그게 뭐였는데요?"},{w:"m_luna",t:"기억. 백 년 치.",fc:"chars/face_luna_sorrow.png"},{w:"m_luna",t:"깨보니 아무것도 안 남았더라. 사람도, 마을도, 이름도.",fc:"chars/face_luna_sorrow.png",cg:"assets/art/cg_luna_awakening.jpg",cgc:"봉인이 끝나고, 홀로 깨어난 아침."},{w:"m_luna",t:"이상하지. 얼굴은 안 떠오르는데 그리운 건 남았어."},{w:"boss",t:"그만큼 소중했던 거 아닐까요."},{w:"m_luna",t:"…그렇게 들으니 좀 낫네."},{w:"m_luna",t:"미안한데, 며칠 안 올지도 몰라. 기억이 돌아올 때마다 좀… 아파서."}]},
-    {c:[{w:"m_luna",t:"솔직히 말해도 돼?"},{w:"boss",t:"네."},{w:"m_luna",t:"여기 오는 게 가끔 무서워.",fc:"chars/face_luna_fear.png"},{w:"boss",t:"왜요?"},{w:"m_luna",t:"너희는 늙잖아. 나만 남고.",fc:"chars/face_luna_fear.png"},{w:"m_luna",t:"정 붙이면 늘 내가 배웅하는 쪽이야. 매번."},{w:"m_luna",t:"그래서 이름도 늦게 알려준 거야. 멀리 두려고."},{w:"boss",t:"근데 지금 여기 있잖아요."},{w:"m_luna",t:"…그러네. 무서워도 발이 여기로 오더라. 어쩌겠어."},{w:"boss",t:"무서우면 무서운 채로 와요. 문 열어둘게요."},{w:"m_luna",t:"그런 말 오랜만에 들어."},{w:"m_luna",t:"계속 와도 되는 거지?"},{w:"boss",t:"언제든요."},{w:"m_luna",t:"고마워.",fc:"chars/face_luna_grateful.png"}]},
+    {c:[{w:"boss",t:"오늘 좀 지쳐 보여요."},{w:"m_luna",t:"꿈을 꿨어. 백 년 만에."},{w:"boss",t:"좋은 꿈이요?"},{w:"m_luna",t:"아니. 전쟁이 끝나던 밤이었어."},{w:"m_luna",t:"그 어둠을 가두려면 봉인이 필요했어. 봉인엔 대가가 따르고."},{w:"m_luna",t:"나는 가진 것 중에 제일 값진 걸 내놨어."},{w:"boss",t:"그게 뭐였는데요?"},{w:"m_luna",t:"기억. 백 년 치.",fc:"chars/face_luna_sorrow.webp"},{w:"m_luna",t:"깨보니 아무것도 안 남았더라. 사람도, 마을도, 이름도.",fc:"chars/face_luna_sorrow.webp",cg:"assets/art/cg_luna_awakening.webp",cgc:"봉인이 끝나고, 홀로 깨어난 아침."},{w:"m_luna",t:"이상하지. 얼굴은 안 떠오르는데 그리운 건 남았어."},{w:"boss",t:"그만큼 소중했던 거 아닐까요."},{w:"m_luna",t:"…그렇게 들으니 좀 낫네."},{w:"m_luna",t:"미안한데, 며칠 안 올지도 몰라. 기억이 돌아올 때마다 좀… 아파서."}]},
+    {c:[{w:"m_luna",t:"솔직히 말해도 돼?"},{w:"boss",t:"네."},{w:"m_luna",t:"여기 오는 게 가끔 무서워.",fc:"chars/face_luna_fear.webp"},{w:"boss",t:"왜요?"},{w:"m_luna",t:"너희는 늙잖아. 나만 남고.",fc:"chars/face_luna_fear.webp"},{w:"m_luna",t:"정 붙이면 늘 내가 배웅하는 쪽이야. 매번."},{w:"m_luna",t:"그래서 이름도 늦게 알려준 거야. 멀리 두려고."},{w:"boss",t:"근데 지금 여기 있잖아요."},{w:"m_luna",t:"…그러네. 무서워도 발이 여기로 오더라. 어쩌겠어."},{w:"boss",t:"무서우면 무서운 채로 와요. 문 열어둘게요."},{w:"m_luna",t:"그런 말 오랜만에 들어."},{w:"m_luna",t:"계속 와도 되는 거지?"},{w:"boss",t:"언제든요."},{w:"m_luna",t:"고마워.",fc:"chars/face_luna_grateful.webp"}]},
     {c:[{w:"m_luna",t:"마지막 조각이 돌아왔어."},{w:"boss",t:"어떤 기억이요?"},{w:"m_luna",t:"봉인 직전에 뭘 마셨는지. 커피였어. 누가 내려준 커피."},{w:"m_luna",t:"얼굴이 이제야 떠올라. …네 커피랑 맛이 겹쳐서, 계속 여기로 왔나 봐."},{w:"m_luna",t:"봉인이 지켜준다던 것들, 결국 아무것도 못 지켰어. 지켜준 건 이 한 잔이었지."},{w:"m_luna",t:"잊는 게 무서웠는데. 다시 기억하는 것도 나쁘지 않네."}],m:[{w:"m_luna",t:"백 년 만에 처음으로 바라는 게 생겼어."},{w:"boss",t:"뭔데요?"},{w:"m_luna",t:"네가 나이 드는 걸, 끝까지 곁에서 보는 거."},{w:"m_luna",t:"(담담히) 배웅하는 쪽은 이제 그만할래. 이번엔 남는 쪽이야."}],f:[{w:"m_luna",t:"처음으로 바라는 게 생겼어."},{w:"boss",t:"뭔데요?"},{w:"m_luna",t:"네가 늙어가는 걸, 곁에서 끝까지 보는 거."},{w:"m_luna",t:"(담담히) 슬픈 얘기 아니야. 이번엔 배웅 말고, 곁에 있겠단 뜻이야."}]},
   ],
   m_sera: [
     {c:[{w:"m_sera",t:"저... 혹시 저 아세요?"},{w:"boss",t:"창가 말고 안쪽으로 드릴게요. 거긴 밖에서 다 보이거든요."},{w:"m_sera",t:"(모자챙을 슬쩍 내리며) ...사람 잘못 보셨어요. 저 그냥 손님이에요."},{w:"boss",t:"안 여쭐게요, 아무것도. 그냥 손님이신데요."},{w:"m_sera",t:"네. 그냥 손님. ...그 말 오랜만이에요."}]},
-    {c:[{w:"m_sera",t:"지금 저 말고 손님 없죠?"},{w:"boss",t:"네, 지금은요."},{w:"m_sera",t:"그때 아무것도 안 여쭤보셨잖아요. 그래서 제가 먼저 말할래요."},{w:"m_sera",t:"'에코'는 무대 이름이에요. 진짜 이름은 세라예요.",cg:"assets/art/cg_sera_stage.jpg",cgc:"무대 위의 에코 — 만 명이 부르는 이름."},{w:"boss",t:"세라."},{w:"m_sera",t:"...이름이 그렇게 불리는 거였구나."},{w:"m_sera",t:"다들 '에코', '그 에코' 그러거든요. 세라라고 불린 건 오랜만이에요."},{w:"boss",t:"앞으로도 세라라고 부를게요."},{w:"m_sera",t:"(잔을 두 손으로 감싸며) ...네. 그렇게 해주세요."}]},
-    {c:[{w:"m_sera",t:"저 처음 노래한 게 다섯 살이에요. 골목에서 혼자.",cg:"assets/art/cg_sera_alley_child.jpg",cgc:"다섯 살, 골목에서 혼자 부르던 노래."},{w:"boss",t:"지금이랑 달라요?"},{w:"m_sera",t:"그땐 틀린다는 게 뭔지도 몰랐어요. 그냥 좋아서 불렀거든요."},{w:"m_sera",t:"지금은 한 음만 틀려도 큰일 나요. 만 명이 보니까."},{w:"m_sera",t:"제 노래에 'wander'라는 말이 있어요. 여기저기 떠돈다는 뜻이에요."},{w:"m_sera",t:"뜻도 모르고 불렀거든요. 근데 그 골목 헤매던 다섯 살 저 같더라고요."},{w:"boss",t:"지금도 노래 좋아해요?"},{w:"m_sera",t:"...좋은데 무섭기도 해요. 여기서만 그냥 좋아요."}]},
+    {c:[{w:"m_sera",t:"지금 저 말고 손님 없죠?"},{w:"boss",t:"네, 지금은요."},{w:"m_sera",t:"그때 아무것도 안 여쭤보셨잖아요. 그래서 제가 먼저 말할래요."},{w:"m_sera",t:"'에코'는 무대 이름이에요. 진짜 이름은 세라예요.",cg:"assets/art/cg_sera_stage.webp",cgc:"무대 위의 에코 — 만 명이 부르는 이름."},{w:"boss",t:"세라."},{w:"m_sera",t:"...이름이 그렇게 불리는 거였구나."},{w:"m_sera",t:"다들 '에코', '그 에코' 그러거든요. 세라라고 불린 건 오랜만이에요."},{w:"boss",t:"앞으로도 세라라고 부를게요."},{w:"m_sera",t:"(잔을 두 손으로 감싸며) ...네. 그렇게 해주세요."}]},
+    {c:[{w:"m_sera",t:"저 처음 노래한 게 다섯 살이에요. 골목에서 혼자.",cg:"assets/art/cg_sera_alley_child.webp",cgc:"다섯 살, 골목에서 혼자 부르던 노래."},{w:"boss",t:"지금이랑 달라요?"},{w:"m_sera",t:"그땐 틀린다는 게 뭔지도 몰랐어요. 그냥 좋아서 불렀거든요."},{w:"m_sera",t:"지금은 한 음만 틀려도 큰일 나요. 만 명이 보니까."},{w:"m_sera",t:"제 노래에 'wander'라는 말이 있어요. 여기저기 떠돈다는 뜻이에요."},{w:"m_sera",t:"뜻도 모르고 불렀거든요. 근데 그 골목 헤매던 다섯 살 저 같더라고요."},{w:"boss",t:"지금도 노래 좋아해요?"},{w:"m_sera",t:"...좋은데 무섭기도 해요. 여기서만 그냥 좋아요."}]},
     {c:[{w:"m_sera",t:"(밝게) 사장님! 오늘 라떼 완전 기대돼요, 저 SNS에 올려서 태그—"},{w:"m_sera",t:"(문득 멈칫) ...아. 또 이러네요, 나. 여기선 안 그래도 되는데."},{w:"boss",t:"세라. 지금 행복해요?"},{w:"m_sera",t:"네, 당연히— (말이 끊긴다)"},{w:"m_sera",t:"...어? 이상하다. 대답이 안 나와요."},{w:"m_sera",t:"그 질문 처음 받아봐요. 다들 '행복하죠?' 하고 답을 정해주거든요."},{w:"boss",t:"천천히 생각해도 돼요."},{w:"m_sera",t:"(한참 뒤) 모르겠어요. 근데 여기 이렇게 앉아 있는 지금은... 좀 알 것 같기도 하고."}]},
     {c:[{w:"m_sera",t:"저 오늘 아예 안 쓰고 왔어요. 눈치챘어요?"},{w:"boss",t:"네. 처음이네요."},{w:"m_sera",t:"여기선 벗어도 될 것 같아서요."},{w:"m_sera",t:"데뷔하고 진짜 제 얼굴 보여준 데가 없었어요. 다들 무대 위 에코만 아니까."},{w:"m_sera",t:"근데 사장님은 처음부터 그냥 세라로 봐줬잖아요. 알면서도, 끝까지 모르는 사람처럼."},{w:"m_sera",t:"(창가 의자에 앉아, 다섯 살 그 골목의 노래를 아주 작게 흥얼거린다.)"},{w:"m_sera",t:"(멈추고 웃으며) ...방금 음 틀렸다. 근데 하나도 안 무섭네."}],m:[{w:"m_sera",t:"여기 오면 숨이 쉬어져요. 집이란 게 이런 느낌인가 봐요."},{w:"m_sera",t:"앞으로도 와도 되죠? 오래오래요."},{w:"boss",t:"언제든지요."},{w:"m_sera",t:"(식어가는 잔을 감싸 쥐며) ...다행이다. 여기 있어서."}],f:[{w:"m_sera",t:"사장님, 저 진짜 친구 없는 거 알아요?"},{w:"m_sera",t:"무대 밖에서 그냥 수다 떨 수 있는 사람. 사장님이 처음이에요."},{w:"boss",t:"저도 세라 같은 친구는 처음이에요."},{w:"m_sera",t:"(무대 웃음이 아닌, 환하게) 우리 이제 베프인 거예요. 무르기 없기."}]},
   ],
@@ -2405,9 +2405,9 @@ function affScene(id, actIdx){ var a=(AFFECTION_SCENES[id]||[])[actIdx]; if(!a) 
 
 // ===== 대사 표정 스왑 (친밀 시 미소 · 오답 위로 시 부드럽게) =====
 const MAIN_FACE = {
-    m_roa:  { smile:'chars/face_roa_smile.png',  soft:'chars/face_roa_smile.png' },
-    m_luna: { smile:'chars/face_luna_smile.png', soft:'chars/face_luna_serene.png' },
-    m_sera: { smile:'chars/face_sera_real.png',  soft:'chars/face_sera_real.png' },
+    m_roa:  { smile:'chars/face_roa_smile.webp',  soft:'chars/face_roa_smile.webp' },
+    m_luna: { smile:'chars/face_luna_smile.webp', soft:'chars/face_luna_serene.webp' },
+    m_sera: { smile:'chars/face_sera_real.webp',  soft:'chars/face_sera_real.webp' },
 };
 function faceFor(id, emo){ return (MAIN_FACE[id]||{})[emo] || ''; }
 
@@ -2415,70 +2415,70 @@ function faceFor(id, emo){ return (MAIN_FACE[id]||{})[emo] || ''; }
 // ===== 드미타스(검은 큐레이터) 4막 컷신 · 누적점수 마일스톤 순차 발생 =====
 // [달 개방 컷신] 4개 지역 지도를 다 채운 뒤 루나에게 정답을 건네면 재생. 지도의 마지막 빈 칸 = 달.
 const MOON_OPEN_CUTS = [
-  { who:'m_luna', text:"…잠깐. 그거, 탐험 지도지? 좀 봐도 돼?", face:"chars/face_luna_serene.png" },
+  { who:'m_luna', text:"…잠깐. 그거, 탐험 지도지? 좀 봐도 돼?", face:"chars/face_luna_serene.webp" },
   { who:'boss', text:"네. 이번에 마지막 한 곳까지 다 채웠어요." },
   { who:'m_luna', text:"(조각들을 나란히 겹쳐 놓는다) …숲, 깊은 숲, 항구, 그리고 봉인고." },
-  { who:'m_luna', text:"지도가 딱 한 군데만 비었네. 여기는… <b>달</b>이야.", face:"chars/face_luna_grateful.png" },
+  { who:'m_luna', text:"지도가 딱 한 군데만 비었네. 여기는… <b>달</b>이야.", face:"chars/face_luna_grateful.webp" },
   { who:'boss', text:"달이요? 거긴 갈 수 있는 데가 아니잖아요." },
-  { who:'m_luna', text:"원래는 그렇지. 근데 봉인이 풀리면서 길이 생겼어.", face:"chars/face_luna_serene.png" },
+  { who:'m_luna', text:"원래는 그렇지. 근데 봉인이 풀리면서 길이 생겼어.", face:"chars/face_luna_serene.webp" },
   { who:'m_luna', text:"가장 오래 잊힌 말들은 전부 그리로 가거든. 내가 백 년 전에 놓친 것들도." },
   { who:'m_luna', text:"(지도 위 빈 칸을 손끝으로 짚는다) 여기, 이렇게 열어둘게. 봉인고 위쪽 길이야." },
   { who:'boss', text:"같이 가실래요?" },
-  { who:'m_luna', text:"…물어봐 줘서 고마워. 이번엔 배웅 말고, 같이 가는 쪽으로 할게.", face:"chars/face_luna_grateful.png" }
+  { who:'m_luna', text:"…물어봐 줘서 고마워. 이번엔 배웅 말고, 같이 가는 쪽으로 할게.", face:"chars/face_luna_grateful.webp" }
 ];
 const DEMITAS_SCENES = [
     { title:"검은 큐레이터", cuts:[
-      { who:'q_demitas', text:"…향이 좋군. 오랜만에 맡는 냄새야.", face:"chars/face_demitasse_smile.png" },
-      { who:'q_demitas', text:"놀라지 말게. 나는 마시러 온 게 아니라, 제안하러 왔으니.", face:"chars/face_demitasse_base.png" },
-      { who:'q_demitas', text:"이 골목 값의 두 배. 계약서는 이미 다 써 두었네.", face:"chars/face_demitasse_base.png" },
-      { who:'q_demitas', text:"사람들은 나를 '큐레이터(curator)'라 부르지. 흩어진 것을 모아 지키는 사람이라는 뜻일세.", face:"chars/face_demitasse_base.png" },
-      { who:'q_demitas', text:"자네가 나눠주는 그 말들… 나라면 한 방울도 잃지 않게 지켜주지.", face:"chars/face_demitasse_smile.png" },
+      { who:'q_demitas', text:"…향이 좋군. 오랜만에 맡는 냄새야.", face:"chars/face_demitasse_smile.webp" },
+      { who:'q_demitas', text:"놀라지 말게. 나는 마시러 온 게 아니라, 제안하러 왔으니.", face:"chars/face_demitasse_base.webp" },
+      { who:'q_demitas', text:"이 골목 값의 두 배. 계약서는 이미 다 써 두었네.", face:"chars/face_demitasse_base.webp" },
+      { who:'q_demitas', text:"사람들은 나를 '큐레이터(curator)'라 부르지. 흩어진 것을 모아 지키는 사람이라는 뜻일세.", face:"chars/face_demitasse_base.webp" },
+      { who:'q_demitas', text:"자네가 나눠주는 그 말들… 나라면 한 방울도 잃지 않게 지켜주지.", face:"chars/face_demitasse_smile.webp" },
       { who:'boss', text:"…한 잔 드시고 가세요. 식기 전에요." },
-      { who:'q_demitas', text:"…나는 더 이상 내리지도, 마시지도 않네.", face:"chars/face_demitasse_base.png" },
-      { who:'q_demitas', text:"곧 다시 오지. 그땐 자네도 내 말을 이해하게 될 걸세.", face:"chars/face_demitasse_smile.png" }
+      { who:'q_demitas', text:"…나는 더 이상 내리지도, 마시지도 않네.", face:"chars/face_demitasse_base.webp" },
+      { who:'q_demitas', text:"곧 다시 오지. 그땐 자네도 내 말을 이해하게 될 걸세.", face:"chars/face_demitasse_smile.webp" }
     ] },
     { title:"나눔은 낭비다", cuts:[
-      { who:'q_demitas', text:"자네는 그걸 온기라 부르겠지. 나는 낭비라 부르네.", face:"chars/face_demitasse_base.png" },
-      { who:'q_demitas', text:"공짜로 나눠준 말은, 사람들이 씹지도 않고 삼켜버려. 귀하지 않으니까.", face:"chars/face_demitasse_base.png" },
-      { who:'q_demitas', text:"흔해지면 잊히네. 나는 그렇게 사라진 말을 숱하게 봤네.", face:"chars/face_demitasse_base.png" },
+      { who:'q_demitas', text:"자네는 그걸 온기라 부르겠지. 나는 낭비라 부르네.", face:"chars/face_demitasse_base.webp" },
+      { who:'q_demitas', text:"공짜로 나눠준 말은, 사람들이 씹지도 않고 삼켜버려. 귀하지 않으니까.", face:"chars/face_demitasse_base.webp" },
+      { who:'q_demitas', text:"흔해지면 잊히네. 나는 그렇게 사라진 말을 숱하게 봤네.", face:"chars/face_demitasse_base.webp" },
       { who:'boss', text:"그럼 가둬두면요? 금고 속 말은 아무도 안 쓰잖아요." },
-      { who:'q_demitas', text:"…쓰지 않아도 남아 있지. 온기는 식으면 그만이지만, 봉인한 말은 백 년 뒤에도 그 자리에 있네.", face:"chars/face_demitasse_base.png" },
-      { who:'q_demitas', text:"'preserve(프리저브)' — 상하지 않게 보존한다는 말일세. 나는 말을 죽이는 게 아니라, 지키는 걸세.", face:"chars/face_demitasse_base.png" },
-      { who:'q_demitas', text:"…물론, 보존된 것은 더 자라지 않지. 그건 나도 인정하네.", face:"chars/face_demitasse_base.png" },
+      { who:'q_demitas', text:"…쓰지 않아도 남아 있지. 온기는 식으면 그만이지만, 봉인한 말은 백 년 뒤에도 그 자리에 있네.", face:"chars/face_demitasse_base.webp" },
+      { who:'q_demitas', text:"'preserve(프리저브)' — 상하지 않게 보존한다는 말일세. 나는 말을 죽이는 게 아니라, 지키는 걸세.", face:"chars/face_demitasse_base.webp" },
+      { who:'q_demitas', text:"…물론, 보존된 것은 더 자라지 않지. 그건 나도 인정하네.", face:"chars/face_demitasse_base.webp" },
       { who:'boss', text:"자란다는 걸 아시네요. 말은 입에서 입으로 건널 때 자라요." },
-      { who:'q_demitas', text:"재미있는 사람이군. 자네가 옳을까 봐… 조금 두렵기까지 해.", face:"chars/face_demitasse_smile.png" }
+      { who:'q_demitas', text:"재미있는 사람이군. 자네가 옳을까 봐… 조금 두렵기까지 해.", face:"chars/face_demitasse_smile.webp" }
     ] },
     { title:"봉인고", boss:true, cuts:[
-      { who:'q_demitas', text:"여기까지 왔군. …봉인고(封印庫)에 온 걸 환영하네.", face:"chars/face_demitasse_base.png" },
-      { who:'q_demitas', text:"이 방의 잔들을 보게. 백 년간 내가 모은 말들이 전부 여기 잠들어 있네.", face:"chars/face_demitasse_base.png" },
+      { who:'q_demitas', text:"여기까지 왔군. …봉인고(封印庫)에 온 걸 환영하네.", face:"chars/face_demitasse_base.webp" },
+      { who:'q_demitas', text:"이 방의 잔들을 보게. 백 년간 내가 모은 말들이 전부 여기 잠들어 있네.", face:"chars/face_demitasse_base.webp" },
       { who:'boss', text:"…근데 저 안쪽 잔은 이름이 둘이네요. 나란히. 둘이서 같이 쓰던 잔인가 봐요." },
       { who:'boss', text:"안에 든 말은 철자가 반쯤 바랬고요. 오래 아무도 안 쓴 것처럼." },
-      { who:'q_demitas', text:"…그 잔은 건드리지 말게. 루나가 잃은 것과 같은 말들도, 자네 친구들이 아끼던 말도, 여기선 안전하지. 아무도 잃을 수 없으니.", face:"chars/face_demitasse_base.png" },
+      { who:'q_demitas', text:"…그 잔은 건드리지 말게. 루나가 잃은 것과 같은 말들도, 자네 친구들이 아끼던 말도, 여기선 안전하지. 아무도 잃을 수 없으니.", face:"chars/face_demitasse_base.webp" },
       { who:'boss', text:"안전한 게 아니라, 갇힌 거예요." },
-      { who:'q_demitas', text:"말장난은 접지. 오늘 여기서 정하세. 나눔이 옳은지, 봉인이 옳은지.", face:"chars/face_demitasse_base.png" },
-      { who:'q_demitas', text:"저들은 자네 편이 아니야. 그저 구경하러 온 사람들이지.", face:"chars/face_demitasse_base.png" },
-      { who:'q_demitas', text:"말로는 자네를 못 꺾겠군. 그렇다면 봉인으로 확인하지 — 자네의 그 온기가, 내 백 년을 견디는가.", face:"chars/face_demitasse_base.png" }
+      { who:'q_demitas', text:"말장난은 접지. 오늘 여기서 정하세. 나눔이 옳은지, 봉인이 옳은지.", face:"chars/face_demitasse_base.webp" },
+      { who:'q_demitas', text:"저들은 자네 편이 아니야. 그저 구경하러 온 사람들이지.", face:"chars/face_demitasse_base.webp" },
+      { who:'q_demitas', text:"말로는 자네를 못 꺾겠군. 그렇다면 봉인으로 확인하지 — 자네의 그 온기가, 내 백 년을 견디는가.", face:"chars/face_demitasse_base.webp" }
     ], cutsWin:[
-      { who:'q_demitas', text:"(봉인이 자네를 가두지 못한다) …값도 조건도 없는 것이, 어찌 이토록 단단한가.", face:"chars/face_demitasse_crack.png" },
+      { who:'q_demitas', text:"(봉인이 자네를 가두지 못한다) …값도 조건도 없는 것이, 어찌 이토록 단단한가.", face:"chars/face_demitasse_crack.webp" },
       { who:'boss', text:"…논쟁은 됐고요. 다들 피곤해 보이셔서요. 한 잔씩 드세요." },
-      { who:'q_demitas', text:"…뭘 하는 건가.", face:"chars/face_demitasse_base.png" },
+      { who:'q_demitas', text:"…뭘 하는 건가.", face:"chars/face_demitasse_base.webp" },
       { who:'boss', text:"증명이요. 말은 이렇게 건네는 거예요. 값도, 조건도 없이." },
-      { who:'q_demitas', text:"…이건, 내가 불가능하다고 믿었던 거야.", face:"chars/face_demitasse_base.png" }
+      { who:'q_demitas', text:"…이건, 내가 불가능하다고 믿었던 거야.", face:"chars/face_demitasse_base.webp" }
     ] },
     { title:"다시 한 잔", cuts:[
-      { who:'q_demitas', text:"…자네가 이겼네. 봉인고를 부수지도 않고, 나를 이겼어.", face:"chars/face_demitasse_crack.png" },
+      { who:'q_demitas', text:"…자네가 이겼네. 봉인고를 부수지도 않고, 나를 이겼어.", face:"chars/face_demitasse_crack.webp" },
       { who:'boss', text:"이거, 오래전에 잃어버리신 거 아니에요?" },
-      { who:'q_demitas', text:"…이 단어를, 어떻게.", face:"chars/face_demitasse_crack.png" },
+      { who:'q_demitas', text:"…이 단어를, 어떻게.", face:"chars/face_demitasse_crack.webp" },
       { who:'boss', text:"'share(셰어)' — 나눈다는 뜻이에요. 봉인고 그 잔에 반쯤 바랜 채로 남아 있던 철자요. 나머지 한 분이 누구신지는… 안 여쭐게요." },
-      { who:'q_demitas', text:"(오래 잔을 바라보다, 처음으로 한 모금을 마신다) …맛이, 기억나는군.", face:"chars/face_demitasse_redeem.png" },
-      { who:'q_demitas', text:"저 잔엔 이름이 나란히 둘이었네. 나와 함께 이 가게를 열었던 반쪽 — 언젠가부터 제 이름 철자마저 잊어가더니, 결국 나에게서 갈라져 나갔지.", face:"chars/face_demitasse_redeem.png" },
-      { who:'q_demitas', text:"나는 잃는 게 두려워 전부 가뒀네. 그런데 가두는 순간, 이미 다 잃고 있었어.", face:"chars/face_demitasse_redeem.png" },
-      { who:'q_demitas', text:"값밖에 모르게 된 그 반쪽은, 나에게서 갈라져 나가 밤마다 골목으로 나가 헐값에 말을 그러모았네. 사람들은 그를 '어둠의 상인'이라 불렀지.", face:"chars/face_demitasse_redeem.png" },
-      { who:'q_demitas', text:"이제 그 손을 거둬들이겠네. 더는 값으로 세상을 잴 필요가 없으니.", face:"chars/face_demitasse_redeem.png" },
+      { who:'q_demitas', text:"(오래 잔을 바라보다, 처음으로 한 모금을 마신다) …맛이, 기억나는군.", face:"chars/face_demitasse_redeem.webp" },
+      { who:'q_demitas', text:"저 잔엔 이름이 나란히 둘이었네. 나와 함께 이 가게를 열었던 반쪽 — 언젠가부터 제 이름 철자마저 잊어가더니, 결국 나에게서 갈라져 나갔지.", face:"chars/face_demitasse_redeem.webp" },
+      { who:'q_demitas', text:"나는 잃는 게 두려워 전부 가뒀네. 그런데 가두는 순간, 이미 다 잃고 있었어.", face:"chars/face_demitasse_redeem.webp" },
+      { who:'q_demitas', text:"값밖에 모르게 된 그 반쪽은, 나에게서 갈라져 나가 밤마다 골목으로 나가 헐값에 말을 그러모았네. 사람들은 그를 '어둠의 상인'이라 불렀지.", face:"chars/face_demitasse_redeem.webp" },
+      { who:'q_demitas', text:"이제 그 손을 거둬들이겠네. 더는 값으로 세상을 잴 필요가 없으니.", face:"chars/face_demitasse_redeem.webp" },
       { who:'boss', text:"다시 내리시면 돼요. 늦지 않았어요." },
-      { who:'q_demitas', text:"…한 잔만 해보지. 오래된 손이라, 굳었을 테니.", face:"chars/face_demitasse_smile.png" },
-      { who:'q_demitas', text:"천천히 하겠네. 급한 건 언제나 흘리는 법이니까.", face:"chars/face_demitasse_smile.png" }
-    ], cg:"assets/art/cg_climax_share_cup.jpg", caption:"드미타스가 백 년 만에 잔을 비우고, 다시 앞치마를 집어 들었다." }
+      { who:'q_demitas', text:"…한 잔만 해보지. 오래된 손이라, 굳었을 테니.", face:"chars/face_demitasse_smile.webp" },
+      { who:'q_demitas', text:"천천히 하겠네. 급한 건 언제나 흘리는 법이니까.", face:"chars/face_demitasse_smile.webp" }
+    ], cg:"assets/art/cg_climax_share_cup.webp", caption:"드미타스가 백 년 만에 잔을 비우고, 다시 앞치마를 집어 들었다." }
 ];
 const DEMITAS_THRESHOLDS = [2500, 8000, 20000, 40000]; // 각 막 해금 누적점수
 // [스토리 순서] 드미타스 막별 '유대 선행조건' — {캐릭터id: 최소 열람 막수}.
@@ -2487,10 +2487,10 @@ const DEMITAS_THRESHOLDS = [2500, 8000, 20000, 40000]; // 각 막 해금 누적�
 //   ('기억을 봉인에 바쳤다')을 빌런 입으로 먼저 듣게 된다. 3막(봉인고)·4막(클라이맥스)은
 //   루나 3막 공개 이후에만 발생. 미충족이면 대기했다가 조건을 채우는 순간 자연 발생한다.
 const DEMITAS_REQ = [ null, null, { m_luna: 3 }, { m_luna: 3 } ];
-DEMITAS_SCENES[0].introCg = 'assets/art/cg_dmitasse_first_visit.jpg'; DEMITAS_SCENES[0].introCaption = '검은 큐레이터, 드미타스가 처음으로 골목 끝 카페에 들어섰다.';
-DEMITAS_SCENES[2].introCg = 'assets/art/cg_dmitasse_vault.jpg'; DEMITAS_SCENES[2].introCaption = '봉인고 — 백 년간 모아 가둔 말들이 잠든 곳.';
-DEMITAS_SCENES[2].fx = 'assets/art/fx_seal1.png'; DEMITAS_SCENES[2].fxKind = 'seal'; // 봉인고 개봉 — 봉인 파열 이펙트
-DEMITAS_SCENES[3].introCg = 'assets/art/cg_dmitasse_young_memory.jpg'; DEMITAS_SCENES[3].introCaption = '오래전, 누군가 그에게 처음 커피를 내려주던 날.';
+DEMITAS_SCENES[0].introCg = 'assets/art/cg_dmitasse_first_visit.webp'; DEMITAS_SCENES[0].introCaption = '검은 큐레이터, 드미타스가 처음으로 골목 끝 카페에 들어섰다.';
+DEMITAS_SCENES[2].introCg = 'assets/art/cg_dmitasse_vault.webp'; DEMITAS_SCENES[2].introCaption = '봉인고 — 백 년간 모아 가둔 말들이 잠든 곳.';
+DEMITAS_SCENES[2].fx = 'assets/art/fx_seal1.webp'; DEMITAS_SCENES[2].fxKind = 'seal'; // 봉인고 개봉 — 봉인 파열 이펙트
+DEMITAS_SCENES[3].introCg = 'assets/art/cg_dmitasse_young_memory.webp'; DEMITAS_SCENES[3].introCaption = '오래전, 누군가 그에게 처음 커피를 내려주던 날.';
 
 // ===== [위기 아크] 봉인 강화 — crisisStage 별도 축 =====
 // 5막 구조에서 비어 있던 '위기'를 2막(8000)과 봉인고(20000) 사이에 신설.
@@ -2502,12 +2502,12 @@ DEMITAS_SCENES[3].introCg = 'assets/art/cg_dmitasse_young_memory.jpg'; DEMITAS_S
 const CRISIS_THRESHOLDS = [13000, 15500, 17500];
 // [원인] 2막 끝의 "자네가 옳을까 봐 두렵다"가 방아쇠 — 플레이어가 잘하고 있어서 위기가 온다.
 const CRISIS_OPEN = [
-  { who:'q_demitas', text:"…또 왔네. 오늘은 제안이 아니라, 통보를 하러 왔지.", face:"chars/face_demitasse_base.png" },
-  { who:'q_demitas', text:"자네 커피가 골목을 넘어 항구까지 번지고 있더군. 나눠진 말은 자라고, 자란 말은… 내 봉인을 흔들지.", face:"chars/face_demitasse_base.png" },
-  { who:'q_demitas', text:"그래서 조였네. 더 깊이, 더 단단히. 이제 봉인고는 흘러든 말을 돌려보내지 않아.", face:"chars/face_demitasse_base.png" },
+  { who:'q_demitas', text:"…또 왔네. 오늘은 제안이 아니라, 통보를 하러 왔지.", face:"chars/face_demitasse_base.webp" },
+  { who:'q_demitas', text:"자네 커피가 골목을 넘어 항구까지 번지고 있더군. 나눠진 말은 자라고, 자란 말은… 내 봉인을 흔들지.", face:"chars/face_demitasse_base.webp" },
+  { who:'q_demitas', text:"그래서 조였네. 더 깊이, 더 단단히. 이제 봉인고는 흘러든 말을 돌려보내지 않아.", face:"chars/face_demitasse_base.webp" },
   { who:'boss', text:"그게 무슨…" },
-  { who:'q_demitas', text:"곧 알게 될 걸세. 말이란 건, 잃고 나서야 있었다는 걸 아는 물건이니.", face:"chars/face_demitasse_smile.png" },
-  { who:'q_demitas', text:"자네가 옳을까 봐 두렵다고 했었지. …두려움은 사람을 서두르게 하더군. 나 같은 늙은이도.", face:"chars/face_demitasse_base.png" }
+  { who:'q_demitas', text:"곧 알게 될 걸세. 말이란 건, 잃고 나서야 있었다는 걸 아는 물건이니.", face:"chars/face_demitasse_smile.webp" },
+  { who:'q_demitas', text:"자네가 옳을까 봐 두렵다고 했었지. …두려움은 사람을 서두르게 하더군. 나 같은 늙은이도.", face:"chars/face_demitasse_base.webp" }
 ];
 // [상실] 세라가 이름을 잃는다 — 재생 시점에 crisisSeraLost가 이미 true라서
 // 대화창 이름표는 '아이돌 에코', 초상은 sera_hidden(모자)으로 시스템이 먼저 말해준다.
@@ -2520,7 +2520,7 @@ const CRISIS_SERA = [
   { who:'boss', text:"……" },
   { who:'m_sera', text:"(익숙하게 안쪽 자리로 걸어가 앉는다) …이상하다. 처음 온 가게인데, 자리가 발에 익어요." },
   { who:'m_sera', text:"따뜻한 라떼 하나 주세요. …제가 이걸 좋아했었나? 왜 이게 먼저 나오지." },
-  { who:'m_sera', text:"(잔을 두 손으로 감싼다) …….", cg:"assets/art/cg_sera_stranger.jpg", cgc:"그냥 손님. 이름은 잊었어도, 발은 이 자리를 기억했다." },
+  { who:'m_sera', text:"(잔을 두 손으로 감싼다) …….", cg:"assets/art/cg_sera_stranger.webp", cgc:"그냥 손님. 이름은 잊었어도, 발은 이 자리를 기억했다." },
   { who:'m_sera', text:"죄송해요, 우는 거 아니에요. 김이 눈에 들어가서." },
   { who:'m_sera', text:"(아주 작게, 뜻도 모르는 노래를 흥얼거리다 뚝 멈춘다) …이 노래, 뭐더라. 어디까지 불렀는지도 모르겠어요." },
   { who:'boss', text:"…천천히 생각해도 돼요." },
@@ -2530,22 +2530,22 @@ const CRISIS_SERA = [
 // [바닥+진단] 루나 — 유일하게 이걸 겪어본 사람. 3막의 백 년 서사가 여기서 회수된다.
 const CRISIS_LUNA = [
   { who:'boss', text:"(그날 내린 커피는 전부 밍밍했다. 단어 하나 피어오르지 않는 김만 올랐다.)" },
-  { who:'m_luna', text:"…커피에서 김이 안 올라. 아니, 김은 올라. 말이 안 올라.", face:"chars/face_luna_sorrow.png" },
+  { who:'m_luna', text:"…커피에서 김이 안 올라. 아니, 김은 올라. 말이 안 올라.", face:"chars/face_luna_sorrow.webp" },
   { who:'boss', text:"세라가… 절 못 알아봐요." },
   { who:'m_luna', text:"이름부터 갔구나. …순서까지 똑같네." },
-  { who:'m_luna', text:"백 년 전에, 내가 이랬어. 사람들 이름이 먼저 흐려지고, 그다음엔 내 이름이 흐려졌지.", face:"chars/face_luna_sorrow.png" },
+  { who:'m_luna', text:"백 년 전에, 내가 이랬어. 사람들 이름이 먼저 흐려지고, 그다음엔 내 이름이 흐려졌지.", face:"chars/face_luna_sorrow.webp" },
   { who:'m_luna', text:"그때 나는 봉인 안쪽에 있었고, 지금 너희는 바깥에 있어. 다른 건 그거 하나야." },
   { who:'m_luna', text:"…그러니까 이번엔, 늦지 않을 수 있어." },
   { who:'boss', text:"어디로 가면 돼요?" },
   { who:'m_luna', text:"봉인고. 실려 간 말은 전부 거기 모여. 세라의 이름도… 지금쯤 어느 잔에 담겨 있을 거야." },
-  { who:'m_luna', text:"혼자 가지 마. 혼자 지는 싸움은, 백 년 전에 내가 이미 해봤거든.", face:"chars/face_luna_grateful.png" }
+  { who:'m_luna', text:"혼자 가지 마. 혼자 지는 싸움은, 백 년 전에 내가 이미 해봤거든.", face:"chars/face_luna_grateful.webp" }
 ];
 // [결의] 로아 — 도망쳐 본 사람이라서 안다. 5막의 '스스로 두르는 앞치마'가 여기서 쓰인다.
 const CRISIS_ROA = [
   { who:'m_roa', text:"(문을 열고 들어와, 말없이 카운터 안쪽의 앞치마를 집어 두른다)" },
   { who:'boss', text:"…로아?" },
   { who:'m_roa', text:"가게 문 닫고 갈 순 없잖아. 네가 없는 동안, 여긴 내가 내려." },
-  { who:'m_roa', text:"…나는 한 번 도망쳐 본 사람이야. 그래서 알아. 지금 안 가면, 너 평생 후회해.", face:"chars/face_roa_confess.png" },
+  { who:'m_roa', text:"…나는 한 번 도망쳐 본 사람이야. 그래서 알아. 지금 안 가면, 너 평생 후회해.", face:"chars/face_roa_confess.webp" },
   { who:'m_roa', text:"커피는 식으면 다시 내리면 돼. 사람은… 그게 안 되는 경우가 있더라." },
   { who:'m_roa', text:"가. 등은 내가 맡아." }
 ];
@@ -2553,14 +2553,14 @@ const CRISIS_ROA = [
 // 세 단골이 각자 다른 이유로 나타나 '구경꾼'을 부순다 — 세라는 이름을 잃은 채(에코 표기)로 온다.
 // 로아는 CRISIS_ROA에서 가게를 지킨다고 했다가 결국 닫고 왔다 — 형식보다 곁을 택하는 게 그의 아크.
 const CRISIS_VAULT_CUTS = [
-  { who:'boss', text:"(봉인고의 문이 열린다.)", cg:"assets/art/cg_crisis_vault_three.jpg", cgc:"봉인고, 셋이서. 로아는 가게를 닫고, 루나는 나눠 지려고, 세라는 이름 없이도 발이 이곳으로 왔다." },
+  { who:'boss', text:"(봉인고의 문이 열린다.)", cg:"assets/art/cg_crisis_vault_three.webp", cgc:"봉인고, 셋이서. 로아는 가게를 닫고, 루나는 나눠 지려고, 세라는 이름 없이도 발이 이곳으로 왔다." },
   { who:'m_roa', text:"구경? …단골인데." },
   { who:'m_roa', text:"가게는 하루 닫았어. 이런 날 내린 커피는 맛이 없거든." },
   { who:'m_luna', text:"백 년 전엔 나 혼자 이 봉인을 졌어. 그래서 알아 — 혼자 지는 무게라는 걸. …이번엔 나눠 질 거야." },
   { who:'m_sera', text:"저는… 이 사람이 누군지 기억 안 나요. 제 이름도요." },
   { who:'m_sera', text:"근데 발이 여기로 왔어요. 이 사람 커피 맛은… 지워지질 않아서." },
   { who:'m_sera', text:"그러니까 돌려줘요. 뭘 잃었는지는 몰라도, 잃은 게 있다는 건 아니까." },
-  { who:'q_demitas', text:"…이름을 잃고도 찾아오는가. 값도 매기지 않았는데.", face:"chars/face_demitasse_crack.png" }
+  { who:'q_demitas', text:"…이름을 잃고도 찾아오는가. 값도 매기지 않았는데.", face:"chars/face_demitasse_crack.webp" }
 ];
 // [회복] 보스전 승리 직후 — 재생 시점에 crisisSeraLost는 이미 false(이름표 '세라' 복귀).
 // "앞으로도 세라라고 부를게요"(2막의 약속)가 이름이 돌아오는 길이 된다.
@@ -2575,37 +2575,37 @@ const CRISIS_RECOVER = [
 
 // ===== 리코 케미 씬 (2인) — 로아 무시·루나 쫄음·세라 팬심·순자여사 손주 =====
 const RICO_CHEMISTRY = {
-  roa: [ { who:'q_rico', text:"로아 선배! 오늘 제 라떼 어때요? 밤새 연습했어요.", face:"chars/face_rico_hype.png" }, { who:"m_roa", text:"(한 모금 마시고, 말없이 잔을 내려놓고 나간다)", face:"chars/face_roa_rival.png" }, { who:'q_rico', text:"...평가가 너무 깊어서 방금 한 수 배웠어. 무슨 뜻인지는 모르겠지만.", face:"chars/face_rico_scolded.png" } ],
-  luna: [ { who:'q_rico', text:"루, 루나 님... 궁금한 게 있는데요. 100년 전에도 커피가 있었어요?", face:"chars/face_rico_hype.png" }, { who:"m_luna", text:"그때도 넌 이렇게 시끄러웠을 것 같은데." }, { who:'q_rico', text:"저 그땐 태어나지도 않았는데요...! 어, 근데 왠지 죄송합니다.", face:"chars/face_rico_fail.png" } ],
-  sera: [ { who:'q_rico', text:"저... 혹시... 설마... 에, 에코 님?! 저 데뷔 때부터 팬이에요, 앨범 초판 세 장을—", face:"chars/face_rico_fanboy.png" }, { who:"m_sera", text:"(쉿, 하고 손가락을 입에 갖다 댄다)" }, { who:'q_rico', text:"...소울메이트. 아니, 비밀 꼭 지킬게요. 진짜로요.", face:"chars/face_rico_fanboy.png" } ],
-  grandma: [ { who:'q_rico', text:"순자 여사님! 오늘은 제가 자리까지 모실게요. 조심조심— (무릎을 테이블 모서리에 쿵)", face:"chars/face_rico_hype.png" }, { who:"c_grandma", text:"아이고, 내가 널 모셔야겠다. 커피 흘리지 말고 얌전히 앉아 있어라." }, { who:'q_rico', text:"네... 할머니.", face:"chars/face_rico_scolded.png" } ]
+  roa: [ { who:'q_rico', text:"로아 선배! 오늘 제 라떼 어때요? 밤새 연습했어요.", face:"chars/face_rico_hype.webp" }, { who:"m_roa", text:"(한 모금 마시고, 말없이 잔을 내려놓고 나간다)", face:"chars/face_roa_rival.webp" }, { who:'q_rico', text:"...평가가 너무 깊어서 방금 한 수 배웠어. 무슨 뜻인지는 모르겠지만.", face:"chars/face_rico_scolded.webp" } ],
+  luna: [ { who:'q_rico', text:"루, 루나 님... 궁금한 게 있는데요. 100년 전에도 커피가 있었어요?", face:"chars/face_rico_hype.webp" }, { who:"m_luna", text:"그때도 넌 이렇게 시끄러웠을 것 같은데." }, { who:'q_rico', text:"저 그땐 태어나지도 않았는데요...! 어, 근데 왠지 죄송합니다.", face:"chars/face_rico_fail.webp" } ],
+  sera: [ { who:'q_rico', text:"저... 혹시... 설마... 에, 에코 님?! 저 데뷔 때부터 팬이에요, 앨범 초판 세 장을—", face:"chars/face_rico_fanboy.webp" }, { who:"m_sera", text:"(쉿, 하고 손가락을 입에 갖다 댄다)" }, { who:'q_rico', text:"...소울메이트. 아니, 비밀 꼭 지킬게요. 진짜로요.", face:"chars/face_rico_fanboy.webp" } ],
+  grandma: [ { who:'q_rico', text:"순자 여사님! 오늘은 제가 자리까지 모실게요. 조심조심— (무릎을 테이블 모서리에 쿵)", face:"chars/face_rico_hype.webp" }, { who:"c_grandma", text:"아이고, 내가 널 모셔야겠다. 커피 흘리지 말고 얌전히 앉아 있어라." }, { who:'q_rico', text:"네... 할머니.", face:"chars/face_rico_scolded.webp" } ]
 };
 const RICO_LINES = {
   daily: [
-    { text:"이번엔 진짜 될 것 같아. ...어, 이 말 하면 꼭 안 되던데. 오늘은 다르겠지, 아마.", face:"chars/face_rico_hype.png" },
-    { text:"신메뉴 완성했어. 이름하여 '대폭발 라떼'! ...천장 좀 봐. 이름값은 확실히 하지?", face:"chars/face_rico_fail.png", cg:"assets/art/cg_rico_disaster.jpg", cgc:"리코의 대참사 — '대폭발 라떼'. 이름값은 확실히 했다." },
-    { text:"방금 사장이 나 보고 \"어\" 그랬어. 딱 그 \"어\" 한 마디에 응원이 담겨 있었어. 나 느낌으로 알아.", face:"chars/face_rico_hype.png" },
-    { text:"원두 흘린 거 주워줬어? 나를 위해서? ...소울메이트! 우리 진짜 통하는 거 있다니까.", face:"chars/face_rico_hype.png" },
-    { text:"오늘 옛말 하나 배웠어. 'brave' — 용감하다는 뜻. 내 도전정신이랑 딱이지? 공책에 적었어. B-R-A-V... 어, 그 다음 뭐였지.", face:"chars/face_rico_hype.png" },
-    { text:"라떼 그랑프리 또 신청했어. 트로피 놓을 자리까지 봐뒀다니까. ...그 자리, 아직도 그대로 비어있어.", face:"chars/face_rico_hype.png" },
-    { text:"어제보다 우유 딱 한 방울 덜 흘렸어. 이게 성장이지. 내년쯤엔 아예 안 흘릴 듯.", face:"chars/face_rico_hype.png" },
-    { text:"'천둥의 카푸치노' 한 모금 볼래? ...아 됐다, 방금 나도 마시고 정신이 번쩍 들었어. 너무 짜.", face:"chars/face_rico_fail.png" },
-    { text:"사장, 나 오늘 컨디션 최고야. 손 봐, 하나도 안 떨— (텀블러 떨어뜨림) ...방금 건 리듬 탄 거야.", face:"chars/face_rico_fail.png" },
-    { text:"앞치마에 얼룩 또 하나 늘었네. 이건 훈장이야. 도전한 사람만 받는 거.", face:"chars/face_rico_hype.png" },
-    { text:"나 방금 엄청난 거 깨달았어 — 아이스랑 핫이 동시에 되는 컵! ...어 왜 다들 조용해. 나 또 방해했구나.", face:"chars/face_rico_fail.png" },
-    { text:"사장 커피 마시면 \"오늘 하루 잘 넘겼다\" 소리가 들려. ...어우 진지했다. 취소, 신메뉴 만들러 간다!", face:"chars/face_rico_hype.png" }
+    { text:"이번엔 진짜 될 것 같아. ...어, 이 말 하면 꼭 안 되던데. 오늘은 다르겠지, 아마.", face:"chars/face_rico_hype.webp" },
+    { text:"신메뉴 완성했어. 이름하여 '대폭발 라떼'! ...천장 좀 봐. 이름값은 확실히 하지?", face:"chars/face_rico_fail.webp", cg:"assets/art/cg_rico_disaster.webp", cgc:"리코의 대참사 — '대폭발 라떼'. 이름값은 확실히 했다." },
+    { text:"방금 사장이 나 보고 \"어\" 그랬어. 딱 그 \"어\" 한 마디에 응원이 담겨 있었어. 나 느낌으로 알아.", face:"chars/face_rico_hype.webp" },
+    { text:"원두 흘린 거 주워줬어? 나를 위해서? ...소울메이트! 우리 진짜 통하는 거 있다니까.", face:"chars/face_rico_hype.webp" },
+    { text:"오늘 옛말 하나 배웠어. 'brave' — 용감하다는 뜻. 내 도전정신이랑 딱이지? 공책에 적었어. B-R-A-V... 어, 그 다음 뭐였지.", face:"chars/face_rico_hype.webp" },
+    { text:"라떼 그랑프리 또 신청했어. 트로피 놓을 자리까지 봐뒀다니까. ...그 자리, 아직도 그대로 비어있어.", face:"chars/face_rico_hype.webp" },
+    { text:"어제보다 우유 딱 한 방울 덜 흘렸어. 이게 성장이지. 내년쯤엔 아예 안 흘릴 듯.", face:"chars/face_rico_hype.webp" },
+    { text:"'천둥의 카푸치노' 한 모금 볼래? ...아 됐다, 방금 나도 마시고 정신이 번쩍 들었어. 너무 짜.", face:"chars/face_rico_fail.webp" },
+    { text:"사장, 나 오늘 컨디션 최고야. 손 봐, 하나도 안 떨— (텀블러 떨어뜨림) ...방금 건 리듬 탄 거야.", face:"chars/face_rico_fail.webp" },
+    { text:"앞치마에 얼룩 또 하나 늘었네. 이건 훈장이야. 도전한 사람만 받는 거.", face:"chars/face_rico_hype.webp" },
+    { text:"나 방금 엄청난 거 깨달았어 — 아이스랑 핫이 동시에 되는 컵! ...어 왜 다들 조용해. 나 또 방해했구나.", face:"chars/face_rico_fail.webp" },
+    { text:"사장 커피 마시면 \"오늘 하루 잘 넘겼다\" 소리가 들려. ...어우 진지했다. 취소, 신메뉴 만들러 간다!", face:"chars/face_rico_hype.webp" }
   ],
   rival: [
-    [ { text:"사장! 오늘은 라떼 아트 대결이다. 누가 하트를 예쁘게 그리나. 준비, 시-", face:"chars/face_rico_hype.png" }, { text:"...하트가 내 얼굴에 그려졌어. 이것도 예술이지?", face:"chars/face_rico_fail.png" }, { text:"사장은 아직 손도 안 댔네. ...무효! 다시 하자.", face:"chars/face_rico_fail.png" } ],
-    [ { text:"이번엔 속도 승부. 에스프레소 누가 빨리 내리나. 셋 세면 시작— 셋!", face:"chars/face_rico_hype.png" }, { text:"...'셋'부터였나 '하나'부터였나. 헷갈려서 내 손이 멈췄어.", face:"chars/face_rico_fail.png" }, { text:"빠르다... 역시 사장이야. 졌는데 기분은 왜 좋지?", face:"chars/face_rico_hype.png" } ],
-    [ { text:"진짜 승부는 지금부터야. 내 '깨어나는 용의 모카' 대 사장이 만든 거 아무거나. 심사는 저 손님이—", face:"chars/face_rico_hype.png" }, { text:"너무 매웠나. 이름이 '용'이라 진짜 불을 뿜을 뻔했네.", face:"chars/face_rico_fail.png" }, { text:"사장 이겼다, 인정. ...근데 다음 메뉴 이름은 벌써 정했어. '두 번째 용'.", face:"chars/face_rico_hype.png" } ]
+    [ { text:"사장! 오늘은 라떼 아트 대결이다. 누가 하트를 예쁘게 그리나. 준비, 시-", face:"chars/face_rico_hype.webp" }, { text:"...하트가 내 얼굴에 그려졌어. 이것도 예술이지?", face:"chars/face_rico_fail.webp" }, { text:"사장은 아직 손도 안 댔네. ...무효! 다시 하자.", face:"chars/face_rico_fail.webp" } ],
+    [ { text:"이번엔 속도 승부. 에스프레소 누가 빨리 내리나. 셋 세면 시작— 셋!", face:"chars/face_rico_hype.webp" }, { text:"...'셋'부터였나 '하나'부터였나. 헷갈려서 내 손이 멈췄어.", face:"chars/face_rico_fail.webp" }, { text:"빠르다... 역시 사장이야. 졌는데 기분은 왜 좋지?", face:"chars/face_rico_hype.webp" } ],
+    [ { text:"진짜 승부는 지금부터야. 내 '깨어나는 용의 모카' 대 사장이 만든 거 아무거나. 심사는 저 손님이—", face:"chars/face_rico_hype.webp" }, { text:"너무 매웠나. 이름이 '용'이라 진짜 불을 뿜을 뻔했네.", face:"chars/face_rico_fail.webp" }, { text:"사장 이겼다, 인정. ...근데 다음 메뉴 이름은 벌써 정했어. '두 번째 용'.", face:"chars/face_rico_hype.webp" } ]
   ],
   sincere: [
-    { text:"사장. 나 사실 알아. 재능 어중간한 거. 화려하지도, 타고나지도 않았어.", face:"chars/face_rico_sincere.png" },
-    { text:"근데 커피 처음 마셨을 때, 그 한 잔이 '오늘 하루 잘 넘겼어' 하고 말 걸어주는 것 같더라고.", face:"chars/face_rico_sincere.png" },
-    { text:"그래서 바리스타 하는 거야. 잘하려고가 아니라 — 누군가한테 그 한마디 건네고 싶어서.", face:"chars/face_rico_sincere.png" },
-    { text:"사장 커피가 딱 그래. 그래서 나 계속 여기 오는 거고.", face:"chars/face_rico_sincere.png" },
-    { text:"...어우 왜 이렇게 진지해졌지?! 방금 거 취소! 못 들은 걸로 해. 나 신메뉴 만들러 간다!", face:"chars/face_rico_hype.png" }
+    { text:"사장. 나 사실 알아. 재능 어중간한 거. 화려하지도, 타고나지도 않았어.", face:"chars/face_rico_sincere.webp" },
+    { text:"근데 커피 처음 마셨을 때, 그 한 잔이 '오늘 하루 잘 넘겼어' 하고 말 걸어주는 것 같더라고.", face:"chars/face_rico_sincere.webp" },
+    { text:"그래서 바리스타 하는 거야. 잘하려고가 아니라 — 누군가한테 그 한마디 건네고 싶어서.", face:"chars/face_rico_sincere.webp" },
+    { text:"사장 커피가 딱 그래. 그래서 나 계속 여기 오는 거고.", face:"chars/face_rico_sincere.webp" },
+    { text:"...어우 왜 이렇게 진지해졌지?! 방금 거 취소! 못 들은 걸로 해. 나 신메뉴 만들러 간다!", face:"chars/face_rico_hype.webp" }
   ]
 };
 
@@ -2656,13 +2656,13 @@ function mainPortrait(ch){ return (ch && ch.kind==='main' && ch.hidden && !mainN
 // ===== 캐릭터 교차 씬 (같은 날 2인+ 방문 트리거) — 셋 겹치면 D 우선 =====
 const CROSS_SCENES = [
   { id:'D', need:['m_roa','m_luna','m_sera'], min:80, cuts:[ {who:"m_sera", text:"어… 오늘 셋이 다 있네요."}, {who:"m_luna", text:"당기는 날이 겹쳤나 봐."}, {who:"m_roa", text:"…그런가 보군."}, {who:"m_sera", text:"이 조용한 거, 편하다. 무대에선 이런 적이 없거든요."}, {who:"m_luna", text:"옛말로 'calm'. 잔잔함. …여기가 딱 그렇지."}, {who:"m_roa", text:"말 안 해도 되는 자리, 흔치 않아."}, {who:"m_sera", text:"우리 셋, 단골 표시 하나 만들래요? 달, 잔, 별. 다 어울리잖아요."}, {who:"m_luna", text:"달은 내가 가져가고."}, {who:"m_roa", text:"…잔은 뻔하지."}, {who:"m_sera", text:"그럼 별은 저. 완성."} ],
-    cg:"assets/art/cg_three_regulars_mark.jpg", caption:"달, 잔, 별 — 세 단골의 표식이 생긴 날." },
+    cg:"assets/art/cg_three_regulars_mark.webp", caption:"달, 잔, 별 — 세 단골의 표식이 생긴 날." },
   { id:'C', need:['m_roa','m_sera'], min:60, cuts:[ {who:"m_sera", text:"아, 먼저 계셨네요."}, {who:"m_roa", text:"모자, 그렇게 푹 눌러쓰면 더 티 나."}, {who:"m_sera", text:"네?"}, {who:"m_roa", text:"숨으려고 애쓰는 티가 나거든. 그냥 있어. 그게 제일 안 들켜."}, {who:"m_sera", text:"…저 아세요?"}, {who:"m_roa", text:"이름은 몰라. 도망쳐 온 얼굴은 알아."}, {who:"m_roa", text:"나도 도망쳐 왔거든."}, {who:"m_roa", text:"잘 숨어."} ],
-    cg:"assets/art/cg_cross_roa_sera.jpg", caption:"도망쳐 온 얼굴은, 도망쳐 온 사람이 먼저 알아본다." },
+    cg:"assets/art/cg_cross_roa_sera.webp", caption:"도망쳐 온 얼굴은, 도망쳐 온 사람이 먼저 알아본다." },
   { id:'B', need:['m_luna','m_sera'], min:40, cuts:[ {who:"m_sera", text:"루나 님… 여기 자주 오세요?"}, {who:"m_luna", text:"요새는. 넌 얼굴 가려도 소용없어."}, {who:"m_sera", text:"…들켰네요."}, {who:"m_luna", text:"얼굴로 안 게 아니야. 네 목소리에는 울림이 섞여 있거든."}, {who:"m_luna", text:"백 년 전에는 더 자주 들렸었는데 말야."}, {who:"m_sera", text:"음... 저 비밀로 해주실 수 있어요?"}, {who:"m_luna", text:"걱정 마. 잊히는 게 뭔지 나도 잘 알아."}, {who:"m_luna", text:"…백 년을 잊혔었거든."}, {who:"m_luna", text:"그러니 너 하나 못 본 척, 어렵지 않아."} ],
-    cg:"assets/art/cg_cross_luna_sera.jpg", caption:"들켜도 괜찮은 사람이 생긴 날 — 루나가 세라의 비밀을 지켜주기로 했다." },
+    cg:"assets/art/cg_cross_luna_sera.webp", caption:"들켜도 괜찮은 사람이 생긴 날 — 루나가 세라의 비밀을 지켜주기로 했다." },
   { id:'A', need:['m_roa','m_luna'], min:40, cuts:[ {who:"m_luna", text:"너도 왔네."}, {who:"m_roa", text:"…어."}, {who:"m_luna", text:"말 안 시켜서 좋다. 다들 뭘 그렇게 묻던데."}, {who:"m_roa", text:"물을 게 있어야 묻지."}, {who:"m_luna", text:"그 커피, 온도 낮췄지. 향이 더 오래 남네."}, {who:"m_roa", text:"…알아보는군."}, {who:"m_luna", text:"이런 조용함, 옛말로 'ease'라고 했어. 편안함. …요샌 귀한 거야."} ],
-    cg:"assets/art/cg_cross_roa_luna.jpg", caption:"말없이 앉아도 편한 사이 — 두 단골의 침묵이 좋았던 날." },
+    cg:"assets/art/cg_cross_roa_luna.webp", caption:"말없이 앉아도 편한 사이 — 두 단골의 침묵이 좋았던 날." },
 ];
 
 // 오답/시간초과 때 메인 캐릭터 위로 한마디 (30% 확률로 등장)
@@ -2947,13 +2947,13 @@ function speak(text, callback) {
 
 /* --- Story Data --- */
 const storyLines = [
-    { img:'chars/npc_realtor.png', name:"부동산 사장님", text:"자, 계약은 끝났네. 영어 마을이라 월세가 좀 비싸지만 목은 좋아." },
+    { img:'chars/npc_realtor.webp', name:"부동산 사장님", text:"자, 계약은 끝났네. 영어 마을이라 월세가 좀 비싸지만 목은 좋아." },
     { player:true, name:"나(사장)", text:"감사합니다! 그런데 손님들이 다 영어로 주문한다면서요?" },
-    { img:'chars/npc_realtor.png', name:"부동산 사장님", text:"그렇지. 여긴 손님들이 <b style='color:var(--red)'>단어 뜻</b>을 말하면, 자네가 알맞은 <b style='color:var(--blue)'>영단어 컵</b>을 줘야 해." },
-    { img:'chars/rush.png', name:"진상 손님", text:"(갑자기 등장) 어이! 빨리빨리 안 줘? 난 성격 급해서 3초밖에 못 기다려!" },
-    { img:'chars/npc_realtor.png', name:"부동산 사장님", text:"저렇게 <b style='color:var(--red)'>버럭하는 손님</b>은 성격이 급해서 오래 못 기다려. 시간 제한이 짧으니 서둘러 골라야 해." },
-    { img:'chars/vip.png', name:"VIP", text:"흠... 저는 품격 있게 직접 스펠링을 적어서 주문하겠습니다." },
-    { img:'chars/npc_realtor.png', name:"부동산 사장님", text:"저런 <b style='color:var(--gold)'>VIP</b>는 팁을 많이 주지. 타자를 쳐서 입력해야 해. 그럼 행운을 비네!" }
+    { img:'chars/npc_realtor.webp', name:"부동산 사장님", text:"그렇지. 여긴 손님들이 <b style='color:var(--red)'>단어 뜻</b>을 말하면, 자네가 알맞은 <b style='color:var(--blue)'>영단어 컵</b>을 줘야 해." },
+    { img:'chars/rush.webp', name:"진상 손님", text:"(갑자기 등장) 어이! 빨리빨리 안 줘? 난 성격 급해서 3초밖에 못 기다려!" },
+    { img:'chars/npc_realtor.webp', name:"부동산 사장님", text:"저렇게 <b style='color:var(--red)'>버럭하는 손님</b>은 성격이 급해서 오래 못 기다려. 시간 제한이 짧으니 서둘러 골라야 해." },
+    { img:'chars/vip.webp', name:"VIP", text:"흠... 저는 품격 있게 직접 스펠링을 적어서 주문하겠습니다." },
+    { img:'chars/npc_realtor.webp', name:"부동산 사장님", text:"저런 <b style='color:var(--gold)'>VIP</b>는 팁을 많이 주지. 타자를 쳐서 입력해야 해. 그럼 행운을 비네!" }
 ];
 
 // ==========================================
@@ -2961,25 +2961,25 @@ const storyLines = [
 // ==========================================
 const SHOP_DB = {
     counter: [
-        { id: 'c1', name: '미니 선인장', desc: 'Lv.1 소박한 시작', price: 400, icon: '🌵', img:'deco/cactus.png' },
-        { id: 'c2', name: '해바라기 화분', desc: 'Lv.2 화사한 분위기', price: 1200, icon: '🌻', img:'deco/sunflower.png' },
-        { id: 'c3', name: '고급 커피잔', desc: 'Lv.3 전문가의 향기', price: 3000, icon: '☕', img:'deco/coffeecup.png' },
-        { id: 'c4', name: '미니 수족관', desc: 'Lv.4 물멍 타임', price: 7000, icon: '🐠', img:'deco/aquarium.png' },
-        { id: 'c5', name: '황금 고양이상', desc: 'Lv.5 부의 상징', price: 15000, icon: '🐱', img:'deco/goldcat.png' }
+        { id: 'c1', name: '미니 선인장', desc: 'Lv.1 소박한 시작', price: 400, icon: '🌵', img:'deco/cactus.webp' },
+        { id: 'c2', name: '해바라기 화분', desc: 'Lv.2 화사한 분위기', price: 1200, icon: '🌻', img:'deco/sunflower.webp' },
+        { id: 'c3', name: '고급 커피잔', desc: 'Lv.3 전문가의 향기', price: 3000, icon: '☕', img:'deco/coffeecup.webp' },
+        { id: 'c4', name: '미니 수족관', desc: 'Lv.4 물멍 타임', price: 7000, icon: '🐠', img:'deco/aquarium.webp' },
+        { id: 'c5', name: '황금 고양이상', desc: 'Lv.5 부의 상징', price: 15000, icon: '🐱', img:'deco/goldcat.webp' }
     ],
     wall: [
-        { id: 'w1', name: '메뉴 칠판', desc: 'Lv.1 카페의 기본', price: 600, icon: '📋', img:'deco/chalkboard.png' },
-        { id: 'w2', name: '네온 사인', desc: 'Lv.2 힙한 감성', price: 2000, icon: '💡', img:'deco/neon.png' },
-        { id: 'w3', name: '앤티크 시계', desc: 'Lv.3 고풍스러운 멋', price: 5000, icon: '🕰️', img:'deco/clock.png' },
-        { id: 'w4', name: '명화 액자', desc: 'Lv.4 품격 있는 카페', price: 10000, icon: '🖼️', img:'deco/painting.png' },
-        { id: 'w5', name: '숲속 창문', desc: 'Lv.5 탁 트인 뷰', price: 20000, icon: '🏞️', img:'deco/forestwindow.png' }
+        { id: 'w1', name: '메뉴 칠판', desc: 'Lv.1 카페의 기본', price: 600, icon: '📋', img:'deco/chalkboard.webp' },
+        { id: 'w2', name: '네온 사인', desc: 'Lv.2 힙한 감성', price: 2000, icon: '💡', img:'deco/neon.webp' },
+        { id: 'w3', name: '앤티크 시계', desc: 'Lv.3 고풍스러운 멋', price: 5000, icon: '🕰️', img:'deco/clock.webp' },
+        { id: 'w4', name: '명화 액자', desc: 'Lv.4 품격 있는 카페', price: 10000, icon: '🖼️', img:'deco/painting.webp' },
+        { id: 'w5', name: '숲속 창문', desc: 'Lv.5 탁 트인 뷰', price: 20000, icon: '🏞️', img:'deco/forestwindow.webp' }
     ],
     pet: [
-        { id: 'p1', name: '길냥이', desc: 'Lv.1 귀여운 친구', price: 700, icon: '🐈', img:'deco/cat.png' },
-        { id: 'p2', name: '리트리버', desc: 'Lv.2 든든한 댕댕이', price: 2500, icon: '🐕', img:'deco/dog.png' },
-        { id: 'p3', name: '앵무새', desc: 'Lv.3 말하는 새', price: 6000, icon: '🦜', img:'deco/parrot.png' },
-        { id: 'p4', name: '아기 펭귄', desc: 'Lv.4 뒤뚱뒤뚱', price: 12000, icon: '🐧', img:'deco/penguin.png' },
-        { id: 'p5', name: '유니콘', desc: 'Lv.5 환상의 동물', price: 30000, icon: '🦄', img:'deco/unicorn.png' }
+        { id: 'p1', name: '길냥이', desc: 'Lv.1 귀여운 친구', price: 700, icon: '🐈', img:'deco/cat.webp' },
+        { id: 'p2', name: '리트리버', desc: 'Lv.2 든든한 댕댕이', price: 2500, icon: '🐕', img:'deco/dog.webp' },
+        { id: 'p3', name: '앵무새', desc: 'Lv.3 말하는 새', price: 6000, icon: '🦜', img:'deco/parrot.webp' },
+        { id: 'p4', name: '아기 펭귄', desc: 'Lv.4 뒤뚱뒤뚱', price: 12000, icon: '🐧', img:'deco/penguin.webp' },
+        { id: 'p5', name: '유니콘', desc: 'Lv.5 환상의 동물', price: 30000, icon: '🦄', img:'deco/unicorn.webp' }
     ]
 };
 // 장식 아이콘 렌더 헬퍼 (img 있으면 SVG, 없으면 이모지)
@@ -3319,7 +3319,7 @@ const game = {
         var self = this;
         // 최종막 뒤에 엔딩 컷을 이어 붙인다 — 서사가 클라이맥스에서 끊기지 않게(도감 '새 아침'도 여기서 해금)
         var afterScene = (st === DEMITAS_SCENES.length - 1)
-            ? function(){ showCutsceneCG('assets/art/cg_ending_new_morning.jpg', '그리고 또 하루. 골목 끝 카페에 새 아침이 열렸다.', function(){ self.nextTurn(true); }); }
+            ? function(){ showCutsceneCG('assets/art/cg_ending_new_morning.webp', '그리고 또 하루. 골목 끝 카페에 새 아침이 열렸다.', function(){ self.nextTurn(true); }); }
             : function(){ self.nextTurn(true); };
         this.playCutscene(scene, afterScene);
         return true;
@@ -3356,7 +3356,7 @@ const game = {
         }
     },
     playCutscene: function(scene, done){
-        CHAR_BY_ID['boss'].img = (vbGender()==='f' ? 'chars/barista_f.png' : 'chars/barista_m.png');
+        CHAR_BY_ID['boss'].img = (vbGender()==='f' ? 'chars/barista_f.webp' : 'chars/barista_m.webp');
         var self = this;
         var runDialogue = function(){
             if(scene.fx){ self.playFx(scene.fx, scene.fxKind || 'burst'); } // 컷신 개시 이펙트(예: 봉인 파열)
@@ -3938,7 +3938,7 @@ const game = {
                     this._firstCupPending = false;
                     try{ localStorage.setItem('vb_first_cup','1'); }catch(e){}
                     const _self = this;
-                    showCutsceneCG('assets/art/cg_first_cup_yujin.jpg', '첫 잔을 내렸다.', () => _self.scheduleNextTurn(400));
+                    showCutsceneCG('assets/art/cg_first_cup_yujin.webp', '첫 잔을 내렸다.', () => _self.scheduleNextTurn(400));
                     return;
                 }
                 this.scheduleNextTurn(400);
@@ -5139,7 +5139,7 @@ equipItem: function(category, level) {
         const charEl = document.getElementById('story-char');
         const emojiEl = document.getElementById('story-avatar');
         // 플레이어(나 사장) 라인 = 게임 시작 시 선택한 성별 바리스타
-        const imgSrc = line.player ? ((localStorage.getItem('vb_gender')==='f') ? 'chars/barista_f.png' : 'chars/barista_m.png') : line.img;
+        const imgSrc = line.player ? ((localStorage.getItem('vb_gender')==='f') ? 'chars/barista_f.webp' : 'chars/barista_m.webp') : line.img;
         if(imgSrc){
             charEl.onload = function(){ charEl.style.display=''; emojiEl.style.display='none'; };
             charEl.onerror = function(){ charEl.style.display='none'; emojiEl.style.display=''; emojiEl.innerHTML = UI_ICON.people; };
@@ -5236,9 +5236,9 @@ equipItem: function(category, level) {
     updateCafeBg: function(){
         var img = document.querySelector('#scene-bg .scene-photo'); if(!img) return;
         var dc = this.dailyCount || 0;
-        var src = (dc >= 8) ? 'assets/art/bg_cafe_night_moon.jpg'
-                : (dc >= 6) ? 'assets/art/bg_cafe_evening.jpg'
-                :             'scenes/cafe_pastel.png';
+        var src = (dc >= 8) ? 'assets/art/bg_cafe_night_moon.webp'
+                : (dc >= 6) ? 'assets/art/bg_cafe_evening.webp'
+                :             'scenes/cafe_pastel.webp';
         if(img.getAttribute('src') !== src) img.src = src;
         var phase = (dc >= 8) ? 'night' : (dc >= 6) ? 'evening' : 'day';
         if(this._timePhase !== phase) { this._timePhase = phase; this.updateDecorations(); }
@@ -5774,7 +5774,7 @@ BgMusic.playTrack('title');
 // [성능] 모든 이미지 미리 로드(손님 PNG·씬·장식) — 첫 등장 시 딜레이 방지(특히 웹 배포)
 (function preloadAllImages(){
     try {
-        const urls = new Set(['scenes/cafe_pastel.png','assets/art/bg_cafe_evening.jpg','assets/art/bg_cafe_night_moon.jpg','scenes/title.png','sprites/coin.svg']);
+        const urls = new Set(['scenes/cafe_pastel.webp','assets/art/bg_cafe_evening.webp','assets/art/bg_cafe_night_moon.webp','scenes/title.webp','sprites/coin.svg']);
         CHAR_DEX.forEach(c => { if(c.img) urls.add(c.img); });
         ['counter','wall','pet'].forEach(cat => (SHOP_DB[cat]||[]).forEach(it => { if(it.img) urls.add(it.img); }));
         urls.forEach(u => { const im = new Image(); im.src = u; });
