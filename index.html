@@ -1909,7 +1909,7 @@ var onAlertClose = null;
 let _alertPrevPaused = null;
 function showCutsceneCG(src, caption, onDone, opts){
     opts = opts || {};
-    var _k=(src||'').split('/').pop().replace(/\.(jpg|jpeg|png)$/i,'');
+    var _k=(src||'').split('/').pop().replace(/\.(jpg|jpeg|png|webp)$/i,'');
     // [CG 도감] 감상한 CG를 파일명 키로 기록(도감에 등록된 것만)
     try{ if(typeof game !== 'undefined' && game){ if(_k) game.markCgSeen(_k); } }catch(e){}
     var el = document.getElementById('cutscene-cg');

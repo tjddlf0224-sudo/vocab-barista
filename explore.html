@@ -2851,7 +2851,7 @@ function showExCutsceneCG(src, caption, onDone, dexKey){
   //   dexKey: 성별 분기 CG처럼 '파일은 둘, 도감 항목은 하나'인 경우 기록용 키를 따로 넘긴다
   //   (안 그러면 반대 성별 슬롯이 영원히 잠긴 채 남아 '못 본 컨텐츠'처럼 보인다).
   try{
-    var _k=dexKey || (src||'').split('/').pop().replace(/\.(jpg|jpeg|png)$/i,'');
+    var _k=dexKey || (src||'').split('/').pop().replace(/\.(jpg|jpeg|png|webp)$/i,'');
     if(_k){ var c=SaveBridge.loadCafe(); var arr=Array.isArray(c.seenCgs)?c.seenCgs:[]; if(arr.indexOf(_k)===-1){ arr.push(_k); SaveBridge.patchCafe({seenCgs:arr}); } }
   }catch(e){}
   var el = document.getElementById('ex-cutscene');
@@ -2891,7 +2891,7 @@ const DarkDuel = {
     if(window.ExploreBgm) try{ExploreBgm.play('boss');}catch(e){}
     // [정리] 말풍선보다 CG가 먼저 — 메인 캐릭터 조우처럼 얼굴부터 보여준 뒤 대사로 이어진다
     var self=this;
-    showExCutsceneCG('assets/art/cg_dark_merchant_duel.webp', '어둠 속에서, 낯선 상인이 잔을 내밀었다.', function(){ self.intro(); }, 'cg_dark_merchant_meet'); },
+    showExCutsceneCG('assets/art/cg_dark_merchant_duel.webp', '어둠 속에서, 낯선 상인이 잔을 내밀었다.', function(){ self.intro(); }, 'cg_dark_merchant_duel'); },
   intro(){ var _beaten=!!((Explore.state.events||{}).darkMerchant);
     // [반전] 카페 드미타스 진행도에 따라 정체를 흘림 — 만난 뒤 첫 조우=reveal(1회), 구원 후=dissolve
     var _stage=0; try{ _stage=(JSON.parse(localStorage.getItem('vb_save_v7')||'{}').demitasStage)||0; }catch(e){}
