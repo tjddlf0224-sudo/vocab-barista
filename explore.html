@@ -721,7 +721,10 @@ const SaveBridge = {
       materials:ex.materials||{}, items:ex.items||[], companion:ex.companion||'none',
       map:ex.map||{zone:'forest'}, pos:ex.pos||null, steps:ex.steps||0,
       quests:ex.quests||{}, questN:ex.questN||{}, events:ex.events||{}, explored:ex.explored||{}, maps:ex.maps||{}, zoneBoss:ex.zoneBoss||{}, monstersSeen:ex.monstersSeen||{},
-      skillTier:(ex.skillTier&&typeof ex.skillTier==='object')?ex.skillTier:{} }; },  // 동행별 스킬 진화 티어(0~3)
+      skillTier:(ex.skillTier&&typeof ex.skillTier==='object')?ex.skillTier:{},  // 동행별 스킬 진화 티어(0~3)
+      // [버그수정] 화이트리스트에 없어서 저장은 되는데(saveExplore는 state 전체를 그대로 씀) 로드 시 매번
+      // 빈 객체로 되돌아갔다 — 위기 회복 인사가 앱을 재시작할 때마다 NPC당 다시 재생되던 원인.
+      crisisRecovered:(ex.crisisRecovered&&typeof ex.crisisRecovered==='object')?ex.crisisRecovered:{} }; },
   saveExplore(s){ localStorage.setItem(EXPLORE_KEY,JSON.stringify(s)); },
 };
 
@@ -781,7 +784,9 @@ const Explore = {
     // [스토리 보스] 카페 봉인고 막에서 넘어왔으면 지도 탐험 없이 바로 드미타스 결전
     try{ if(localStorage.getItem('vb_story_boss')==='demitas'){ localStorage.removeItem('vb_story_boss'); setTimeout(function(){ Battle.startDemitasBoss(); }, 350); } }catch(e){}
   },
-  persist(){ SaveBridge.patchCafe({ wallet:this.cafe.wallet, myWords:this.cafe.myWords, turnCount:this.cafe.turnCount, craftedItems:this.cafe.craftedItems, masteredList:this.cafe.masteredList }); SaveBridge.saveExplore(this.state); },
+  // [버그수정] stats가 화이트리스트에 없어 srsCorrect가 stats.srsGraduated(울림 R축)를 올려도 카페 저장본엔
+  // 절대 반영되지 않았다(메모리상의 this.cafe.stats만 바뀌고 다음 탐험 진입 때 loadCafe로 다시 원본을 덮어씀).
+  persist(){ SaveBridge.patchCafe({ wallet:this.cafe.wallet, myWords:this.cafe.myWords, turnCount:this.cafe.turnCount, craftedItems:this.cafe.craftedItems, masteredList:this.cafe.masteredList, stats:this.cafe.stats, masteredCount:(this.cafe.masteredList||[]).length }); SaveBridge.saveExplore(this.state); },
   // 스펠링 조합 정답 시 SRS 갱신(오답노트 단어면 박스↑, 졸업하면 제거)
   srsCorrect(word){ const arr=this.cafe.myWords||[]; const v=arr.find(x=>x.w&&x.w.toLowerCase()===word);
     if(v){ v.box=(v.box||1)+1; v.due=(this.cafe.turnCount||0)+(v.box*2);
@@ -789,6 +794,10 @@ const Explore = {
         // [버그수정] 졸업 단어를 카페 마스터 도감에도 반영(예전엔 오답노트에서 빼기만 해 크레딧·도감 유실).
         if(!Array.isArray(this.cafe.masteredList)) this.cafe.masteredList=[];
         if(this.cafe.masteredList.indexOf(v.w)<0) this.cafe.masteredList.push(v.w);
+        // [버그수정] 울림 R축(오답정복=방어%)이 카페 stats.srsGraduated만 보는데 탐험 졸업은 여길 증가시키지
+        // 않았다 — 단어가 masteredList로 옮겨져 더 이상 SRS 대상이 아니게 되므로 이 졸업의 R 기회가 영구 소실됐다.
+        if(!this.cafe.stats||typeof this.cafe.stats!=='object') this.cafe.stats={};
+        this.cafe.stats.srsGraduated=(this.cafe.stats.srsGraduated||0)+1;
       }
       this.persist(); } },
   // 채용 여부: 카페 손님 도감에 해당 메인 캐릭터가 등록(=만난 적 있음)되면 동행 가능
@@ -2953,7 +2962,7 @@ const GameEvent = {
     if(c.gold) Explore.cafe.wallet=(Explore.cafe.wallet||0)-c.gold;
     if(c.mat) Explore.state.materials[c.mat]=((Explore.state.materials||{})[c.mat]||0)-(c.count||1); },
 
-  open(def){ if(!def) return; this.cur=def;
+  open(def){ if(!def) return; if(this.done(def.id)) return; this.cur=def;
     const {name,text,act}=this._els();
     name.textContent=def.name;
     document.getElementById('event-dlg').classList.add('show');
@@ -3017,6 +3026,9 @@ const GameEvent = {
     if(pass){
       const rwtxt=Explore.grantReward(def.reward||{});
       this._markDone(def.id);
+      // [버그수정] pick()과 달리 여기선 World.events에서 안 빼서 노드가 맵에 그대로 남아 있었다 —
+      // done 플래그는 '다음 존 재생성' 때만 걸러지므로, 그 전까지 같은 자리에서 무한 반복 파밍이 가능했다.
+      if(window.World && World.events){ World.events = World.events.filter(e => e.id !== def.id); World._miniDirty = true; }
       text.innerHTML=`${def.okText}<br>(${this.score}/${this.rounds.length} 정답)${rwtxt?`<br><span class="lvlup">${rwtxt}</span>`:''}`;
       act.innerHTML=`<button class="q-btn ok" onclick="GameEvent.close()">좋아</button>`;
       if(window.Sfx)Sfx.play('levelup'); if(window.exHaptic)exHaptic('success');
