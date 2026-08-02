@@ -2426,7 +2426,8 @@ const Battle = {
     //   조건(moonBossReady)에 쓰인다. 승패 무관, '만남' 자체가 기준.
     if(m.id){ if(!Explore.state.monstersSeen) Explore.state.monstersSeen={};
       if(!Explore.state.monstersSeen[m.id]){ Explore.state.monstersSeen[m.id]=true; World.announceMoonBossReady(); } }
-    // [값의 장막] 봉인고 보스 전용 — 값으로 두른 장막이 타격을 대부분 흘려보낸다.
+    // [값의 장막] 몬스터 정의의 veil 필드 기반 범용 기믹(봉인고 보스 curatorward=3겹, 달 최종보스
+    // eldestword=5겹에도 적용됨) — 값으로 두른 장막이 타격을 대부분 흘려보낸다.
     //   무력화·페널티는 없다(딜은 계속 들어감). 스킬의 '옛말 빛'이 닿을 때마다 한 겹씩 풀리고,
     //   전부 풀리면 갇힌 말이 해방되며 무방비가 된다 — 처치가 아니라 '봉인 해제'가 요령.
     this.veil = m.veil || 0; this.veilMax = m.veil || 0;
