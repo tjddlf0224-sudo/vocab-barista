@@ -1677,6 +1677,9 @@ const World = {
   demitasStage(){ try{ return (JSON.parse(localStorage.getItem('vb_save_v7')||'{}').demitasStage)||0; }catch(e){ return 0; } },
   // [위기 아크] 카페 위기 진행도 조회 — 퀘스트 NPC 붕괴 대사 전환에 사용
   crisisStage(){ try{ return (JSON.parse(localStorage.getItem('vb_save_v7')||'{}').crisisStage)||0; }catch(e){ return 0; } },
+  // [버그수정] 봉인고를 이미 깬 구세이브는 위기 아크를 안 겪고 곧장 4로 건너뛴다 — 이 경우 회복 대사를
+  // 보여주면 겪은 적 없는 상실이 '돌아왔다'는 앞뒤 없는 대사가 된다.
+  crisisSkipped(){ try{ return !!(JSON.parse(localStorage.getItem('vb_save_v7')||'{}').crisisSkipped); }catch(e){ return false; } },
   // 지도 완성 진행도 — 달 개방 판정·팻말 표기에 공용
   mapsProgress(list){ const done=Explore.state.maps||{};
     return { have:(list||[]).filter(z=>done[z]).length, need:(list||[]).length }; },
@@ -2817,7 +2820,7 @@ const Quest = {
     }
     // [위기 아크] 회복 후 첫 대화 — 말이 돌아온 기쁨 한 줄(1회), 그 뒤 평소 퀘스트로
     let _recoverLine = '';
-    if(_cs === 4 && CRISIS_NPC_RECOVER[id]){
+    if(_cs === 4 && CRISIS_NPC_RECOVER[id] && !(window.World && World.crisisSkipped && World.crisisSkipped())){
       if(!Explore.state.crisisRecovered) Explore.state.crisisRecovered = {};
       if(!Explore.state.crisisRecovered[id]){
         Explore.state.crisisRecovered[id] = 1; Explore.persist();

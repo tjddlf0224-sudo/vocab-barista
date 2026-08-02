@@ -3099,6 +3099,7 @@ const game = {
             this._demitasRetry = data.demitasRetry || 0;  // [보스전] 봉인고 패배 후 재도전 쿨다운(점수 기준)
             this.crisisStage = data.crisisStage || 0;      // [위기 아크] 진행도 복원
             this.crisisSeraLost = !!data.crisisSeraLost;   // [위기 아크] 세라 이름 상실 플래그 복원
+            this.crisisSkipped = !!data.crisisSkipped;     // [위기 아크] 구세이브 아크 건너뜀 플래그 복원
             this.seenCgs = Array.isArray(data.seenCgs) ? data.seenCgs : [];   // [CG 도감] 감상 목록 복원
             this.crossPlayed = (data.crossPlayed && typeof data.crossPlayed === 'object') ? data.crossPlayed : {};   // [버그수정] 교차 씬 하루1회 기록 복원 — 저장 안 하면 재실행 시 같은 날 재발동
             this._ricoSincereSeen = !!data.ricoSincereSeen;   // [영속] 리코 '재능 고백' 1회성 플래그 복원 — 재실행마다 반복되던 문제 방지
@@ -3216,6 +3217,7 @@ const game = {
             demitasRetry: this._demitasRetry || 0,   // [보스전] 봉인고 재도전 쿨다운
             crisisStage: this.crisisStage || 0,      // [위기 아크] 진행도(0~4) — explore도 이 값을 읽어 NPC 붕괴 대사 전환
             crisisSeraLost: !!this.crisisSeraLost,   // [위기 아크] 세라 이름 상실 플래그(비파괴 — charActs는 그대로)
+            crisisSkipped: !!this.crisisSkipped,     // [위기 아크] 구세이브가 아크를 안 겪고 4로 건너뛴 경우 — 탐험 회복대사 억제용
             crossPlayed: this.crossPlayed || {},     // [버그수정] 교차 씬 하루1회 기록(날짜 키, 다음날 자연 만료)
             ricoSincereSeen: !!this._ricoSincereSeen,  // [영속] 리코 '재능 고백' 1회성 플래그
 
@@ -3278,7 +3280,10 @@ const game = {
     maybeCrisisEvent: function(){
         if(this.gameMode !== 'normal') return false;
         // 이미 봉인고를 이긴 구세이브 — 위기의 전제(결전 전) 자체가 지나갔으니 아크 통째로 건너뜀
-        if((this.demitasStage||0) >= 3){ if((this.crisisStage||0) < 4) this.crisisStage = 4; return false; }
+        // [버그수정] 봉인고를 이미 깬 구세이브는 crisisStage=4로 건너뛰는데, 탐험 NPC들이 이걸 '회복'으로
+        // 읽어 겪은 적도 없는 상실을 전제로 한 기쁨 대사("말이 돌아왔어!")를 던진다. crisisSkipped로
+        // 표시해 explore.html이 그 회복 대사를 건너뛰게 한다(정상 진행자는 이 플래그가 없음).
+        if((this.demitasStage||0) >= 3){ if((this.crisisStage||0) < 4){ this.crisisStage = 4; this.crisisSkipped = true; this.saveData(); } return false; }
         var st = this.crisisStage || 0;
         if(st >= 3) return false;
         if((this.lifetimeScore||0) < CRISIS_THRESHOLDS[st]) return false;
@@ -3468,6 +3473,10 @@ const game = {
             let rIdx = Math.floor(Math.random() * this.activePool.length);
             wordObj = this.activePool[rIdx];
             this.activePool.splice(rIdx, 1);
+            // [버그수정] 복습 모드에서 isReview가 계속 false로 남아 SRS 박스 승급(4단계) 없이 정답 1회에
+            // 즉시 mastered로 넘어갔다(checkAnswer의 isReview 분기를 못 타서). 복습 풀에서 뽑은 손님은
+            // 전부 복습 경로로 처리해야 한다.
+            isReview = true;
         } else {
             if(!rawWords || rawWords.length===0) rawWords = ACTIVE_WORDDATA.easy;
 
@@ -3569,8 +3578,12 @@ const game = {
         const timed = (type === 'vip' || type === 'rush' ||
             (charObj && (charObj.kind === 'main' || (charObj.rarity && charObj.rarity !== 'common'))));
 
+        // [버그수정] 복습 모드의 wordObj는 activePool(myWords를 깊은 복사한 것)에서 나와 원본과 다른 참조다.
+        // reviewRef를 그대로 넘기면 SRS 박스 증가가 복사본에만 반영되고 실제 오답노트(myWords)엔 안 남는다.
+        // myWords에서 같은 단어의 살아있는 참조를 다시 찾아 넘긴다(일반 모드는 이미 myWords의 참조라 그대로 써도 안전).
+        const reviewRefLive = isReview ? (this.gameMode === 'review' ? this.myWords.find(v => v.w === wordObj.w) : wordObj) : null;
         this.currentCust = { data: wordObj, type: type, maxTime: baseTime, timeLeft: baseTime, avatar: custAvatar,
-                             char: charObj, timed: timed, isReview: isReview, reviewRef: isReview ? wordObj : null };
+                             char: charObj, timed: timed, isReview: isReview, reviewRef: reviewRefLive };
         this.renderScene();
 
         // 메인 캐릭터(normal/vip 모두): 대화창 먼저 → 탭 후 타이머+focus 시작
@@ -3719,6 +3732,16 @@ const game = {
     todayStr: function(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); },
     // 메인 손님 등장 인사: 그날 그 캐릭터 첫 등장이면 일일 대사, 아니면 호감 단계별 인사
     mainGreeting: function(id){
+        // [버그수정] 위기로 이름을 잃은 세라는 사장을 못 알아본다 — 아래 평소 인사(친밀도 기반)를 그대로 쓰면
+        // '못 알아보는 손님' 설정과 정면충돌한다. CRISIS_SERA와 같은 톤(낯익은데 왜인지 모름)으로 대체.
+        if(id === 'm_sera' && this.crisisSeraLost){
+            return this.pickLine([
+                "…또 왔네요. 이 자리, 자꾸 여기 앉게 돼요.",
+                "저기, 여기 자주 왔었나요? 왠지 낯이 익어서.",
+                "따뜻한 라떼 하나 주세요. …이거, 제가 원래 좋아했나요?",
+                "죄송해요, 이상한 질문이죠. 그냥… 목소리가 익숙해서요."
+            ]);
+        }
         const d = MAIN_DIALOGUE[id]; if(!d) return '';
         if(!this.mainMet) this.mainMet = {};
         // 첫 만남(#8) — 그 캐릭터를 생애 처음 만난 순간엔 소개 대사(이름 미공개)
@@ -3776,7 +3799,17 @@ const game = {
         };
         next();
     },
-    mainFarewell: function(id){ const d = MAIN_DIALOGUE[id]; return d ? this.pickLine(resolveGenderLines(d.served[this.affTier(id)])) : ''; },
+    mainFarewell: function(id){
+        // [버그수정] 위 mainGreeting과 동일한 이유 — 위기 중 세라의 작별 대사도 낯선 손님 톤으로.
+        if(id === 'm_sera' && this.crisisSeraLost){
+            return this.pickLine([
+                "고마워요. …이상하게, 마음이 편해지네요.",
+                "잘 마셨습니다. 다음에 또 올게요, 왠지 그래야 할 것 같아서.",
+                "…감사해요."
+            ]);
+        }
+        const d = MAIN_DIALOGUE[id]; return d ? this.pickLine(resolveGenderLines(d.served[this.affTier(id)])) : '';
+    },
 
     // ===== 대화창 시스템 =====
     showDialogue: function(charId, text, opts) {
@@ -4001,7 +4034,10 @@ const game = {
             this.checkRank();
 
             // [호감도] 메인 캐릭터 손님을 응대하면 유대 상승
-            if(this.currentCust.char && this.currentCust.char.kind === 'main') {
+            // [버그수정] 위기로 이름을 잃은 세라는 사장을 못 알아보는 상태다 — 그 상태로 유대(호감도)가
+            // 계속 오르고 3~5막이 열리면 '못 알아보면서 더 가까워지는' 모순이 생긴다. 회복 전까진 동결.
+            if(this.currentCust.char && this.currentCust.char.kind === 'main'
+               && !(this.currentCust.char.id === 'm_sera' && this.crisisSeraLost)) {
                 this.gainAffection(this.currentCust.char.id, 12);
             }
 
@@ -5658,7 +5694,9 @@ if(typeof window.vbDeleteAccount!=='function'){ window.vbDeleteAccount=function(
 (function(){
   // [버그수정] vb_explore_v1(탐험 레벨·장비·맵·재료) 추가 — 빠져 있어 기기 변경 시 탐험 진행이 통째 소실됐다.
   //   (클라우드 덮어쓰기 방지 수정 이후라 빈 세이브로 백업을 날릴 위험 없음)
-  const SYNC_KEYS = ['vb_save_v7','vb_mastered_v7','vb_ranks_v4','vb_category','vb_explore_v1'];
+  // [버그수정] vb_gender·vb_moon_open이 빠져 있어 기기를 바꾸면 바리스타 성별 선택과 달(포스트게임) 존
+  // 개방 상태가 안 넘어가고 새 기기에서 다시 물어보거나(성별) 잠긴 채로 보였다(달).
+  const SYNC_KEYS = ['vb_save_v7','vb_mastered_v7','vb_ranks_v4','vb_category','vb_explore_v1','vb_gender','vb_moon_open'];
   const $ = id => document.getElementById(id);
   const loginErr = m => { const e=$('vbLoginError'); if(e) e.textContent=m||''; };
   const hideLogin = () => { const l=$('login-screen'); if(l) l.classList.add('hidden'); };
