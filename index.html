@@ -3103,6 +3103,12 @@ const game = {
             this.crossPlayed = (data.crossPlayed && typeof data.crossPlayed === 'object') ? data.crossPlayed : {};   // [버그수정] 교차 씬 하루1회 기록 복원 — 저장 안 하면 재실행 시 같은 날 재발동
             this._ricoSincereSeen = !!data.ricoSincereSeen;   // [영속] 리코 '재능 고백' 1회성 플래그 복원 — 재실행마다 반복되던 문제 방지
             this.unlockedAchievements = Array.isArray(data.unlockedAchievements) ? data.unlockedAchievements : [];
+            // [버그수정] 난이도/카테고리는 여기서 곧장 복원하지 않는다 — init()은 selectDifficulty→game.start(false)
+            // 경로에서도 재호출되는데, 그 경로는 이미 이번 호출 스택에서 새 난이도를 막 골라뒀다. 여기서 저장된
+            // 옛 값으로 되돌리면 방금 고른 난이도가 그대로 덮여써진다. 실제로 복원이 필요한 곳(탐험→카페 복귀)은
+            // resumeFromExplore에서 별도로 처리한다.
+            this._savedDifficulty = data.difficulty || 'normal';
+            this._savedCategory = data.category || '';
             if(data.stats) {
                 totalServedCount = data.stats.totalServed || 0;
                 totalVipCount = data.stats.totalVip || 0;
@@ -3154,6 +3160,12 @@ const game = {
 
     // 탐험 복귀 — 진행 중이던 카페로(일시정지 상태). '계속 하기'로 다음 손님부터 재개
     resumeFromExplore: function() {
+        // [버그수정] 탐험은 location.href 전체 페이지 이동이라 rawWords/ACTIVE_WORDDATA/GAME_CATEGORY가
+        // 스크립트 기본값(지역인재easy)으로 리셋된 채 돌아온다 — 카테고리·난이도 선택화면은 건너뛰므로
+        // 여기서 저장된 값으로 다시 세팅해야 세션 중 골랐던 난이도가 유지된다.
+        this.difficulty = this._savedDifficulty || 'normal';
+        if(this._savedCategory) setGameCategory(this._savedCategory);
+        rawWords = ACTIVE_WORDDATA[this.difficulty] || ACTIVE_WORDDATA.easy;
         document.getElementById('start-screen').classList.add('hidden');
         this.gameMode='normal'; document.body.classList.remove('mode-review');
         this.isActive=false; this.isPaused=true; this._needTurn=true;
@@ -3208,7 +3220,11 @@ const game = {
             ricoSincereSeen: !!this._ricoSincereSeen,  // [영속] 리코 '재능 고백' 1회성 플래그
 
             seenCgs: this.seenCgs || [],             // [CG 도감] 감상한 CG 키 목록
-            unlockedAchievements: this.unlockedAchievements || []
+            unlockedAchievements: this.unlockedAchievements || [],
+            // [버그수정] 난이도/카테고리를 저장 안 해서 탐험 갔다 카페로 돌아오면(location.href 전체 리로드로
+            // rawWords·ACTIVE_WORDDATA가 스크립트 기본값으로 리셋) Easy·지역인재로 조용히 강등됐다.
+            difficulty: this.difficulty || 'normal',
+            category: window.GAME_CATEGORY || 'regional'
         };
         localStorage.setItem('vb_save_v7', JSON.stringify(data));
     },
@@ -3283,6 +3299,11 @@ const game = {
             return true;
         }
         // st === 2 — [바닥+결의] 루나(진단) → 로아(등) 연속 재생. 이후 봉인고 결전이 열린다.
+        // [버그수정] CRISIS_LUNA는 루나 3막(백년 전쟁·봉인)을, CRISIS_ROA는 로아 3막(그라인드 하임 도주)을
+        // 그대로 재서술한다 — 유대로 아직 그 막을 안 연 플레이어에게는 스포일러가 먼저 터진다.
+        // maybeDemitasEvent의 DEMITAS_REQ(m_luna:3)와 같은 기준으로 게이트(점수는 유지, 조건 충족 시 자연 발생).
+        if(((this.charActs && this.charActs['m_luna']) || 0) < 3) return false;
+        if(((this.charActs && this.charActs['m_roa']) || 0) < 3) return false;
         this.crisisStage = 3; this.saveData();
         this.playCutscene({ cuts: CRISIS_LUNA }, function(){
             self.playCutscene({ cuts: CRISIS_ROA }, function(){ self.nextTurn(true); });
@@ -3414,7 +3435,11 @@ const game = {
     nextTurn: function(skipRico) {
         // [버그수정] 진입 즉시 대기중인 다음-턴 예약을 취소 — 중복 스폰(손님 2명 연속) 방지
         if(this._nextTurnTO) { clearTimeout(this._nextTurnTO); this._nextTurnTO = null; }
-        if(!this.isActive || this.isPaused) return;
+        // [버그수정] 정지 상태라 여기서 조용히 반환하면(예: 손님 사이 공백에 백그라운드 전환→자동 일시정지)
+        // 예약됐던 턴이 흔적 없이 사라져 재개해도 다음 손님이 안 온다. togglePause 재개 분기가 이미 쓰는
+        // _needTurn 플래그를 여기서도 세워 재개 시 소비되게 한다.
+        if(this.isPaused){ this._needTurn = true; return; }
+        if(!this.isActive) return;
         if(!skipRico && this._pendingDemitas){ var _o=this._pendingDemitas; this._pendingDemitas=null; this._resolveDemitasBattle(_o); return; }  // [보스전] 결과 먼저 처리
         if(!skipRico && this.maybeCrisisEvent()) return;   // [위기 아크] 결전보다 먼저 — 위기가 결전의 전제
         if(!skipRico && this.maybeDemitasEvent()) return;
@@ -3878,6 +3903,11 @@ const game = {
             if(this.combo >= 5) this.startFever();
 
             const afterSpeech = () => {
+                // [버그수정] 유대 막 해금 컷신(_affActPlaying)이 아직 화면에 떠 있는 도중이면, afterSpeech의
+                // 다른 오버레이(작별 대사·첫 잔 컷신·교차씬 등)가 같은 DOM을 덮어써 방금 뜬 막 해금 컷신이
+                // 사라지는데 charActs는 이미 '열람 완료'로 저장돼 있어(checkAffectionActs) 그 막을 영구히
+                // 다시 볼 수 없게 됨. 막 해금 큐가 다 빠질 때까지 afterSpeech 자체를 미룬다.
+                if(this._affActPlaying){ setTimeout(afterSpeech, 200); return; }
                 const el = document.getElementById('cust-el');
                 const nc = this._newChar; this._newChar = null;
                 const cust = this.currentCust;
@@ -4095,6 +4125,11 @@ const game = {
     },
 
     handleFail: function(isTimeout) {
+        // [버그수정] VIP는 오답 표시 중에도 입력창·제출 버튼이 살아 있어(정답 경로만 막던 checkAnswer의
+        // solved 가드는 오답에 안 걸림), 퇴장 대기 1.5초 동안 같은 오답을 다시 제출할 때마다 라이프가
+        // 또 깎였다(연타/키 반복으로 즉시 게임오버 가능). 손님 1명당 실패 처리는 정확히 한 번만.
+        if(!this.currentCust || this.currentCust.solved || this.currentCust.failed) return;
+        this.currentCust.failed = true;
         clearInterval(this.timer); playSound('wrong'); haptic('heavy');
         flashFX('bad'); // [이펙트] 오답 화면 플래시
         totalWrongCount++; // [신규] 학습 통계용 누적 오답 수
@@ -4164,7 +4199,12 @@ const game = {
         if (this.currentCust.type === 'vip') {
             // 빨간색 유지됨!
             msg += `<br><span style="color:#ff5252;">정답: ${this.currentCust.data.w}</span>`;
-            bubble.innerHTML = `<div>${msg}</div>`; 
+            bubble.innerHTML = `<div>${msg}</div>`;
+            // [버그수정] 일반 손님은 위 1번에서 .cup-btn onclick을 없애는데 VIP만 입력창이 그대로 살아있었다.
+            const vipInput = document.getElementById('vip-input');
+            if(vipInput) vipInput.disabled = true;
+            const vipBtn = document.querySelector('.vip-submit');
+            if(vipBtn) vipBtn.disabled = true;
         } else {
             bubble.innerText = msg;
         }
@@ -5207,8 +5247,10 @@ equipItem: function(category, level) {
             // 탐험 복귀 등으로 진행 중 손님이 없으면 새 손님(턴)부터 시작
             if(this._needTurn) {
                 this._needTurn=false; this.isActive=true; this.nextTurn();
-            } else if(this.isActive) {
-                // 상점 모드 등 타이머 없는 경우 대비 — isActive일 때만 타이머 재개
+            } else if(this.isActive && this.currentCust && !this.currentCust.solved && !this.currentCust.failed) {
+                // 상점 모드 등 타이머 없는 경우 대비 — isActive일 때만 타이머 재개.
+                // [버그수정] solved(정답)·failed(오답) 확인 없이 재개하면 이미 처리 끝난 손님에게 타이머가
+                // 다시 돌아 'Too slow!'로 라이프·방금 졸업한 단어를 또 빼앗아갔다(다른 재개 경로 4곳은 solved를 확인함).
                 this.startTimer();
             }
             if(this.currentCust && this.currentCust.type === 'rush') {
@@ -5305,6 +5347,8 @@ equipItem: function(category, level) {
             const inp = document.getElementById('vip-input');
             inp.value = ''; // 입력창을 깨끗하게 비웁니다!
             inp.maxLength = c.data.w.length; // 단어 길이만큼만 입력 가능
+            inp.disabled = false; // [버그수정] 직전 손님이 오답이었다면 handleFail에서 잠갔던 것을 새 손님에서 해제
+            const vipBtn = document.querySelector('.vip-submit'); if(vipBtn) vipBtn.disabled = false;
 
             // [스펠링 실시간 슬롯] 앞 2글자 제시 + 타이핑이 문제 글자칸에 즉시 반영
             if(!c.hintLetters) c.hintLetters = Math.min(2, c.data.w.length);
@@ -5675,7 +5719,7 @@ if(typeof window.vbDeleteAccount!=='function'){ window.vbDeleteAccount=function(
   window.vbResetPw = async function(){ loginErr(''); const em=$('vbLoginEmail').value.trim();
     if(!em){ loginErr('이메일을 먼저 입력하세요'); return; }
     try{ await auth.sendPasswordResetEmail(em); loginErr('재설정 메일을 보냈어요'); }catch(e){ loginErr(mapErr(e)); } };
-  window.vbSignOut = async function(){ try{ if(nativeAuth) await nativeAuth.signOut(); await auth.signOut(); }catch(e){} sessionStorage.removeItem('vb_synced'); sessionStorage.removeItem('vb_guest'); try{ localStorage.removeItem('vb_was_authed'); }catch(e){} location.reload(); };
+  window.vbSignOut = async function(){ try{ if(nativeAuth) await nativeAuth.signOut(); await auth.signOut(); }catch(e){} sessionStorage.removeItem('vb_synced'); sessionStorage.removeItem('vb_guest'); try{ localStorage.removeItem('vb_was_authed'); localStorage.removeItem('vb_cloud_ts'); SYNC_KEYS.forEach(k=>localStorage.removeItem(k)); }catch(e){} location.reload(); };
   window.vbGuest = function(){ sessionStorage.setItem('vb_guest','1'); hideLogin(); };
   function mapErr(e){ const c=(e&&e.code)||''; const M={
     'auth/invalid-email':'올바른 이메일 형식이 아니에요','auth/user-not-found':'가입되지 않은 이메일이에요','auth/wrong-password':'비밀번호가 틀렸어요',
