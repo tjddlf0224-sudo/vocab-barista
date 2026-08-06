@@ -4259,7 +4259,11 @@ const game = {
         if(this.lives <= 0) setTimeout(() => this.gameOver(), 1500);
         else setTimeout(() => {
             this.dismissDialogSilent();
-            document.getElementById('cust-el').classList.add('leaving');
+            // [버그수정] 1.5초 뒤에 도는 콜백이라 그 사이 customer-area가 비워졌으면(정비모드 등) cust-el이 없다.
+            //   가드 없이 .classList를 만지면 여기서 throw가 나 바로 아래 scheduleNextTurn이 실행되지 않고
+            //   진행이 멈춘다 — 퇴장 연출은 못 해도 다음 턴은 반드시 예약돼야 한다.
+            const _ce = document.getElementById('cust-el');
+            if(_ce) _ce.classList.add('leaving');
             this.scheduleNextTurn(400);
         }, 1500);
     },
@@ -5055,9 +5059,12 @@ equipItem: function(category, level) {
         // 🚨 핵심 수정: innerText -> innerHTML 로 변경!
         el.innerHTML = text; 
         
-        const r = targetEl.getBoundingClientRect(); 
-        el.style.left=(window.innerWidth/2-40)+'px'; 
-        el.style.top=r.top+'px';
+        // [버그수정] 호출부 상당수가 document.getElementById('cust-el')를 그대로 넘기는데, 손님 영역이
+        //   비워진 뒤(정비모드 등)엔 null이라 여기서 throw가 났다 — 떠오르는 글자 하나 때문에 호출부의
+        //   이후 로직(다음 턴 예약·보상 처리)까지 통째로 중단됐다. 대상이 없으면 화면 중앙에 띄운다.
+        const r = targetEl ? targetEl.getBoundingClientRect() : null;
+        el.style.left=(window.innerWidth/2-40)+'px';
+        el.style.top=(r ? r.top : window.innerHeight/2)+'px';
         document.body.appendChild(el); 
         setTimeout(()=>el.remove(), 1000);
     },
@@ -5421,6 +5428,11 @@ equipItem: function(category, level) {
     },
     startTimer: function() {
         if(this.timer) clearInterval(this.timer);
+        // [버그수정] 이미 응대가 끝난(정답 solved / 오답 failed) 손님에겐 타이머를 다시 돌리지 않는다.
+        //   호출부가 6곳(모달 닫기·스킨창·인벤·일시정지 재개 등)이라 각자 검사하면 반드시 하나를 빠뜨린다
+        //   — 실제로 togglePause만 고쳤다가 closeOverlays가 남아 오답 손님에 타이머가 다시 흐르던 문제가 있었다.
+        //   여기서 한 번에 막으면 모든 호출부가 자동으로 안전해진다.
+        if(this.currentCust && (this.currentCust.solved || this.currentCust.failed)) return;
         // 일반 손님은 시간제한 없음 — 타이머를 돌리지 않음(시간초과로 라이프 안 깎임)
         if(this.currentCust && !this.currentCust.timed) return;
         const bar = document.getElementById('timer-bar');
