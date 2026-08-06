@@ -1172,6 +1172,8 @@
         </div>
         <button class="login-reset" onclick="vbResetPw()">비밀번호를 잊으셨나요?</button>
         <button class="login-guest" onclick="vbGuest()">로그인 없이 둘러보기</button>
+        <!-- [심사] 계정 생성 지점에도 방침 접근 경로를 둔다(App Store 5.1.1(i)) -->
+        <a class="login-reset" href="privacy.html" target="_blank" rel="noopener" style="display:block; text-align:center; text-decoration:none;">개인정보처리방침</a>
       </div>
     </div>
     <div class="overlay premium" id="start-screen">
@@ -1347,6 +1349,11 @@
         <div class="set-sec">
           <div class="set-label">문의 · 지원</div>
           <a class="set-link" href="mailto:tjddlf0224@gmail.com">tjddlf0224@gmail.com</a>
+        </div>
+        <!-- [심사] 개인정보를 수집하는 앱은 앱 안에서 방침에 접근할 수 있어야 한다(App Store 5.1.1(i)) -->
+        <div class="set-sec">
+          <div class="set-label">약관</div>
+          <a class="set-link" href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>
         </div>
         <button class="btn-mini" onclick="vbCloseSettings()" style="background:linear-gradient(180deg,#cdbfb0,#a89684); color:#fff; box-shadow:0 3px 0 #8a7560; padding:10px; width:100%; margin-top:6px;">닫기</button>
       </div>
