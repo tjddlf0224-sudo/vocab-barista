@@ -1352,13 +1352,13 @@
       </div>
     </div>
 
-    <div id="inventory-screen" class="overlay hidden" onclick="if(event.target===this){ this.classList.add('hidden'); game.isActive=true; if(game.currentCust && !game.currentCust.solved) game.startTimer(); }">
+    <div id="inventory-screen" class="overlay hidden" onclick="if(event.target===this){ this.classList.add('hidden'); game.isActive=true; game.resumeCustomer(); }">
         <div class="panel" style="max-height:80vh; display:flex; flex-direction:column;">
             <h2 id="inventory-title">스킨 변경</h2>
             <div id="inventory-list" class="inventory-list" style="overflow-y:auto; flex:1;">
                 </div>
             <br>
-            <button class="btn-mini" onclick="document.getElementById('inventory-screen').classList.add('hidden'); game.isActive=true; if(game.currentCust && !game.currentCust.solved) game.startTimer();" style="background:linear-gradient(180deg,#cdbfb0,#a89684); color:#fff; box-shadow:0 3px 0 #8a7560; padding:10px; width:100%;">닫기</button>
+            <button class="btn-mini" onclick="document.getElementById('inventory-screen').classList.add('hidden'); game.isActive=true; game.resumeCustomer();" style="background:linear-gradient(180deg,#cdbfb0,#a89684); color:#fff; box-shadow:0 3px 0 #8a7560; padding:10px; width:100%;">닫기</button>
         </div>
     </div>
 
@@ -3858,7 +3858,10 @@ const game = {
         if(box) box.classList.remove('dlg-active');
         const gc = document.getElementById('game-container'); if(gc) gc.classList.remove('dlg-mode');
         if(this._dlgTimer) { clearTimeout(this._dlgTimer); this._dlgTimer = null; }
+        // [버그수정] _dlgOnDismiss를 끊는다는 건 진행 중이던 컷신 체인(유대 막 해금 포함)이 여기서
+        //   죽는다는 뜻이다. _affActPlaying을 남겨두면 afterSpeech가 영원히 대기해 게임이 멈춘다.
         this._dlgOnDismiss = null;
+        this._affActPlaying = false;
     },
     // [버그수정] 다음 손님 예약은 항상 '한 번만' — 여러 경로(정답/오답/패스/작별타이머)에서
     // setTimeout(nextTurn)이 중복 예약돼 손님이 2명 연속 튀어나오던 문제 방지(single-flight).
@@ -3940,7 +3943,15 @@ const game = {
                 // 다른 오버레이(작별 대사·첫 잔 컷신·교차씬 등)가 같은 DOM을 덮어써 방금 뜬 막 해금 컷신이
                 // 사라지는데 charActs는 이미 '열람 완료'로 저장돼 있어(checkAffectionActs) 그 막을 영구히
                 // 다시 볼 수 없게 됨. 막 해금 큐가 다 빠질 때까지 afterSpeech 자체를 미룬다.
-                if(this._affActPlaying){ setTimeout(afterSpeech, 200); return; }
+                // [안전망] 무한 대기 방지 — 컷신 체인이 어떤 이유로든 끊겨 _affActPlaying이 고착되면
+                //   여기서 영원히 200ms 재귀를 돌아 게임이 완전히 멈춘다. 12초(60회) 넘으면 강제로 풀고 진행한다.
+                if(this._affActPlaying){
+                    this._affActWait = (this._affActWait || 0) + 1;
+                    if(this._affActWait < 60){ setTimeout(afterSpeech, 200); return; }
+                    console.warn('유대 막 컷신 대기 시간 초과 — 강제 해제하고 진행');
+                    this._affActPlaying = false;
+                }
+                this._affActWait = 0;
                 const el = document.getElementById('cust-el');
                 const nc = this._newChar; this._newChar = null;
                 const cust = this.currentCust;
@@ -4485,9 +4496,11 @@ const game = {
 
         if(this.currentCust && this.currentCust.solved) {
             this.nextTurn();
-        } 
+        }
         else if(this.currentCust && this.lives > 0 && !this.isPaused) {
-            this.startTimer();
+            // [버그수정] 오답(failed) 손님도 여기로 오는데 예전엔 startTimer만 불러 아무 일도 안 일어났다
+            //   → 다음 턴 예약도 타이머도 없는 소프트락. resumeCustomer가 두 경우를 모두 처리한다.
+            this.resumeCustomer();
         }
     },
 
@@ -4633,7 +4646,7 @@ equipItem: function(category, level) {
         const modal = document.getElementById('inventory-screen-item');
         if(modal){ modal.classList.add('hidden'); modal.style.display = ''; }
         this.isActive = true;
-        if(this.currentCust && !this.currentCust.solved) this.startTimer();
+        this.resumeCustomer();
     },
 
     // [신규 추가!] 교체 메뉴 (스킨 선택창) 열기
@@ -5426,6 +5439,16 @@ equipItem: function(category, level) {
             });
         }
     },
+    // [버그수정] 오버레이(상점·인벤·도감·스킨창)를 닫고 게임으로 돌아올 때의 단일 재개 지점.
+    //   예전엔 호출부마다 `if(!solved) startTimer()`를 직접 써서, 오답(failed) 손님일 때
+    //   startTimer가 조기 반환 → 예약된 턴도 타이머도 없는 영구 소프트락이 났다.
+    //   (오답 1.5초 창 안에 상점을 열면 nextTurn이 isActive=false 구간에 발화해 조용히 버려진다.)
+    //   이미 처리된 손님이면 다음 턴을 예약하고, 아직 응대 중이면 타이머를 재개한다.
+    resumeCustomer: function() {
+        if(!this.currentCust) return;
+        if(this.currentCust.solved || this.currentCust.failed) { this.scheduleNextTurn(400); return; }
+        this.startTimer();
+    },
     startTimer: function() {
         if(this.timer) clearInterval(this.timer);
         // [버그수정] 이미 응대가 끝난(정답 solved / 오답 failed) 손님에겐 타이머를 다시 돌리지 않는다.
@@ -6088,7 +6111,7 @@ function dismissTopCafeLayer(){
     if(vis('inventory-screen-item')){ game.closeSkinSelector(); return true; }
     if(vis('inventory-screen')){
         document.getElementById('inventory-screen').classList.add('hidden');
-        game.isActive=true; if(game.currentCust && !game.currentCust.solved) game.startTimer();
+        game.isActive=true; game.resumeCustomer();
         return true;
     }
     if(vis('settings-screen')){ vbCloseSettings(); return true; }
