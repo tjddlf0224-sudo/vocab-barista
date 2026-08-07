@@ -252,11 +252,11 @@
      width:100%+height:auto로는 유독 작고 위로 붕 뜸) — 폭·높이를 둘 다 고정한 정사각 박스 +
      object-fit:contain(잘리지 않게 비율 유지 축소)+바닥 기준 정렬로 몬스터마다 크기·바닥선을 통일. */
   /* --espr-scale: 몬스터별 체감 크기 보정(기본 1) — 원본 캔버스 비율 차이로 유독 작아 보이는 개체 전용 */
-  .sprite-enemy{ position:absolute; bottom:30%; right:12%; width:calc(33% * var(--espr-scale,1)); max-width:calc(148px * var(--espr-scale,1)); height:calc(33% * var(--espr-scale,1)); max-height:calc(148px * var(--espr-scale,1)); filter:drop-shadow(0 8px 6px rgba(0,0,0,.4)); }
+  .sprite-enemy{ position:absolute; bottom:2%; right:8%; width:calc(42% * var(--espr-scale,1)); max-width:calc(300px * var(--espr-scale,1)); height:calc(68% * var(--espr-scale,1)); max-height:calc(300px * var(--espr-scale,1)); filter:drop-shadow(0 8px 6px rgba(0,0,0,.4)); }
   .sprite-enemy img{ width:100%; height:100%; object-fit:contain; object-position:center bottom; display:block; }
   .sprite-enemy.emoji{ font-size:4.6rem; text-align:center; }
   /* 보스: 더 크고 위협적인 붉은 오라 */
-  .sprite-enemy.boss{ width:calc(44% * var(--espr-scale,1)); max-width:calc(200px * var(--espr-scale,1)); height:calc(44% * var(--espr-scale,1)); max-height:calc(200px * var(--espr-scale,1)); bottom:30%; right:9%; filter:drop-shadow(0 10px 8px rgba(0,0,0,.5)) drop-shadow(0 0 18px rgba(255,60,60,.7)); animation:bossPulse 1.6s ease-in-out infinite; }
+  .sprite-enemy.boss{ width:calc(48% * var(--espr-scale,1)); max-width:calc(340px * var(--espr-scale,1)); height:calc(78% * var(--espr-scale,1)); max-height:calc(340px * var(--espr-scale,1)); bottom:2%; right:6%; filter:drop-shadow(0 10px 8px rgba(0,0,0,.5)) drop-shadow(0 0 18px rgba(255,60,60,.7)); animation:bossPulse 1.6s ease-in-out infinite; }
   @keyframes bossPulse{ 0%,100%{ filter:drop-shadow(0 10px 8px rgba(0,0,0,.5)) drop-shadow(0 0 14px rgba(255,60,60,.6)); } 50%{ filter:drop-shadow(0 10px 8px rgba(0,0,0,.5)) drop-shadow(0 0 26px rgba(255,90,90,.9)); } }
   .sprite-self{ position:absolute; bottom:4%; left:6%; width:40%; max-width:185px; filter:drop-shadow(0 8px 6px rgba(0,0,0,.4)); }
   .sprite-self img{ width:100%; height:auto; display:block; }
