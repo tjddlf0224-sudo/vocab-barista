@@ -3099,9 +3099,12 @@ const LunaShadow = {
         +`<button class="q-btn ghost" onclick="LunaShadow.close()">아직은 아니다</button>`
       : `<button class="q-btn ok" onclick="LunaShadow.next()">계속</button>`
         +`<button class="q-btn ghost" onclick="LunaShadow.close()">물러선다</button>`;
+    // [버그수정] 대사가 막 뜬 직후의 연타(직전 화면 탭의 반사적 후속 탭 포함)가 같은 자리의 '계속' 버튼을
+    //   연달아 눌러 여러 줄을 한 번에 건너뛰던 문제 — 렌더 직후 짧은 시간은 진행 탭을 무시한다.
+    this.shownAt = Date.now();
   },
-  next(){ this.i++; this.render(); },
-  fight(){ this.close(); if(typeof Battle!=='undefined') Battle.start({ base: MONSTERS.lunashadow, boss:true }); },
+  next(){ if(Date.now()-(this.shownAt||0) < 450) return; this.i++; this.render(); },
+  fight(){ if(Date.now()-(this.shownAt||0) < 450) return; this.close(); if(typeof Battle!=='undefined') Battle.start({ base: MONSTERS.lunashadow, boss:true }); },
   // 승리 직후 — 어둠이 흩어지고, 루나가 잃었던 몫이 돌아간다. 성별 분기 CG(남=뽀뽀 / 여=포옹).
   victory(done){
     if(window.World){ World.arenaBoss=null; try{ World.updateActionBtn(); }catch(e){} }
