@@ -1047,23 +1047,23 @@ const EQUIP_DB = {
     { id:'w_bean',  name:'원두 검',      icon:'🗡️', atk:4,  cost:{gold:200, bean:5} },
     { id:'w_roast', name:'로스팅 창',    icon:'🔱', atk:8,  cost:{gold:600, bean:12, berry:6} },
     { id:'w_tusk',  name:'어금니 도끼',  icon:'🪓', atk:12, cost:{gold:900, tusk:3, bean:10} },
-    { id:'w_fang',  name:'송곳니 단검',  icon:'🗡️', atk:16, cost:{gold:1400, fang:4, gel:3} },
-    { id:'w_frost', name:'서리 잔검',    icon:'🗡️', atk:19, cost:{gold:1700, frostsalt:4, saltglass:3} },
+    { id:'w_fang',  name:'송곳니 단검',  icon:'🗡️', atk:16, cost:{gold:1400, fang:4, gel:3, mushroom:3} },
+    { id:'w_frost', name:'서리 잔검',    icon:'🗡️', atk:19, cost:{gold:1700, frostsalt:4, saltglass:3, shell:3} },
     { id:'w_ember', name:'불씨 로스터',  icon:'🔥', atk:21, cost:{gold:2000, ember:5, core:2} },
     { id:'w_core',  name:'코어 브레이커', icon:'⚔️', atk:28, cost:{gold:3000, core:5, fang:3, goldbean:1} },
-    { id:'w_seal',  name:'봉인 해제검',  icon:'🗝️', atk:36, cost:{gold:4200, sealshard:5, silentbell:3, goldbean:2} },
-    { id:'w_moon',  name:'달빛 한 줄기',  icon:'🌙', atk:45, cost:{gold:6000, namelight:5, moondust:4, goldbean:3} },
+    { id:'w_seal',  name:'봉인 해제검',  icon:'🗝️', atk:36, cost:{gold:4200, sealshard:5, silentbell:3, goldbean:2, oldpage:4} },
+    { id:'w_moon',  name:'달빛 한 줄기',  icon:'🌙', atk:45, cost:{gold:6000, namelight:5, moondust:4, goldbean:3, stardust:5} },
   ],
   armor: [
     { id:'a_foam',    name:'우유거품 방패', icon:'🛡️', def:3,  hp:10, cost:{gold:200, berry:5} },
     { id:'a_bean',    name:'원두 갑옷',     icon:'🧥', def:6,  hp:20, cost:{gold:600, bean:8, berry:8} },
     { id:'a_tusk',    name:'어금니 흉갑',   icon:'🛡️', def:10, hp:32, cost:{gold:900, tusk:3, berry:10} },
-    { id:'a_feather', name:'깃털 로브',     icon:'🧥', def:13, hp:48, cost:{gold:1400, feather:5, milk:6} },
-    { id:'a_salt',    name:'소금유리 갑옷', icon:'🛡️', def:15, hp:56, cost:{gold:1700, saltglass:5, waxletter:3, sealtag:2} },
+    { id:'a_feather', name:'깃털 로브',     icon:'🧥', def:13, hp:48, cost:{gold:1400, feather:5, milk:6, mushroom:3} },
+    { id:'a_salt',    name:'소금유리 갑옷', icon:'🛡️', def:15, hp:56, cost:{gold:1700, saltglass:5, waxletter:3, sealtag:2, shell:3} },
     { id:'a_gel',     name:'젤 슈트',       icon:'🥋', def:17, hp:66, cost:{gold:2000, gel:6, core:2} },
     { id:'a_core',    name:'코어 플레이트', icon:'🦺', def:22, hp:90, cost:{gold:3000, core:4, fang:3, goldbean:1} },
-    { id:'a_chain',   name:'풀린 사슬 갑주', icon:'⛓️', def:29, hp:120, cost:{gold:4200, pricechain:5, sealshard:3, goldbean:2} },
-    { id:'a_moon',    name:'달가루 외투',   icon:'🌙', def:36, hp:155, cost:{gold:6000, moondust:5, namelight:4, goldbean:3} },
+    { id:'a_chain',   name:'풀린 사슬 갑주', icon:'⛓️', def:29, hp:120, cost:{gold:4200, pricechain:5, sealshard:3, goldbean:2, oldpage:4} },
+    { id:'a_moon',    name:'달가루 외투',   icon:'🌙', def:36, hp:155, cost:{gold:6000, moondust:5, namelight:4, goldbean:3, stardust:5} },
   ],
 };
 // 장비별 전용 SVG 아이콘(재료 테마 색) — 이모지 중복 제거 + 어울리는 그림
@@ -1103,6 +1103,8 @@ const CRAFT_DB = [
   { id:'cr_atk',   name:'더블 샷',      icon:'⚔️', cost:{bean:3},            effect:'atkup',  where:'battle', edesc:'탐험: 이번 전투 공격력 +50%' },
   { id:'cr_def',   name:'크림 실드',    icon:'🛡️', cost:{milk:2,berry:2},    effect:'defup',  where:'battle', edesc:'탐험: 이번 전투 받는 피해 −50%' },
   { id:'cr_heal',  name:'회복 물약',    icon:'🧪', cost:{milk:1,berry:2},    effect:'heal',   where:'battle', edesc:'탐험: 체력 40% 회복 (전투·이동 중 사용)', healPct:0.4 },
+  // [지역 특산물 활용] 상위 존 채집물로 만드는 고급 회복 물약 — 기본 회복 물약보다 회복량이 큼
+  { id:'cr_heal2', name:'대회복 물약',  icon:'🧪', cost:{shell:2,mushroom:2}, effect:'heal',   where:'battle', edesc:'탐험: 체력 65% 회복 (전투·이동 중 사용)', healPct:0.65 },
 ];
 // ---------- 퀘스트 NPC (에스컬레이팅 반복 의뢰) ----------
 // 각 stage.need = [{type:'mat'|'item', key, count}] · 단계가 오를수록 수량↑ → 조합아이템/드롭재료 요구 → 무한 스케일링
