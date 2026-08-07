@@ -1962,7 +1962,7 @@ const World = {
       const label = lvLock ? `${tgt.name||''} Lv${tgt.minLv} 필요`
                   : storyLock ? `${tgt.name||''} 굳게 잠김`
                   : mapLock ? `${tgt.name||''} 지도 ${mp.have}/${mp.need}`
-                  : lunaLock ? `${tgt.name||''} 루나에게 지도를`
+                  : lunaLock ? `${tgt.name||''} 잠김`
                   : `${tgt.name||''} →`;
       this.drawSign(Math.round(pt.signX*TS-camX), Math.round(pt.signY*TS-camY), TS, label, '▲'); }
     // 존 분위기 틴트(밤 등) — 플레이어 직전에 깔아 캐릭터는 또렷하게
