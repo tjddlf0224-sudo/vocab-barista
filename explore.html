@@ -955,9 +955,17 @@ const MATERIALS = {
   namelight:{ name:'이름의 불빛',  icon:'🕯️', img:'sprites/namelight.svg', rare:true, loot:true },
   // ---- 루나의 어둠(비밀 초월보스) 전용 트로피 — 제작 용도 없음, 격파 증표 ----
   lunamemory:{ name:'루나의 기억 조각', icon:'🌑', img:'sprites/lunamemory.svg', rare:true, loot:true },
+  // ---- [지역 아이덴티티] 존별 채집 전용 특산물 — 전투 드롭과 겹치지 않는 순수 채집물.
+  //   rare:true라서 GATHER_MATS(전역 기본풀)엔 안 잡히고, ZONE_GATHER_EXTRA로 해당 존에서만 노드에 섞인다.
+  mushroom: { name:'야광 버섯',    icon:'🍄', rare:true },   // 깊은숲
+  shell:    { name:'조개껍질',     icon:'🐚', rare:true },   // 잔향 항구
+  oldpage:  { name:'빛바랜 종잇장', icon:'📜', rare:true },   // 봉인고
+  stardust: { name:'별가루',       icon:'✨', rare:true },   // 달
 };
 // 채집 노드로 등장하는 재료(황금 원두는 제외 — 전투 보상으로만 획득)
 const GATHER_MATS = Object.keys(MATERIALS).filter(k => !MATERIALS[k].rare);
+// [지역 아이덴티티] 존마다 기본풀 위에 지역 특산 채집물을 얹어 채집 결과가 존별로 달라지게 한다.
+const ZONE_GATHER_EXTRA = { deepwood:['mushroom'], harbor:['shell'], vault:['oldpage'], moon:['stardust'] };
 // ---------- 동행 캐릭터 (채용 게이팅은 Stage C, 지금은 자유 선택해 미리보기) ----------
 const COMPANIONS = {
   none: { name:'기본',  emoji:'🧑‍🍳', img:null, battleImg:'chars/chef_back.webp', charId:null },
@@ -1327,7 +1335,7 @@ const World = {
     for(let i=0;i<60;i++){ const x=2+Math.floor(this.rnd()*(this.WT-4)), y=3+Math.floor(this.rnd()*(this.HT-5));
       if(!this.barrier.has(key(x,y))) this.deco[y][x]=[39,42,43][Math.floor(this.rnd()*3)]; }
     // 채집 노드
-    const mats=GATHER_MATS;
+    const mats=GATHER_MATS.concat(ZONE_GATHER_EXTRA[Explore.state.map.zone]||[]);
     let placed=0, tries=0;
     while(placed<28 && tries<400){ tries++;
       const x=2+Math.floor(this.rnd()*(this.WT-4)), y=3+Math.floor(this.rnd()*(this.HT-5));
@@ -1855,7 +1863,10 @@ const World = {
       const artKey=NODE_ART[n.mat]; const pimg=artKey?MAP_OBJ[artKey]:null;
       if(pimg&&pimg.complete&&pimg.naturalWidth){ const h=TS*1.3, w=h*(pimg.naturalWidth/pimg.naturalHeight);
         ctx.drawImage(pimg, dx+TS/2-w/2, dy+TS*0.92-h, w, h); }
-      else { const mimg=MATERIALS[n.mat].img; if(Assets.ready(mimg)){ const s=TS*0.92; ctx.drawImage(Assets.imgs[mimg], dx+(TS-s)/2, dy+(TS-s)/2, s, s); } } }
+      else { const mimg=MATERIALS[n.mat].img; if(mimg && Assets.ready(mimg)){ const s=TS*0.92; ctx.drawImage(Assets.imgs[mimg], dx+(TS-s)/2, dy+(TS-s)/2, s, s); }
+        // [지역 특산물] img 없이 emoji만 있는 재료(mushroom/shell/oldpage/stardust 등) — 캔버스에 이모지로 직접 표시
+        else if(!mimg){ ctx.save(); ctx.font=(TS*0.72)+'px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+          ctx.fillText(MATERIALS[n.mat].icon||'?', dx+TS/2, dy+TS*0.5); ctx.restore(); } } }
     // ----- 나무(페인티드, y정렬, 발끝 접지) -----
     const vis=this.trees.filter(t=>t.x>=x0-2&&t.x<=x1+2&&t.y>=y0-3&&t.y<=y1+2); // 이미 y정렬됨
     const _th=zoneTheme();                                        // 존별 장애물(숲=나무 / 항구=화물·계선주 / 봉인고=진열장·기둥 / 달=오벨리스크·달바위)
