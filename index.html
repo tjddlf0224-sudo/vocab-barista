@@ -3343,6 +3343,8 @@ const game = {
             var vi = scene.cuts.findIndex(function(c){ return (c.text||'').indexOf('구경하러') >= 0; });
             if(vi < 0) vi = scene.cuts.length - 2;   // 대사가 수정돼도 최소한 마지막 선언 앞에는 들어가게
             bossCuts = scene.cuts.slice(0, vi+1).concat(CRISIS_VAULT_CUTS, scene.cuts.slice(vi+1));
+            // [배경] 봉인고 대사는 카페가 아니라 봉인고 안 — 대화 동안 배경을 봉인고로 교체(다음 renderScene에서 자동 복구)
+            var vaultBg0 = document.querySelector('#scene-bg .scene-photo'); if(vaultBg0) vaultBg0.src = 'scenes/vault.webp';
             this.playCutscene({ cuts: bossCuts, introCg: scene.introCg, introCaption: scene.introCaption, fx: scene.fx, fxKind: scene.fxKind },
                               function(){ self0._startDemitasBattle(); });
             return true;
@@ -3380,6 +3382,8 @@ const game = {
                 };
             }
             this.saveData();
+            // [배경] 전투에서 돌아온 직후에도 여전히 봉인고 — 승리 대사 재생 전 다시 세팅
+            var vaultBg1 = document.querySelector('#scene-bg .scene-photo'); if(vaultBg1) vaultBg1.src = 'scenes/vault.webp';
             this.playCutscene({ cuts: scene.cutsWin }, afterWin);
         } else {
             this._demitasRetry = (this.lifetimeScore||0) + 2500; this.saveData();   // 재도전 쿨다운(점수 더 모아야)
