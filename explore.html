@@ -2694,6 +2694,9 @@ const Battle = {
     //   일시정지 복귀가 아니라 타이틀 화면으로 튕겨 "초기화됐나?"로 오해하기 쉬웠다.
     try{ localStorage.setItem('vb_resume_paused','1'); }catch(e){}
     try{ Explore.persist(); }catch(e){}
+    // [버그수정] exitToCafe와 달리 이 경로엔 unlockOrientation()이 없어서, 스토리 보스전 후
+    //   카페로 돌아와도 가로 고정이 안 풀려 대화가 계속 가로모드로 유지되던 문제.
+    try{ unlockOrientation(); }catch(e){}
     location.href='index.html';
   },
   // [약점 축 게이팅] 루나의 어둠 전용 — 지정된 울림 축이 자기 캡의 threshold% 미만이면 피해를 짓누른다.
