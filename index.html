@@ -1049,6 +1049,17 @@
 .ach-prog-fill.fill-legendary { background: linear-gradient(90deg, #9b59b6, #e91e8c); }
 .ach-prog-text { font-size: 0.66rem; color: #a07040; margin-top: 2px; }
 .ach-card-reward { font-size: 0.72rem; color: #b8860b; text-align: right; flex-shrink: 0; white-space: nowrap; }
+/* [출석 캘린더] 7일 주기 트랙 — done(지남)/today(오늘)/special(7일차 보너스) */
+.attend-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin:10px 0 14px; }
+.attend-day { position:relative; background:rgba(255,255,255,.15); border:1.5px solid rgba(255,255,255,.35); border-radius:10px; padding:8px 2px 6px; display:flex; flex-direction:column; align-items:center; gap:3px; min-height:64px; }
+.attend-day.done { background:rgba(120,200,140,.28); border-color:#6fcf87; }
+.attend-day.today { border-color:#ffd54f; box-shadow:0 0 0 2px rgba(255,213,79,.5); }
+.attend-day.special { background:rgba(255,213,79,.2); }
+.attend-day .ad-num { font-size:.6rem; opacity:.85; }
+.attend-day .ad-ic svg { width:20px; height:20px; }
+.attend-day .ad-rw { font-size:.58rem; font-weight:bold; white-space:nowrap; }
+.attend-day .ad-check { position:absolute; top:-7px; right:-7px; width:17px; height:17px; }
+.attend-day .ad-check svg { width:17px; height:17px; }
 
     </style>
 </head>
@@ -1266,6 +1277,7 @@
         <h2>일시 정지</h2>
         <div class="pause-menu">
             <button class="buy-btn btn-hero pause-cta" onclick="game.togglePause()">▶ 계속 하기</button>
+            <button class="btn-mini" style="background:linear-gradient(180deg,#ffd97a,#f0b940); color:#5c3d00; box-shadow:0 3px 0 #c48f1e; width:100%; margin-bottom:10px;" onclick="game.openAttendance()"><svg class="bic" viewBox="0 0 24 24" fill="currentColor"><path d="M3.4 9.6h17.2v10.8a1.8 1.8 0 0 1-1.8 1.8H5.2a1.8 1.8 0 0 1-1.8-1.8z"/><rect x="2.4" y="6.2" width="19.2" height="3.6" rx="1.2"/></svg> 출석 캘린더</button>
             <div class="pause-row">
                 <button class="btn-mini" style="background:linear-gradient(180deg,#a3d9cd,#7bc0b0); color:#2f5d52; box-shadow:0 3px 0 #5fa494;" onclick="game.openCollection('word')"><svg class="bic" viewBox="0 0 24 24" fill="currentColor"><path d="M12 6.6C9.8 5.1 6.4 4.7 4 5.3v12.5c2.4-.6 5.8-.2 8 1.3 2.2-1.5 5.6-1.9 8-1.3V5.3c-2.4-.6-5.8-.2-8 1.3z"/><path d="M12 6.6v12.5" fill="none" stroke="#fff8ee" stroke-width="1"/></svg>도감</button>
                 <button id="explore-btn" class="btn-mini" style="background:linear-gradient(180deg,#e6c794,#caa463); color:#6b4e1e; box-shadow:0 3px 0 #a9863f;" onclick="game.goExplore()"><svg class="bic" viewBox="0 0 24 24" fill="currentColor"><path d="M9 4.5 3.6 6.3v13.2L9 17.7l6 1.8 5.4-1.8V4.5L15 6.3 9 4.5z"/><path d="M9 4.5v13.2M15 6.3v13.2" stroke="#fff8ee" stroke-width="0.9" opacity=".55"/></svg>탐험</button>
@@ -1384,6 +1396,12 @@
     <div class="overlay hidden" id="stats-screen" onclick="if(event.target===this) game.closeOverlays()">
         <h2><svg class="bic" viewBox="0 0 24 24"><rect x="4" y="12" width="4" height="8" rx="1" fill="currentColor"/><rect x="10" y="7" width="4" height="13" rx="1" fill="currentColor"/><rect x="16" y="10" width="4" height="10" rx="1" fill="currentColor"/></svg> 학습 통계</h2>
         <div id="stats-body" class="quest-list" style="width:90%; max-width:430px;"></div>
+        <button class="btn-mini close-btn" onclick="game.closeOverlays()">닫기</button>
+    </div>
+
+    <div class="overlay hidden" id="attendance-screen" onclick="if(event.target===this) game.closeOverlays()">
+        <h2><svg class="bic" viewBox="0 0 24 24"><rect x="3.4" y="9.6" width="17.2" height="10.8" rx="1.8" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="2.4" y="6.2" width="19.2" height="3.6" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.7"/></svg> 출석 캘린더</h2>
+        <div id="attendance-body" class="quest-list" style="width:92%; max-width:440px;"></div>
         <button class="btn-mini close-btn" onclick="game.closeOverlays()">닫기</button>
     </div>
 
@@ -3194,8 +3212,21 @@ const game = {
         this.lastDaily = today;
         const reward = Math.min(1000, 200 + (this.dailyStreak-1)*100); // 200부터 +100씩, 최대 1000
         this.wallet += reward;
+        // [주간/월간 보너스] 7일·30일마다 골드 외 재료 아이템도 지급 — 매일 골드만 받는 단조로움 완화
+        let bonusHtml = '';
+        this.craftedItems = this.craftedItems || {};
+        if(this.dailyStreak % 30 === 0){
+            this.craftedItems.cr_score = (this.craftedItems.cr_score||0) + 2;
+            this.craftedItems.cr_heart = (this.craftedItems.cr_heart||0) + 1;
+            this.wallet += 500;
+            bonusHtml = `<br><span style="color:#ffd54f;">${UI_ICON.medal} 30일 특별 보너스! 골든 블렌드×2, 하트 마카롱×1, +500G</span>`;
+        } else if(this.dailyStreak % 7 === 0){
+            this.craftedItems.cr_score = (this.craftedItems.cr_score||0) + 1;
+            bonusHtml = `<br><span style="color:#ffd54f;">${UI_ICON.gift} 주간 보너스! 골든 블렌드×1</span>`;
+        }
         this.saveData(); this.updateHUD(); this.checkAchievements();
-        showGameAlert(`${UI_ICON.gift} <b>${this.dailyStreak}일 연속 출석!</b><br>오늘의 보상 ${UI_ICON.coin} +${reward}G<br><span style="font-size:0.82rem;color:#777;">매일 접속할수록 보상이 커져요 (최대 1,000G)</span>`, null);
+        showGameAlert(`${UI_ICON.gift} <b>${this.dailyStreak}일 연속 출석!</b><br>오늘의 보상 ${UI_ICON.coin} +${reward}G${bonusHtml}<br><span style="font-size:0.82rem;color:#777;">매일 접속할수록 보상이 커져요 (최대 1,000G)</span>`,
+            () => this.openAttendance());
     },
 
 // [데이터 저장 수정]
@@ -5677,6 +5708,50 @@ equipItem: function(category, level) {
 
         screen.classList.remove('hidden');
         screen.style.display = 'flex';
+    },
+
+    // [신규] 출석 캘린더 — 7일 주기 트랙(7일차=주간 보너스), 실제 지급/예정 골드를 그대로 계산해 보여줌
+    openAttendance: function() {
+        if(!this.isPaused){ this.isActive = false; clearInterval(this.timer); }
+        document.getElementById('game-container').classList.remove('effect-rush-bg');
+        const screen = document.getElementById('attendance-screen');
+        const body = document.getElementById('attendance-body');
+        if(!screen || !body) return;
+
+        const streak = this.dailyStreak || 1;
+        const cyclePos = ((streak - 1) % 7) + 1; // 이번 주기에서 오늘이 몇 일차인지 (1~7)
+
+        let html = '<div style="text-align:center; margin-bottom:6px;">' +
+            '<div style="font-size:1.5rem; font-weight:bold; color:#e08a1e;">' + UI_ICON.fire + ' ' + streak + '일 연속 출석</div>' +
+            '<div style="font-size:.78rem; color:#7a5c3a; margin-top:2px;">7일마다 골든 블렌드, 30일마다 특별 보너스!</div>' +
+            '</div>';
+
+        html += '<div class="attend-grid">';
+        for(let i = 1; i <= 7; i++) {
+            const abs = streak - (cyclePos - i); // 이 칸에 해당하는 실제 누적 출석 일수(과거/오늘/미래 예상)
+            const gold = Math.min(1000, 200 + (abs - 1) * 100);
+            const isDone = i <= cyclePos;
+            const isToday = i === cyclePos;
+            const isSpecial = (i === 7);
+            const cls = 'attend-day' + (isDone ? ' done' : '') + (isToday ? ' today' : '') + (isSpecial ? ' special' : '');
+            const icon = isSpecial ? UI_ICON.gift : UI_ICON.coin;
+            const rewardTxt = isSpecial ? (gold + 'G+' + UI_ICON.spark) : (gold + 'G');
+            html += '<div class="' + cls + '">' +
+                (isDone ? '<div class="ad-check">' + UI_ICON.check + '</div>' : '') +
+                '<div class="ad-num">' + i + '일차</div>' +
+                '<div class="ad-ic">' + icon + '</div>' +
+                '<div class="ad-rw">' + rewardTxt + '</div>' +
+                '</div>';
+        }
+        html += '</div>';
+
+        const rem30 = streak % 30 === 0 ? 0 : 30 - (streak % 30);
+        html += '<div class="quest-item" style="display:flex; justify-content:space-between;"><span>' + UI_ICON.medal + ' 다음 30일 특별 보너스까지</span><b>' +
+            (rem30 === 0 ? '오늘 받음!' : rem30 + '일') + '</b></div>';
+
+        body.innerHTML = html;
+        screen.classList.remove('hidden');
+        screen.style.display = 'flex';
     }
 };
 
@@ -6165,7 +6240,7 @@ function dismissTopCafeLayer(){
         return true;
     }
     if(vis('settings-screen')){ vbCloseSettings(); return true; }
-    if(vis('quest-screen') || vis('ach-screen') || vis('stats-screen') || vis('shop-screen')){ game.closeOverlays(); return true; }
+    if(vis('quest-screen') || vis('ach-screen') || vis('stats-screen') || vis('shop-screen') || vis('attendance-screen')){ game.closeOverlays(); return true; }
     if(vis('wordbook-screen')){ document.getElementById('wordbook-screen').classList.add('hidden'); return true; }
     if(vis('dex-screen')){ document.getElementById('dex-screen').classList.add('hidden'); return true; }
     return false;
