@@ -4521,7 +4521,12 @@ const game = {
     },
 
     closeOverlays: function() {
-        document.querySelectorAll('.overlay').forEach(el => { if(el.id!=='game-container') el.classList.add('hidden'); });
+        // [버그수정] start-screen·gender-screen은 온보딩 전용 화면이라 이 범용 닫기에서 제외해야 함.
+        // 출석 캘린더(checkDailyReward 콜백)가 로그인 직후 부팅 시점에 열릴 수 있는데, 그때 "닫기"를
+        // 누르면 아직 열려 있어야 할 start-screen까지 숨겨져 바리스타·난이도 선택을 건너뛰고
+        // 미설정 상태로 바로 게임 화면에 진입해버리는 문제가 있었다(주문 무한 대기 + 캐릭터 미표시).
+        const KEEP = new Set(['game-container', 'start-screen', 'gender-screen']);
+        document.querySelectorAll('.overlay').forEach(el => { if(!KEEP.has(el.id)) el.classList.add('hidden'); });
         // [버그수정] 일시정지 중에는 pause 화면을 유지하고 음악·isActive를 건드리지 않음
         if(this.isPaused) {
             document.getElementById('pause-screen').classList.remove('hidden');
