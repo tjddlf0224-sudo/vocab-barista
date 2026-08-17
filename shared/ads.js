@@ -19,7 +19,19 @@ window.VBAds = (function () {
   function admob() { return (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.AdMob) || null; }
   function isNative() { return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); }
   function platform() { return (window.Capacitor && window.Capacitor.getPlatform && window.Capacitor.getPlatform() === 'android') ? 'android' : 'ios'; }
-  function unit(kind) { var t = USE_TEST ? TEST : REAL; return (t[platform()] || {})[kind]; }
+  // [보강 2026-08-18] REAL에 해당 플랫폼 ID가 아직 없으면(예: Android 미발급) 테스트 광고단위로 폴백.
+  // 빈 문자열을 그대로 넘기면 prepareRewardVideoAd가 실패해 부활 기능이 조용히 죽는다.
+  function unit(kind) {
+    var id = ((USE_TEST ? TEST : REAL)[platform()] || {})[kind];
+    if (!id) id = (TEST[platform()] || {})[kind];
+    return id;
+  }
+  // 이 플랫폼이 아직 실제 광고단위가 없어 테스트 광고로 도는 중인지 — isTesting 플래그에 반영해야
+  // AdMob 정책 위반(실제 광고를 테스트 없이 호출)이나 "no fill"을 피할 수 있다.
+  function isTestUnit(kind) {
+    if (USE_TEST) return true;
+    return !((REAL[platform()] || {})[kind]);
+  }
 
   var _inited = false;
   function init() {
@@ -40,7 +52,7 @@ window.VBAds = (function () {
     var earned = false, handle = null;
     return init()
       .then(function () { return A.addListener('onRewardedVideoAdReward', function () { earned = true; }); })
-      .then(function (h) { handle = h; return A.prepareRewardVideoAd({ adId: unit('rewarded'), isTesting: USE_TEST }); })
+      .then(function (h) { handle = h; return A.prepareRewardVideoAd({ adId: unit('rewarded'), isTesting: isTestUnit('rewarded') }); })
       .then(function () { return A.showRewardVideoAd(); })
       .then(function () { try { handle && handle.remove && handle.remove(); } catch (e) {} return earned; })
       .catch(function (e) { console.warn('[VBAds] rewarded 실패', e); try { handle && handle.remove && handle.remove(); } catch (e2) {} return false; });
@@ -55,7 +67,7 @@ window.VBAds = (function () {
     var A = admob();
     if (!A || !isNative()) return Promise.resolve(false);
     return init()
-      .then(function () { return A.prepareInterstitial({ adId: unit('interstitial'), isTesting: USE_TEST }); })
+      .then(function () { return A.prepareInterstitial({ adId: unit('interstitial'), isTesting: isTestUnit('interstitial') }); })
       .then(function () { return A.showInterstitial(); })
       .then(function () { return true; })
       .catch(function (e) { console.warn('[VBAds] interstitial 실패', e); return false; });
