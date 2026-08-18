@@ -2930,7 +2930,10 @@ function playSound(type) {
 }
 
 let voiceList = [];
-if(speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = () => voiceList = window.speechSynthesis.getVoices();
+// [버그수정] Android WebView는 Web Speech API(speechSynthesis) 자체가 없어 가드 없는 전역 참조가
+// 최상위 레벨에서 ReferenceError를 던지고, 이게 같은 <script> 블록 안의 `const game = {...}`(뒤쪽)
+// 실행을 통째로 막아버렸다(안드로이드에서 game이 아예 생성되지 않아 로그인·전체 기능 마비).
+if(typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = () => voiceList = window.speechSynthesis.getVoices();
 
 // [신규] TTS 속도 설정 — localStorage에 저장(0.8/1.0/1.2), speak()의 utterance.rate에 반영
 function getTtsRate() {
