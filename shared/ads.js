@@ -4,7 +4,7 @@
 //  ▶ 실제 배포 시: USE_TEST=false 로 바꾸고 REAL 에 발급받은 광고단위 ID 입력.
 // ============================================================
 window.VBAds = (function () {
-  var USE_TEST = false; // 배포: REAL ID(iOS) 적용됨. Android는 아직 미발급.
+  var USE_TEST = false; // 배포: REAL ID(iOS·Android 둘 다) 적용됨.
 
   // Google 공식 테스트 광고단위 (계정 없이 동작)
   var TEST = {
@@ -13,7 +13,7 @@ window.VBAds = (function () {
   };
   var REAL = {
     ios:     { rewarded: 'ca-app-pub-7418287954060066/1585931446', interstitial: 'ca-app-pub-7418287954060066/1535362922' },
-    android: { rewarded: '', interstitial: '' }, // TODO: 안드로이드 출시 시 발급받아 채우기
+    android: { rewarded: 'ca-app-pub-7418287954060066/5259988507', interstitial: 'ca-app-pub-7418287954060066/6818175857' }, // 2026-08-18 발급
   };
 
   function admob() { return (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.AdMob) || null; }
