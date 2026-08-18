@@ -24,6 +24,29 @@
         });
         window.vbDB = firebase.firestore();
         try { window.vbAuth = firebase.auth(); } catch(e2){ console.warn('Auth 초기화 실패:', e2); }
+
+        // ── DAU 체크 ──
+        // Play/App Store DAU는 지연이 크고 매번 콘솔에서 CSV를 수동으로 내려받아야 해서,
+        // 전산회계 오락실·상담일지와 동일한 패턴으로 기기당 하루 1회만 Firestore에 직접
+        // 기록한다. 문서 ID를 "기기ID_날짜"로 고정해서 읽기 없이 set(merge)만 하면 되고
+        // (중복 호출돼도 같은 문서를 덮어쓸 뿐), 랭킹 조회 등 기존 로직과는 무관하다.
+        (function(){
+          try {
+            var today = new Date().toISOString().slice(0, 10);
+            if (localStorage.getItem('vb_dau_date') === today) return; // 오늘 이미 기록함
+            localStorage.setItem('vb_dau_date', today); // 요청 성공 여부와 무관하게 먼저 찍어 중복 방지
+            var deviceId = localStorage.getItem('vb_device_id');
+            if (!deviceId) {
+              deviceId = (window.crypto && window.crypto.randomUUID) ? window.crypto.randomUUID() : 'dev-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+              localStorage.setItem('vb_device_id', deviceId);
+            }
+            var platform = (window.Capacitor && window.Capacitor.getPlatform) ? window.Capacitor.getPlatform() : 'web';
+            window.vbDB.collection('dau_events').doc(deviceId + '_' + today).set({
+              device_id: deviceId, platform: platform, snapshot_date: today,
+              created_at: firebase.firestore.FieldValue.serverTimestamp(),
+            }, { merge: true }).catch(function(){});
+          } catch (e) {}
+        })();
       } catch(e) { console.warn('Firebase 초기화 실패(오프라인?):', e); }
     </script>
     <script>
