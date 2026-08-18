@@ -2863,9 +2863,10 @@ function pickCharByType(type) {
         return CHAR_BY_ID['c_vip'];
     }
     if(type === 'rush') return CHAR_BY_ID['c_rush'];
-    // normal: 7% 확률로 메인 캐릭터, 아니면 일반 손님 풀에서 희귀도 가중 추첨
+    // normal: 7% 확률로 메인 캐릭터(행운의 각인 사용 중이면 오늘 하루 3배=21%), 아니면 일반 손님 풀에서 희귀도 가중 추첨
     const nmains = CHAR_DEX.filter(c => c.kind==='main' && (c.tags||[]).includes('normal'));
-    if(nmains.length && Math.random() < 0.07) return nmains[Math.floor(Math.random()*nmains.length)];
+    const _charmActive = typeof game !== 'undefined' && game.charmBoostDay === game.day;
+    if(nmains.length && Math.random() < (_charmActive ? 0.21 : 0.07)) return nmains[Math.floor(Math.random()*nmains.length)];
     const pool = CHAR_DEX.filter(c => ['human','cat','dog'].includes(c.kind));
     let total = 0; pool.forEach(c => total += (RARITY_WEIGHT[c.rarity]||1));
     let r = Math.random() * total;
@@ -3022,6 +3023,8 @@ const ICONS = {
     smiley:'<svg class="it-ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="#ffce5c"/><circle cx="9" cy="10.5" r="1.5" fill="#6a4a2a"/><circle cx="15" cy="10.5" r="1.5" fill="#6a4a2a"/><path d="M8 14.5a4.5 4.5 0 0 0 8 0" fill="none" stroke="#6a4a2a" stroke-width="1.8" stroke-linecap="round"/></svg>',
     hourglass:'<svg class="it-ic" viewBox="0 0 24 24" fill="#c98a3a"><path d="M6 3h12v3.2l-4 5.3 4 5.3V20H6v-3.2l4-5.3-4-5.3z"/></svg>',
     sword:'<svg class="it-ic" viewBox="0 0 24 24"><path d="M13 4h7v7l-8.5 8.5-3-3z" fill="#c08a6a"/><path d="M3.5 20.5l4-4M2.5 17.5l4 4" stroke="#8a5a3a" stroke-width="2" stroke-linecap="round" fill="none"/></svg>',
+    charm:'<svg class="it-ic" viewBox="0 0 24 24"><path d="M12 2c1 4 1.4 4.4 5.4 5.4-4 1-4.4 1.4-5.4 5.4-1-4-1.4-4.4-5.4-5.4 4-1 4.4-1.4 5.4-5.4z" fill="#e879c7"/><path d="M18.4 13.4c.5 2 .7 2.2 2.7 2.7-2 .5-2.2.7-2.7 2.7-.5-2-.7-2.2-2.7-2.7 2-.5 2.2-.7 2.7-2.7z" fill="#e879c7" opacity=".75"/></svg>',
+    expvial:'<svg class="it-ic" viewBox="0 0 24 24"><path d="M9 3h6v4l4 8.5A3 3 0 0 1 16.3 20H7.7A3 3 0 0 1 5 15.5L9 7z" fill="none" stroke="#7a5cc0" stroke-width="1.6" stroke-linejoin="round"/><path d="M6.6 15.5h10.8" stroke="#7a5cc0" stroke-width="1.4"/><path d="M8.4 14.2 12 8.6l3.6 5.6" fill="#c9b6f0"/></svg>',
 };
 
 const CONSUMABLES = [
@@ -3043,6 +3046,11 @@ const CRAFTED_DEFS = {
     // 탐험 전투에서 사용(전투 화면 아이템 버튼) — 카페 잡화점엔 안 보임
     cr_atk:    { name:'더블 샷',      icon:ICONS.sword, effect:'atkup', where:'battle', desc:'탐험 전투 공격력 +50%' },
     cr_def:    { name:'크림 실드',    icon:ICONS.shield, effect:'defup', where:'battle', desc:'탐험 전투 받는 피해 −50%' },
+    cr_heal:   { name:'회복 물약',    icon:'🧪', effect:'heal', where:'battle', desc:'탐험 전투·이동 중 체력 40% 회복' },
+    cr_heal2:  { name:'대회복 물약',  icon:'🧪', effect:'heal', where:'battle', desc:'탐험 전투·이동 중 체력 65% 회복' },
+    // [광고 전용] 조합 불가 — 잡화점/조합소의 "광고 보고 받기"로만 획득(미스터리박스에서도 희귀 드롭)
+    cr_charm:  { name:'행운의 각인', icon:ICONS.charm, effect:'charmboost', where:'cafe', desc:'오늘 하루 메인 캐릭터 등장 확률 대폭 상승', adOnly:true },
+    cr_exp2x:  { name:'경험의 물약', icon:ICONS.expvial, effect:'exp2x',   where:'battle', desc:'다음 전투 1회 경험치 2배', adOnly:true },
     // 레거시(이전 세이브 호환 — 더 이상 조합 불가, 보유분은 사용 가능)
     cr_shield: { name:'포근한 라떼', icon:ICONS.shield, effect:'shield', where:'cafe', desc:'한 번 틀려도 콤보 유지' },
     cr_life:   { name:'에너지 샷',   icon:ICONS.heart, effect:'life',   where:'cafe', desc:'라이프 +1' },
@@ -3053,7 +3061,7 @@ window.CRAFTED_DEFS = CRAFTED_DEFS;  // 조합템 아이콘 onerror 폴백에서
 // [5] 게임 엔진 (Game Object)
 // ==========================================
 const game = {
-    wallet: 0, score: 0, lifetimeScore: 0, lives: 5, day: 1, bestDay: 1, lastDaily: '', dailyStreak: 0, affection: {}, charActs: {}, mainSeenDay: {}, mainMet: {}, moodBoost: 0, totalCustomers: 0, dailyCount: 0, masteredCount: 0,
+    wallet: 0, score: 0, lifetimeScore: 0, lives: 5, day: 1, bestDay: 1, lastDaily: '', dailyStreak: 0, affection: {}, charActs: {}, mainSeenDay: {}, mainMet: {}, moodBoost: 0, charmBoostDay: 0, totalCustomers: 0, dailyCount: 0, masteredCount: 0,
     isMuted: false, gameMode: 'normal', isActive: false, isPaused: false, timer: null, currentCust: null,
     activePool: [], sortedWords: [], ownedItems: [], myWords: [],
     
@@ -3100,6 +3108,7 @@ const game = {
             this.mainSeenDay = (data.mainSeenDay && typeof data.mainSeenDay==='object') ? data.mainSeenDay : {}; // 메인별 그날 첫 등장 추적(일일 대사)
             this.mainMet = (data.mainMet && typeof data.mainMet==='object') ? data.mainMet : {}; // 메인별 첫 만남 여부(#8 첫만남 대사)
             this.moodBoost = (typeof data.moodBoost==='number' && data.moodBoost>0) ? data.moodBoost : 0; // 카페라떼: 남은 골드+50% 손님 수
+            this.charmBoostDay = (typeof data.charmBoostDay==='number') ? data.charmBoostDay : 0; // 행운의 각인: 이 day에만 메인 확률 상승
             this.bestDay = data.bestDay || data.day || 1;       // 최고 기록(게임오버에도 유지)
             this.lastDaily = data.lastDaily || '';              // 마지막 출석 보상 날짜(YYYY-M-D)
             this.dailyStreak = data.dailyStreak || 0;           // 연속 출석 일수
@@ -3238,7 +3247,7 @@ const game = {
             myWords: this.myWords,
             day: this.day, score: this.score, lifetimeScore: this.lifetimeScore || 0,
             bestDay: this.bestDay || 1, lastDaily: this.lastDaily || '', dailyStreak: this.dailyStreak || 0,
-            affection: this.affection || {}, charActs: this.charActs || {}, mainSeenDay: this.mainSeenDay || {}, mainMet: this.mainMet || {}, moodBoost: this.moodBoost || 0,
+            affection: this.affection || {}, charActs: this.charActs || {}, mainSeenDay: this.mainSeenDay || {}, mainMet: this.mainMet || {}, moodBoost: this.moodBoost || 0, charmBoostDay: this.charmBoostDay || 0,
             lives: (this.gameMode === 'review' && this._livesBackup !== undefined) ? this._livesBackup : this.lives, // [버그수정] 복습 모드는 본편 라이프 백업값을 저장
             stats: { totalServed: totalServedCount, totalVip: totalVipCount, totalItems: totalItemsBought, totalCorrect: totalCorrectCount, totalWrong: totalWrongCount, currentQuests: currentQuests,
                      recentAnswers: recentAnswers, srsGraduated: this._srsGraduated || 0, vipCorrect: this._vipCorrect || 0 }, // [울림 A/R/S]
@@ -3912,40 +3921,43 @@ const game = {
     },
 
     // 4. 미스터리 박스
+    // [미스터리 박스 등급표] 흔함→대박 순, 광고 전용 아이템(행운의 각인·경험의 물약)도 여기서 희귀 드롭.
+    // 확률 총합 100. 각 등급 안에서는 등장 아이템 중 1개를 균등 추첨.
+    MYSTERY_BOX_TABLE: [
+        { p: 0.35, items: ['cr_time', 'cr_heal'] },              // 흔함
+        { p: 0.30, items: ['cr_score', 'cr_heart', 'cr_def'] },  // 보통
+        { p: 0.20, items: ['cr_mood', 'cr_atk', 'cr_heal2'] },   // 좋음
+        { p: 0.10, items: ['cr_charm', 'cr_exp2x'] },            // 희귀(광고 전용템)
+        { p: 0.05, gold: 2000 },                                  // 대박(황금 콩)
+    ],
     buyMysteryBox: function() {
         if(this.wallet < 500) {
             showGameAlert("코인이 부족합니다! (500G 필요)");
             return;
         }
-        
         this.wallet -= 500;
-        this.updateHUD();
-        playSound('correct'); 
+        playSound('correct');
 
-        const rand = Math.random();
-        let msg = "";
-        
-        if (rand < 0.05) { 
-            const bonus = 2000;
-            this.wallet += bonus;
-            msg = `대박! 황금 콩 발견! +${bonus}G`;
+        let r = Math.random(), tier = this.MYSTERY_BOX_TABLE[this.MYSTERY_BOX_TABLE.length - 1];
+        for (const t of this.MYSTERY_BOX_TABLE) { if (r < t.p) { tier = t; break; } r -= t.p; }
+
+        let msg;
+        if (tier.gold) {
+            this.wallet += tier.gold;
+            msg = `${UI_ICON.coin} 대박! 황금 콩 발견! +${tier.gold}G`;
             playSound('clear');
-        } else if (rand < 0.4) {
-            const bonus = 600;
-            this.wallet += bonus;
-            msg = `꽤 괜찮은 원두네요. +${bonus}G`;
-        } else if (rand < 0.7) {
-            const bonus = 100;
-            this.wallet += bonus;
-            msg = `믹스 커피 당첨... +${bonus}G`;
         } else {
-            msg = `텅 비어있습니다. (꽝!)`;
-            playSound('wrong');
+            const id = tier.items[Math.floor(Math.random() * tier.items.length)];
+            const d = CRAFTED_DEFS[id];
+            this.craftedItems = this.craftedItems || {};
+            this.craftedItems[id] = (this.craftedItems[id] || 0) + 1;
+            msg = `${craftIcon(id, d, "cr-ic sm")} <b>${d.name}</b> 획득!<br><span style="font-size:0.9rem;color:#555;">${d.desc}</span>`;
         }
-        
+
         showGameAlert(msg);
         this.updateHUD();
         this.saveData();
+        this.renderShopItems();
     },
 
     // 5. 정답 체크 (오류 수정됨)
@@ -4370,6 +4382,21 @@ const game = {
         this._applyRevive();
     },
 
+    // [광고] 리워드 광고 시청 시 무료 아이템(잡화점) — cr_charm 등 조합 불가·광고 전용 아이템 공용
+    watchAdForItem: async function(id, btnEl) {
+        if (btnEl) { btnEl.disabled = true; btnEl.textContent = '재생 중…'; }
+        const ok = await (window.VBAds ? VBAds.rewarded() : Promise.resolve(false));
+        if (btnEl) { btnEl.disabled = false; }
+        if (!ok) { showGameAlert('광고 시청이 완료되지 않아 아이템을 받지 못했어요.'); this.renderShopItems(); return; }
+        const d = CRAFTED_DEFS[id]; if (!d) return;
+        this.craftedItems = this.craftedItems || {};
+        this.craftedItems[id] = (this.craftedItems[id] || 0) + 1;
+        this.saveData();
+        playSound('buy');
+        this.renderShopItems();
+        showGameAlert(`${craftIcon(id, d, "cr-ic sm")} <b>${d.name}</b> 획득!<br><span style="font-size:0.9rem;color:#555;">${d.desc}</span>`, null);
+    },
+
     // 부활 공통 처리(골드/광고 공용)
     _applyRevive: function() {
         this.lives = 1;
@@ -4565,6 +4592,15 @@ const game = {
     renderShopItems: function() {
         const list = document.getElementById('shop-list'); list.innerHTML='';
 
+        // [광고 전용 아이템] 조합 불가 — 광고 시청으로만 획득 (잡화점에서 쓰는 것만 여기 노출)
+        Object.keys(CRAFTED_DEFS).filter(id => CRAFTED_DEFS[id].adOnly && CRAFTED_DEFS[id].where !== 'battle').forEach(id => {
+            const d = CRAFTED_DEFS[id];
+            const el = document.createElement('div'); el.className = 'shop-item consumable';
+            el.style.borderLeft = '4px solid #ab47bc';
+            el.innerHTML = `<div style="display:flex;align-items:center;"><div class="icon">${craftIcon(id, d)}</div><div><div style="font-weight:bold;">${d.name}</div><div style="font-size:0.8rem;">${d.desc}</div></div></div><button class="buy-btn" style="background:linear-gradient(180deg,#ce93d8,#ab47bc);" onclick="game.watchAdForItem('${id}', this)">${UI_ICON.film} 광고 보기</button>`;
+            list.appendChild(el);
+        });
+
         // [탐험 조합 아이템] 보유분을 맨 위에 — 사용하면 효과 발동
         const ci = this.craftedItems || {};
         // 카페에서 쓰는 아이템만 노출(전투 전용 ⚔️🛡️은 탐험 전투의 🎒 버튼에서 사용)
@@ -4630,6 +4666,9 @@ const game = {
         else if (d.effect === 'life') {
             if (this.lives >= 5) { showGameAlert(`${UI_ICON.heart} 체력이 이미 가득 찼어요. 아껴두세요!`, null); return; }
             this.lives = Math.min(5, this.lives + 1); this.updateHUD();
+        }
+        else if (d.effect === 'charmboost') {
+            this.charmBoostDay = this.day; // 오늘(day) 동안만 유효 — pickCustomer에서 검사
         }
         else if (d.effect === 'time') {
             if (this.currentCust) { this.currentCust.timeLeft += 5000;

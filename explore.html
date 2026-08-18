@@ -1105,6 +1105,9 @@ const CRAFT_DB = [
   { id:'cr_heal',  name:'회복 물약',    icon:'🧪', cost:{milk:1,berry:2},    effect:'heal',   where:'battle', edesc:'탐험: 체력 40% 회복 (전투·이동 중 사용)', healPct:0.4 },
   // [지역 특산물 활용] 상위 존 채집물로 만드는 고급 회복 물약 — 기본 회복 물약보다 회복량이 큼
   { id:'cr_heal2', name:'대회복 물약',  icon:'🧪', cost:{shell:2,mushroom:2}, effect:'heal',   where:'battle', edesc:'탐험: 체력 65% 회복 (전투·이동 중 사용)', healPct:0.65 },
+  // [광고 전용] 조합 불가(cost 없음) — 조합소의 "광고 보고 받기"로만 획득. renderCraft에서 adOnly는 별도 취급.
+  { id:'cr_charm', name:'행운의 각인',  icon:'💫', cost:null, effect:'charmboost', where:'cafe',   edesc:'카페: 오늘 하루 메인 캐릭터 등장 확률 대폭 상승', adOnly:true },
+  { id:'cr_exp2x', name:'경험의 물약',  icon:'🧪', cost:null, effect:'exp2x',   where:'battle', edesc:'탐험: 다음 전투 1회 경험치 2배', adOnly:true },
 ];
 // ---------- 퀘스트 NPC (에스컬레이팅 반복 의뢰) ----------
 // 각 stage.need = [{type:'mat'|'item', key, count}] · 단계가 오를수록 수량↑ → 조합아이템/드롭재료 요구 → 무한 스케일링
@@ -2187,7 +2190,13 @@ const World = {
   openCraft(){ this.renderCraft(); document.getElementById('craft-screen').classList.add('show'); ExploreBgm.play('craft'); },
   closeCraft(){ document.getElementById('craft-screen').classList.remove('show'); ExploreBgm.play('map'); },
   renderCraft(){ this.renderMats(); const owned=Explore.cafe.craftedItems||{}; let h='<div class="eq-grid">';
-    CRAFT_DB.forEach(r=>{ const can=this.canAfford(r.cost); const have=owned[r.id]||0;
+    // [광고 전용] 재료 조합 불가 — 광고 시청으로만 획득. 목록 맨 위에 별도로.
+    CRAFT_DB.filter(r=>r.adOnly).forEach(r=>{ const have=owned[r.id]||0;
+      h+=`<div class="eq-card" style="border-left:3px solid #ab47bc"><span class="eq-ic">${craftIcon(r)}</span><div class="eq-info">`
+        +`<div class="nm">${r.name}${have?` <small style="color:#7a5a2a">보유 x${have}</small>`:''}</div>`
+        +`<div class="bn">${r.edesc}</div></div>`
+        +`<button class="eq-btn buy" style="background:linear-gradient(180deg,#ce93d8,#ab47bc)" onclick="World.watchAdForItem('${r.id}', this)">${UI_ICON.film} 광고</button></div>`; });
+    CRAFT_DB.filter(r=>!r.adOnly).forEach(r=>{ const can=this.canAfford(r.cost); const have=owned[r.id]||0;
       h+=`<div class="eq-card"><span class="eq-ic">${craftIcon(r)}</span><div class="eq-info">`
         +`<div class="nm">${r.name}${have?` <small style="color:#7a5a2a">보유 x${have}</small>`:''}</div>`
         +`<div class="bn">${r.edesc}</div><div class="ct">${this.costDetail(r.cost)}</div></div>`
@@ -2212,6 +2221,17 @@ const World = {
     Explore.cafe.craftedItems[r.id]=(Explore.cafe.craftedItems[r.id]||0)+1;
     Explore.persist(); Explore.refreshHUD(); this.renderCraft();
     this.toast(`${craftIcon(r,'cr-ic sm')} <b>${r.name}</b> 조합 성공! 가방에 보관`); },
+  // [광고 전용 아이템] 재료 없이 리워드 광고 시청으로 획득
+  async watchAdForItem(id, btnEl){
+    const r=CRAFT_DB.find(x=>x.id===id); if(!r) return;
+    if(btnEl){ btnEl.disabled=true; btnEl.textContent='재생 중…'; }
+    const ok = await (window.VBAds ? VBAds.rewarded() : Promise.resolve(false));
+    if(!ok){ this.toast('광고 시청이 완료되지 않아 아이템을 받지 못했어요.'); this.renderCraft(); return; }
+    if(!Explore.cafe.craftedItems) Explore.cafe.craftedItems={};
+    Explore.cafe.craftedItems[r.id]=(Explore.cafe.craftedItems[r.id]||0)+1;
+    Explore.persist(); Explore.refreshHUD(); this.renderCraft();
+    this.toast(`${craftIcon(r,'cr-ic sm')} <b>${r.name}</b> 획득! 가방에 보관`);
+  },
   renderStats(){
     const s=Explore.state; const eff=Explore.effStats(); const b=eff.bonus;
     const need=expNeed(s.level); const expPct=Math.min(100,(s.exp/need)*100);
@@ -2455,7 +2475,7 @@ const Battle = {
     // [3단계 페이즈] 깊은숲 로스팅 골렘 전용 — HP비율로 안개껍질(방어↑)→코어노출(평시)→잔열폭주(공격↑) 전환.
     //   원본 atk/def를 보존해두고 매 데미지 후 updatePhase()가 현재 비율로 재계산(중첩 없음).
     if(m.phased){ this.enemy._baseAtk=m.atk; this.enemy._baseDef=m.def; this.enemy._phaseName=null; this.updatePhase(); }
-    this.atkBuff=1; this.dmgReduce=0; this.hideItems(); // 전투 아이템 버프는 전투마다 초기화
+    this.atkBuff=1; this.dmgReduce=0; this.expBuff=1; this.hideItems(); // 전투 아이템 버프는 전투마다 초기화
     if(m.isBoss) this.gauge=this.GMAX; // [밸런스] 보스전은 필살기 게이지 만충으로 시작 — 첫 턴 버스트 보장(탱키 보스 완충). ※ 플레이테스트로 수치 조정 여지
     World.release();
     const es=document.getElementById('e-sprite'); es.className='sprite-enemy'+(m.isBoss?' boss':'');
@@ -2520,6 +2540,7 @@ const Battle = {
     owned[id]--; if(owned[id]<=0) delete owned[id]; Explore.cafe.craftedItems=owned; Explore.persist();
     if(r.effect==='atkup'){ this.atkBuff=1.5; this.msg(`${UI_ICON.atk} <b>${r.name}</b> 사용! 이번 전투 공격력 +50%`); }
     else if(r.effect==='defup'){ this.dmgReduce=0.5; this.msg(`${UI_ICON.def} <b>${r.name}</b> 사용! 이번 전투 받는 피해 −50%`); }
+    else if(r.effect==='exp2x'){ this.expBuff=2; this.msg(`${UI_ICON.exp} <b>${r.name}</b> 사용! 이번 전투 경험치 2배`); }
     else if(r.effect==='heal'){ const p=this.pStat(); const before=Explore.state.stats.hp;
       Explore.state.stats.hp=Math.min(p.maxHp, before+Math.round(p.maxHp*(r.healPct||0.4)));
       const g=Explore.state.stats.hp-before; this.msg(`${UI_ICON.heal} <b>${r.name}</b> 사용! 체력 <b>${g}</b> 회복`);
@@ -2760,7 +2781,8 @@ const Battle = {
       Explore.state.materials.core=(Explore.state.materials.core||0)+1;
       dparts.push(`${MAT_ICON.core||''}${(MATERIALS.core||{}).name||'core'}+1`);
     }
-    let txt=`승리! ${UI_ICON.coin}+${gold}${dparts.length?' · '+dparts.join(' · '):''} · ${UI_ICON.exp}EXP+${e.exp}`; Explore.state.exp+=e.exp;
+    const exp=Math.round(e.exp*(this.expBuff||1));
+    let txt=`승리! ${UI_ICON.coin}+${gold}${dparts.length?' · '+dparts.join(' · '):''} · ${UI_ICON.exp}EXP+${exp}${this.expBuff>1?' (x2!)':''}`; Explore.state.exp+=exp;
     // 황금 원두 희귀 드롭(보스 35% · 일반 12%) — 골든 블렌드 조합 재료
     if(this._rand() < (e.isBoss?0.35:0.12)){ Explore.state.materials.goldbean=(Explore.state.materials.goldbean||0)+1; txt+=`<br><span class="lvlup">${MAT_ICON.goldbean} 황금 원두를 발견했다! (+1)</span>`; }
     const ups=[]; while(Explore.state.exp>=expNeed(Explore.state.level)){ Explore.state.exp-=expNeed(Explore.state.level); Explore.state.level++;
